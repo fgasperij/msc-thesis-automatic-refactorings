@@ -5,20 +5,24 @@ SystemWindow subclass: #ExtractToMethodObjectPanel
 	poolDictionaries: ''
 	category: 'Playground'!
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 15:36:22'!
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 12:34:26'!
 buildMorphicWindow
 
-	| classFormGroup inputFieldsLabels variables columnsNames |
+	| classFormGroup variables columnsNames |
 	
 	self setLabel: 'Extract Method to Method Object Panel'.
 	self layoutMorph separation: 10.
 	
 	classFormGroup := FormGroup withTitle: 'Method Object class'.
-	inputFieldsLabels := #('Name' 'Superclass Name' 'Category').
-	inputFieldsLabels do: [ :aLabel |
-		classFormGroup
-			addMorph: (LabeledInput withLabel: aLabel) 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95)].
+	classFormGroup
+			addMorph: (LabeledInput withLabel: 'Name') 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+	classFormGroup
+			addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name') 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+	classFormGroup
+			addMorph: (LabeledInput withLabel: 'Category') 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
 		
 	self layoutMorph 
 		addMorph: classFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
@@ -218,3 +222,15 @@ LabeledInput class
 withLabel: aLabel
 
 	^self newRow withLabel: aLabel! !
+
+
+!classDefinition: #LabeledAutocompletedInput category: #Playground!
+LabeledInput subclass: #LabeledAutocompletedInput
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Playground'!
+
+!LabeledAutocompletedInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 12:32:07'!
+autoCompleterClassFor: textGetter
+	^SmalltalkCompleter! !
