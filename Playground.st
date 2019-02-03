@@ -5,40 +5,66 @@ SystemWindow subclass: #ExtractToMethodObjectPanel
 	poolDictionaries: ''
 	category: 'Playground'!
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 12:34:26'!
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/2/2019 12:19:52'!
 buildMorphicWindow
 
-	| classFormGroup variables columnsNames |
+	| classFormGroup variables columnsNames nameInput scrollPane creationMessageFormGroup theLayoutMorph |
 	
 	self setLabel: 'Extract Method to Method Object Panel'.
 	self layoutMorph separation: 10.
+	self layoutMorph padding: #top.
+	
+	scrollPane := PluggableScrollPane initializedInstance.
+	self layoutMorph addMorphUseAll: scrollPane.
+	
+	theLayoutMorph := LayoutMorph newColumn.
+	scrollPane addToScroller: theLayoutMorph.
 	
 	classFormGroup := FormGroup withTitle: 'Method Object class'.
+	nameInput := LabeledInput withLabel: 'Name'.
 	classFormGroup
-			addMorph: (LabeledInput withLabel: 'Name') 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+			addMorph: nameInput
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
 	classFormGroup
 			addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name') 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
 	classFormGroup
 			addMorph: (LabeledInput withLabel: 'Category') 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
+
+	classFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: 180).
+	theLayoutMorph 
+		addMorph: classFormGroup.
+
 		
-	self layoutMorph 
-		addMorph: classFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
-		
-	variablesFormGroup := FormGroup withTitle: 'Variables to parametrize'.
+	variablesFormGroup := FormGroup 
+		withTitle: 'Instance variables names'
+		withExplanation: 'Instance, class and pool variables referenced by the method will be passed as collaborators to the MethodObject. The MethodObject will have one instance variable corresponding to each of them. Pick their names:'.
 	variables := #(self anInstVar aClassVar).
-	columnsNames := #('Inst Var Name' 'Keyword' 'Parameter name').
-	variablesFormGroup addMorph: (InputTable withColumns: columnsNames withRows: variables).
-	self layoutMorph 
-		addMorph: variablesFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95 proportionalHeight: 0.3).
+	variables do: [ :aVariable |
+		variablesFormGroup
+			addMorph: (LabeledInput withLabel: aVariable ) 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight)].
+	variablesFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+	theLayoutMorph 
+		addMorph: variablesFormGroup.
+	
+	
+	creationMessageFormGroup := FormGroup 
+		withTitle: 'Instance creation message definition'
+		withExplanation: 'The collaborators will be passed in the MethodObject instance creation message. Pick the keyword and the formal parameter name corresponding to each collaborator:'.
+	variables := #(self anInstVar aClassVar).
+	columnsNames := #('Keyword' 'Parameter name').
+	creationMessageFormGroup addMorph: (InputTable withColumns: columnsNames withRows: variables).
+	creationMessageFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
+	theLayoutMorph 
+		addMorph: creationMessageFormGroup.
 	! !
 
 
 !classDefinition: #FormGroup category: #Playground!
 LayoutMorph subclass: #FormGroup
-	instanceVariableNames: 'title borderMorph titleContainer titleMorph titleContainerLayoutSpec'
+	instanceVariableNames: 'title borderMorph titleContainer titleMorph titleContainerLayoutSpec explanation explanationMorph explanationContainer explanationContainerLayoutSpec'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Playground'!
@@ -52,10 +78,18 @@ drawOn: aCanvas
 		borderStyleSymbol: #simple
 		baseColorForBorder: Color darkGray ! !
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 14:25:13'!
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 14:53:15'!
 initializeWithTitle: aTitle
 
+	self initializeWithTitle: aTitle withExplanation: ''.! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/2/2019 11:24:28'!
+initializeWithTitle: aTitle withExplanation: anExplanation
+
+	| explanationMorphLayoutSpec |
+	
 	title := aTitle.
+	explanation := anExplanation.
 	
 	self separation: 5.
 	
@@ -69,7 +103,21 @@ initializeWithTitle: aTitle
 	titleContainerLayoutSpec := LayoutSpec fixedHeight: titleMorph morphHeight.
 	titleContainerLayoutSpec minorDirectionPadding: #left.
 	
-	self addMorph: titleContainer layoutSpec: titleContainerLayoutSpec.! !
+	self addMorph: titleContainer layoutSpec: titleContainerLayoutSpec.
+	
+	explanation isEmpty ifFalse: [
+		explanationMorph := TextModelMorph withText: anExplanation.
+		explanationMorph disableEditing.
+		explanationMorph drawKeyboardFocusIndicator: false.
+		explanationMorph lock: true.
+		explanationMorph hideScrollBarsIndefinitely.
+		
+		explanationMorphLayoutSpec := LayoutSpec proportionalWidth: 0.95.
+		explanationMorphLayoutSpec minorDirectionPadding: #left.
+		explanationMorphLayoutSpec useMorphHeight.
+		
+		self addMorph: explanationMorph layoutSpec: explanationMorphLayoutSpec.
+	].! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -81,6 +129,11 @@ FormGroup class
 withTitle: aTitle
 
 	^FormGroup newColumn initializeWithTitle: aTitle.! !
+
+!FormGroup class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 14:52:31'!
+withTitle: aTitle withExplanation: anExplanation
+
+	^FormGroup newColumn initializeWithTitle: aTitle withExplanation: anExplanation.! !
 
 
 !classDefinition: #InputTable category: #Playground!
@@ -175,7 +228,7 @@ drawOn: aCanvas
 		fillRectangle: self morphLocalBounds
 		color: Color lightGray.! !
 
-!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 14:13:46'!
+!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 18:16:32'!
 withLabel: aLabel
 
 	| labelLayoutSpec inputMorphLayoutSpec |
@@ -184,7 +237,7 @@ withLabel: aLabel
 	
 	labelMorph := StringMorph contents: aLabel.
 	labelLayoutSpec := LayoutSpec 
-		fixedWidth: labelMorph morphWidth
+		fixedWidth: 120
 		fixedHeight: labelMorph morphHeight
 		minorDirectionPadding: #center.
 	self addMorph: labelMorph layoutSpec: labelLayoutSpec.
