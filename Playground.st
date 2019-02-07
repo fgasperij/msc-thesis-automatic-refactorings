@@ -1,65 +1,123 @@
-!classDefinition: #ExtractToMethodObjectPanel category: #Playground!
-SystemWindow subclass: #ExtractToMethodObjectPanel
-	instanceVariableNames: 'variablesFormGroup'
+!classDefinition: #ColoredScrollPane category: #Playground!
+PluggableScrollPane subclass: #ColoredScrollPane
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Playground'!
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/2/2019 12:19:52'!
+!ColoredScrollPane methodsFor: 'as yet unclassified' stamp: 'FGJ 2/5/2019 16:22:45'!
+drawOn: aCanvas
+
+	color := Color lightGray.
+	
+	super drawOn: aCanvas.! !
+
+!ColoredScrollPane methodsFor: 'as yet unclassified' stamp: 'FGJ 2/5/2019 16:24:51'!
+getMenu
+	
+	^nil! !
+
+
+!classDefinition: #ExtractToMethodObjectPanel category: #Playground!
+SystemWindow subclass: #ExtractToMethodObjectPanel
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Playground'!
+
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/5/2019 16:25:41'!
+backgroundColor
+
+	^Color lightGray! !
+
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:44:12'!
 buildMorphicWindow
 
-	| classFormGroup variables columnsNames nameInput scrollPane creationMessageFormGroup theLayoutMorph |
+	| classFormGroup scrollPane formLayout requiredExtent columnsNames creationMessageFormGroup variables variablesFormGroup requiredHeight classFormGroupLabels maxLabelWidth |
 	
-	self setLabel: 'Extract Method to Method Object Panel'.
-	self layoutMorph separation: 10.
-	self layoutMorph padding: #top.
+	self setLabel: 'Extract Method to Method Object'.
 	
-	scrollPane := PluggableScrollPane initializedInstance.
+	scrollPane := ColoredScrollPane initializedInstance.
+	scrollPane scroller color: self backgroundColor.
+	scrollPane scroller layoutSpec: LayoutSpec useAll.
+	scrollPane color: self backgroundColor. 
 	self layoutMorph addMorphUseAll: scrollPane.
 	
-	theLayoutMorph := LayoutMorph newColumn.
-	scrollPane addToScroller: theLayoutMorph.
+	formLayout := LayoutMorph newColumn.
+	formLayout separation: 10; color: self backgroundColor.
+	scrollPane scroller addMorph: formLayout.
 	
-	classFormGroup := FormGroup withTitle: 'Method Object class'.
-	nameInput := LabeledInput withLabel: 'Name'.
+	classFormGroup := FormGroup withTitle: 'Method Object class' withColor: self backgroundColor.
+	classFormGroupLabels := #( 'Name' 'Superclass name' 'Category').
+	maxLabelWidth := (classFormGroupLabels collect: [:aLabel | AbstractFont default widthOfString: aLabel]) max + 20.
 	classFormGroup
-			addMorph: nameInput
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
+			addMorph: (LabeledInput withLabel: 'Name' withWidth: maxLabelWidth)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight).
 	classFormGroup
-			addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name') 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
+			addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name' withWidth: maxLabelWidth) 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight).
 	classFormGroup
-			addMorph: (LabeledInput withLabel: 'Category') 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight).
+			addMorph: (LabeledInput withLabel: 'Category' withWidth: maxLabelWidth) 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight).
 
-	classFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: 180).
-	theLayoutMorph 
-		addMorph: classFormGroup.
+	formLayout
+		addMorph: classFormGroup
+		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: classFormGroup recommendedHeight ).
 
 		
 	variablesFormGroup := FormGroup 
 		withTitle: 'Instance variables names'
-		withExplanation: 'Instance, class and pool variables referenced by the method will be passed as collaborators to the MethodObject. The MethodObject will have one instance variable corresponding to each of them. Pick their names:'.
+		withExplanation: 'Instance, class and pool variables referenced by the method will be passed as collaborators to the MethodObject. The method object will have one instance variable corresponding to each of them. Pick their names:'
+		withColor: self backgroundColor.
 	variables := #(self anInstVar aClassVar).
+	maxLabelWidth := (variables collect: [:aLabel | AbstractFont default widthOfString: aLabel]) max + 20.
 	variables do: [ :aVariable |
 		variablesFormGroup
-			addMorph: (LabeledInput withLabel: aVariable ) 
-			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: nameInput morphHeight)].
-	variablesFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
-	theLayoutMorph 
-		addMorph: variablesFormGroup.
+			addMorph: (LabeledInput withLabel: aVariable withWidth: maxLabelWidth) 
+			layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight )].
+	
+	formLayout 
+		addMorph: variablesFormGroup
+		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: variablesFormGroup recommendedHeight ).
 	
 	
-	creationMessageFormGroup := FormGroup 
+	creationMessageFormGroup := FormGroup
 		withTitle: 'Instance creation message definition'
-		withExplanation: 'The collaborators will be passed in the MethodObject instance creation message. Pick the keyword and the formal parameter name corresponding to each collaborator:'.
+		withExplanation: 'The collaborators will be passed in the MethodObject instance creation message. Pick the keyword and the formal parameter name corresponding to each collaborator:'
+		withColor: self backgroundColor .
 	variables := #(self anInstVar aClassVar).
 	columnsNames := #('Keyword' 'Parameter name').
-	creationMessageFormGroup addMorph: (InputTable withColumns: columnsNames withRows: variables).
-	creationMessageFormGroup layoutSpec: (LayoutSpec proportionalWidth: 0.95).
-	theLayoutMorph 
-		addMorph: creationMessageFormGroup.
-	! !
+	creationMessageFormGroup addMorph: (InputTable withColumns: columnsNames withRows: variables withColor: self backgroundColor ).
+	
+	formLayout 
+		addMorph: creationMessageFormGroup
+		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: creationMessageFormGroup recommendedHeight ).
+	
+	requiredHeight := classFormGroup recommendedHeight + variablesFormGroup recommendedHeight + creationMessageFormGroup recommendedHeight + (formLayout ySeparation * 4).	
+	
+	requiredExtent := ExtractToMethodObjectPanel recommendedWidth@requiredHeight.
+	formLayout morphExtent: requiredExtent.
+	scrollPane scroller morphExtent: requiredExtent.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/6/2019 13:12:47'!
+fontPreferenceChanged
+	"Copied from CodePackageListWindow"
+	"System fonts have changed; rebuild myself"
+	self layoutMorph removeAllMorphs.
+	super fontPreferenceChanged.
+	self buildMorphicWindow.
+! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'ExtractToMethodObjectPanel class' category: #Playground!
+ExtractToMethodObjectPanel class
+	instanceVariableNames: ''!
+
+!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:08:59'!
+recommendedWidth
+
+	^(AbstractFont default widthOf: $A) * 70! !
 
 
 !classDefinition: #FormGroup category: #Playground!
@@ -69,7 +127,7 @@ LayoutMorph subclass: #FormGroup
 	poolDictionaries: ''
 	category: 'Playground'!
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 12:17:03'!
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/4/2019 12:53:57'!
 drawOn: aCanvas
 	aCanvas
 		fillRectangle: self morphLocalBounds
@@ -78,46 +136,69 @@ drawOn: aCanvas
 		borderStyleSymbol: #simple
 		baseColorForBorder: Color darkGray ! !
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 14:53:15'!
-initializeWithTitle: aTitle
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:31:22'!
+initializeWithTitle: aTitle withExplanation: anExplanation withColor: aColor
 
-	self initializeWithTitle: aTitle withExplanation: ''.! !
-
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/2/2019 11:24:28'!
-initializeWithTitle: aTitle withExplanation: anExplanation
-
-	| explanationMorphLayoutSpec |
+	| explanationMorphLayoutSpec bottomSpaceToAccountForLettersBelowBaseLineLikep titleLayoutSpec |
 	
 	title := aTitle.
 	explanation := anExplanation.
 	
-	self separation: 5.
+	self separation: 3.
+	self color: aColor.
 	
 	titleMorph := StringMorph 
 		contents: title 
-		font: (AbstractFont familyName: Preferences defaultFontFamily pointSize: 17)
+		font: Preferences windowTitleFont 
 		emphasis: 1.
-	titleContainer := RectangleLikeMorph new color: Color white.
-	titleContainer addMorph: titleMorph.
+	titleLayoutSpec := LayoutSpec 
+		fixedWidth: titleMorph morphWidth 
+		fixedHeight: titleMorph morphHeight.
+	titleLayoutSpec minorDirectionPadding: 0.03.
 	
-	titleContainerLayoutSpec := LayoutSpec fixedHeight: titleMorph morphHeight.
-	titleContainerLayoutSpec minorDirectionPadding: #left.
-	
-	self addMorph: titleContainer layoutSpec: titleContainerLayoutSpec.
+	self addMorph: titleMorph layoutSpec: titleLayoutSpec.
 	
 	explanation isEmpty ifFalse: [
 		explanationMorph := TextModelMorph withText: anExplanation.
+		explanationMorph color: aColor.
 		explanationMorph disableEditing.
 		explanationMorph drawKeyboardFocusIndicator: false.
 		explanationMorph lock: true.
 		explanationMorph hideScrollBarsIndefinitely.
 		
-		explanationMorphLayoutSpec := LayoutSpec proportionalWidth: 0.95.
+		bottomSpaceToAccountForLettersBelowBaseLineLikep := 5.
+		explanationMorphLayoutSpec := LayoutSpec proportionalWidth: 0.95 fixedHeight: (self minimumHeightToDisplay: anExplanation) + bottomSpaceToAccountForLettersBelowBaseLineLikep.
 		explanationMorphLayoutSpec minorDirectionPadding: #left.
-		explanationMorphLayoutSpec useMorphHeight.
 		
 		self addMorph: explanationMorph layoutSpec: explanationMorphLayoutSpec.
 	].! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 10:57:41'!
+minimumHeightToDisplay: aString
+
+	| aComposer composition lines aText |
+	
+	aComposer := TextComposer new.
+	aText := Text fromString: aString.
+	composition := aComposer composeLinesFrom: 1 to: aText size delta: 0 into: OrderedCollection new priorLines: Array new atY: 0 text: aText extentForComposing: self width @ 999999. 
+	lines := composition first asArray size.
+	
+	^lines * self textHeight! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/6/2019 21:05:18'!
+recommendedHeight
+
+	^((self submorphs collect: [:aMorph | aMorph layoutSpec fixedHeight]) sum) + ( (self submorphs size + 1) * self ySeparation)! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 10:57:14'!
+textHeight
+	
+	^AbstractFont default height! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:07:50'!
+width
+
+	^ExtractToMethodObjectPanel recommendedWidth * 0.7! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -125,15 +206,15 @@ initializeWithTitle: aTitle withExplanation: anExplanation
 FormGroup class
 	instanceVariableNames: ''!
 
-!FormGroup class methodsFor: 'as yet unclassified' stamp: 'FGJ 1/18/2019 15:30:14'!
-withTitle: aTitle
+!FormGroup class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/5/2019 17:01:17'!
+withTitle: aTitle withColor: aColor
 
-	^FormGroup newColumn initializeWithTitle: aTitle.! !
+	^self withTitle: aTitle withExplanation: '' withColor: aColor.! !
 
-!FormGroup class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 14:52:31'!
-withTitle: aTitle withExplanation: anExplanation
+!FormGroup class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/5/2019 16:59:12'!
+withTitle: aTitle withExplanation: anExplanation withColor: aColor
 
-	^FormGroup newColumn initializeWithTitle: aTitle withExplanation: anExplanation.! !
+	^FormGroup newColumn initializeWithTitle: aTitle withExplanation: anExplanation withColor: aColor.! !
 
 
 !classDefinition: #InputTable category: #Playground!
@@ -150,50 +231,50 @@ drawOn: aCanvas
 		fillRectangle: self morphLocalBounds
 		color: Color lightGray.! !
 
-!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 15:42:13'!
-withColumns: columnsTitles withRows: rowsTitles
+!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 11:48:31'!
+withColumns: columnsTitles withRows: rowsTitles withColor: aColor
 
-	| columnTitleLayoutSpec rowsTitlesColumn rowsTitlesTitleContainer |
+	| rowsTitlesColumn rowsSeparation recommendedHeight textHeight numberOfRows widthForInputs maxRowTitleWidth |
 
+	rowsSeparation := 4.
+	textHeight := AbstractFont default height.
+	numberOfRows := (rowsTitles size + 1).
+	recommendedHeight := textHeight * numberOfRows + (rowsSeparation * (numberOfRows + 1)).
+	self layoutSpec: (LayoutSpec fixedHeight: recommendedHeight).
+	
+	"Build the row titles column"
 	rowsTitlesColumn := LayoutMorph newColumn.
-	rowsTitlesColumn separation: 4; color: Color lightGray.
+	rowsTitlesColumn separation: rowsSeparation; color: aColor.
 	
-	title := StringMorph contents: 'Variable Name'.
-	rowsTitlesTitleContainer := RectangleLikeMorph new color: Color lightGray.
-	rowsTitlesTitleContainer addMorph: title.
-	columnTitleLayoutSpec := LayoutSpec fixedWidth: title morphWidth fixedHeight: title morphHeight.
-	rowsTitlesColumn addMorph: rowsTitlesTitleContainer layoutSpec: columnTitleLayoutSpec.
+	title := StringMorph contents: ''.
+	rowsTitlesColumn addMorph: title.
 	
-	rowsTitles do: [:aRowTitle |
-		| titleLayoutSpec |
-		
+	rowsTitles do: [:aRowTitle | | titleLayoutSpec |
 		title := StringMorph contents: aRowTitle.
-		titleContainer := RectangleLikeMorph new color: Color lightGray.
-		titleContainer addMorph: title.
-		titleLayoutSpec := LayoutSpec fixedWidth: title morphWidth fixedHeight: title morphHeight.
-		rowsTitlesColumn addMorph: titleContainer layoutSpec: titleLayoutSpec.
-		
+		titleLayoutSpec := LayoutSpec new.
+		titleLayoutSpec minorDirectionPadding: #left.
+		rowsTitlesColumn addMorph: title layoutSpec: titleLayoutSpec.
 	].
-	self addMorph: rowsTitlesColumn.
+	maxRowTitleWidth := (rowsTitles collect: [:aRowTitle | AbstractFont default widthOfString: aRowTitle]) max * 1.5.
+	self addMorph: rowsTitlesColumn layoutSpec: (LayoutSpec fixedWidth: maxRowTitleWidth).
 	
+	"Build the input columns"
 	columns := columnsTitles collect: [:aColumnName |
-		| columnMorph columnTitleContainer title |
+		| columnMorph title |
 		
 		columnMorph := LayoutMorph newColumn.
-		columnMorph separation: 4; color: Color lightGray.
+		columnMorph separation: rowsSeparation; color: aColor.
+		widthForInputs := (AbstractFont default widthOf: $A) * 20.
+		columnMorph layoutSpec: (LayoutSpec fixedWidth: widthForInputs).
 		
 		title := StringMorph contents: aColumnName.
-		columnTitleContainer := RectangleLikeMorph new color: Color lightGray.
-		columnTitleContainer addMorph: title.
-		columnTitleLayoutSpec := LayoutSpec fixedWidth: title morphWidth fixedHeight: title morphHeight.
-		columnMorph addMorph: columnTitleContainer layoutSpec: columnTitleLayoutSpec.
+		columnMorph addMorph: title.
 		
 		rowsTitles size timesRepeat: [
-			| inputMorph inputMorphLayoutSpec |
+			| inputMorph |
 			inputMorph := TextModelMorph textProvider: self.
 			inputMorph hideScrollBarsIndefinitely.
-			inputMorphLayoutSpec := LayoutSpec fixedWidth: 90 fixedHeight: 15.
-			columnMorph addMorph: inputMorph layoutSpec: inputMorphLayoutSpec.
+			columnMorph addMorph: inputMorph layoutSpec: (LayoutSpec fixedWidth: widthForInputs).
 		].
 	
 		columnMorph.
@@ -207,10 +288,10 @@ withColumns: columnsTitles withRows: rowsTitles
 InputTable class
 	instanceVariableNames: ''!
 
-!InputTable class methodsFor: 'as yet unclassified' stamp: 'FGJ 1/22/2019 15:27:46'!
-withColumns: columnsTitles withRows: rowsTitles
+!InputTable class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 10:40:49'!
+withColumns: columnsTitles withRows: rowsTitles withColor: aColor
 
-	^self newRow withColumns: columnsTitles withRows: rowsTitles. 
+	^self newRow withColumns: columnsTitles withRows: rowsTitles withColor: aColor. 
 	
 	! !
 
@@ -228,8 +309,8 @@ drawOn: aCanvas
 		fillRectangle: self morphLocalBounds
 		color: Color lightGray.! !
 
-!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/1/2019 18:16:32'!
-withLabel: aLabel
+!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:38:21'!
+withLabel: aLabel withWidth: aWidth
 
 	| labelLayoutSpec inputMorphLayoutSpec |
 	
@@ -237,27 +318,16 @@ withLabel: aLabel
 	
 	labelMorph := StringMorph contents: aLabel.
 	labelLayoutSpec := LayoutSpec 
-		fixedWidth: 120
+		fixedWidth: aWidth
 		fixedHeight: labelMorph morphHeight
 		minorDirectionPadding: #center.
 	self addMorph: labelMorph layoutSpec: labelLayoutSpec.
 	
-	"
-	result := TextModelMorph
-				textProvider: self
-				textGetter: #response
-				textSetter: #response:
-				selectionGetter: #selectionInterval.
-	result hasUnacceptedEdits: true.
-	result acceptOnCR: acceptBoolean.
-	result morphExtent: `18@5` * self sizeUnit.
-	self addMorph: result position: `1@2` * self sizeUnit.
-	"
 	inputMorph := TextModelMorph textProvider: self.
 	inputMorph hideScrollBarsIndefinitely.
 	inputMorphLayoutSpec := 
 		LayoutSpec 
-			proportionalWidth: 0.5
+			fixedWidth: (AbstractFont default widthOf: $A) * 30
 			fixedHeight: labelMorph morphHeight + 2.
 	self addMorph: inputMorph layoutSpec: inputMorphLayoutSpec.
 	
@@ -271,10 +341,15 @@ withLabel: aLabel
 LabeledInput class
 	instanceVariableNames: ''!
 
-!LabeledInput class methodsFor: 'as yet unclassified' stamp: 'FGJ 1/18/2019 18:10:59'!
-withLabel: aLabel
+!LabeledInput class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/6/2019 20:39:39'!
+recommendedHeight
 
-	^self newRow withLabel: aLabel! !
+	^AbstractFont default height * 1.8! !
+
+!LabeledInput class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 11:50:57'!
+withLabel: aLabel withWidth: aWidth
+
+	^self newRow withLabel: aLabel withWidth: aWidth! !
 
 
 !classDefinition: #LabeledAutocompletedInput category: #Playground!
