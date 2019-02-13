@@ -1,3 +1,14 @@
+!classDefinition: #IndependentlyColoredButton category: #Playground!
+PluggableButtonMorph subclass: #IndependentlyColoredButton
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Playground'!
+
+!IndependentlyColoredButton methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 12:38:30'!
+adoptWidgetsColor: paneColor! !
+
+
 !classDefinition: #ImmutableTextModelMorph category: #Playground!
 TextModelMorph subclass: #ImmutableTextModelMorph
 	instanceVariableNames: ''
@@ -86,7 +97,7 @@ getMenu
 
 !classDefinition: #ExtractToMethodObjectPanel category: #Playground!
 SystemWindow subclass: #ExtractToMethodObjectPanel
-	instanceVariableNames: 'scrollPane formLayout inputTable preview'
+	instanceVariableNames: 'scrollPane formLayout inputTable preview variablesToParametrize'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Playground'!
@@ -96,126 +107,30 @@ backgroundColor
 
 	^Color lightGray! !
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 12:56:31'!
-buildMorphicWindow
-
-	| classFormGroup requiredExtent columnsNames creationMessageFormGroup variables variablesFormGroup requiredHeight maxLabelWidth inputLayoutSpec previewExplanation previewLayoutSpec |
-	
-	self setLabel: 'Extract Method to Method Object'.
-	
-	self initializeScrollableContainer.
-	self initializeFormLayout.
-	
-	"Method object class section"
-	classFormGroup := FormGroup withTitle: 'Method Object class' withColor: self backgroundColor.
-	maxLabelWidth := self recommendedWidthForLabels: #( 'Name' 'Superclass name' 'Category' 'Evaluation message selector').
-	inputLayoutSpec := LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight.
-	classFormGroup addMorph: (LabeledInput withLabel: 'Name' withWidth: maxLabelWidth) layoutSpec: inputLayoutSpec.
-	classFormGroup addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name' withWidth: maxLabelWidth) layoutSpec: inputLayoutSpec.
-	classFormGroup addMorph: (LabeledInput withLabel: 'Category' withWidth: maxLabelWidth) layoutSpec: inputLayoutSpec.
-	classFormGroup addMorph: (LabeledInput withLabel: 'Evaluation message selector' withWidth: maxLabelWidth) layoutSpec: inputLayoutSpec.
-
-	formLayout
-		addMorph: classFormGroup
-		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: classFormGroup recommendedHeight ).
-
-	
-	"Instance variables section"		
-	variablesFormGroup := FormGroup 
-		withTitle: 'Instance variables names'
-		withExplanation: 'Instance, class and pool variables referenced by the method will be passed as collaborators to the MethodObject. The method object will have one instance variable corresponding to each of them. Pick their names:'
-		withColor: self backgroundColor.
-	variables := #(self anInstVar aClassVar).
-	maxLabelWidth := self recommendedWidthForLabels: variables.
-	variables do: [ :aVariable |
-		variablesFormGroup
-			addMorph: (LabeledInput withLabel: aVariable withWidth: maxLabelWidth) 
-			layoutSpec: inputLayoutSpec].
-	
-	formLayout 
-		addMorph: variablesFormGroup
-		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: variablesFormGroup recommendedHeight ).
-	
-	
-	"Instance creation message section"
-	creationMessageFormGroup := FormGroup
-		withTitle: 'Instance creation message definition'
-		withExplanation: 'The collaborators will be passed in the MethodObject instance creation message. Pick the keyword and the formal parameter name corresponding to each collaborator:'
-		withColor: self backgroundColor .
-	columnsNames := #('Keyword' 'Parameter name').
-	
-	inputTable := InputTable withColumns: columnsNames withRows: variables withColor: self backgroundColor withPreviewModel: self.
-	creationMessageFormGroup addMorph: inputTable.
-	previewExplanation := ImmutableTextModelMorph 
-		withText: 'This is how the instance creation message header will look:'
-		withColor: self backgroundColor
-		withWidth: creationMessageFormGroup width.
-	creationMessageFormGroup addMorph: previewExplanation.
-	
-	preview := TextModelMorph textProvider: self.
-	preview model actualContents: 'All the keywords and parameter names must be filled for the preview to appear here'.
-	preview color: Color white.
-	preview disableEditing.
-	preview drawKeyboardFocusIndicator: false.
-	preview lock: true.
-	
-	previewLayoutSpec := LayoutSpec 
-		proportionalWidth: 0.95
-		fixedHeight: AbstractFont default height * 3.
-	previewLayoutSpec minorDirectionPadding: 0.3.
-	preview layoutSpec: previewLayoutSpec. 
-	
-	creationMessageFormGroup addMorph: preview.
-	
-	formLayout 
-		addMorph: creationMessageFormGroup
-		layoutSpec: (LayoutSpec proportionalWidth: 0.95 fixedHeight: creationMessageFormGroup recommendedHeight ).
-	
-	requiredHeight := classFormGroup recommendedHeight + variablesFormGroup recommendedHeight + creationMessageFormGroup recommendedHeight + (formLayout ySeparation * 4).	
-	
-	requiredExtent := ExtractToMethodObjectPanel recommendedWidth@requiredHeight.
-	formLayout morphExtent: requiredExtent.
-	scrollPane scroller morphExtent: requiredExtent.! !
-
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 11:34:18'!
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 16:59:29'!
 buildPreview
 
 	| keywordParamStrings previewContent |
 	
 	keywordParamStrings := OrderedCollection new.
 	inputTable submorphs allButLast do: [:aSubmorph | | keyword parameterName |
-		keyword := (aSubmorph submorphs at: 3) model actualContents.
-		parameterName := (aSubmorph submorphs at: 2) model actualContents.
+		keyword := (aSubmorph submorphs at: 3) model actualContents string withBlanksTrimmed.
+		parameterName := (aSubmorph submorphs at: 2) model actualContents string withBlanksTrimmed.
+		
+		(keyword isEmpty or: [parameterName isEmpty]) ifTrue: [
+			preview model actualContents: self previewUnavailableMessage.
+			^self].
+		
 		keywordParamStrings addFirst: '', keyword, ': ', parameterName.].
 	
 	previewContent := ' ' join: keywordParamStrings.
 	
 	preview model actualContents: previewContent.! !
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/6/2019 13:12:47'!
-fontPreferenceChanged
-	"Copied from CodePackageListWindow"
-	"System fonts have changed; rebuild myself"
-	self layoutMorph removeAllMorphs.
-	super fontPreferenceChanged.
-	self buildMorphicWindow.
-! !
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/12/2019 15:48:19'!
+layoutSpecForSection: aSection
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:52:59'!
-initializeFormLayout
-
-	formLayout := LayoutMorph newColumn.
-	formLayout separation: 10; color: self backgroundColor.
-	scrollPane scroller addMorph: formLayout.! !
-
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:52:07'!
-initializeScrollableContainer
-
-	scrollPane := ColoredScrollPane initializedInstance.
-	scrollPane scroller color: self backgroundColor.
-	scrollPane scroller layoutSpec: LayoutSpec useAll.
-	scrollPane color: self backgroundColor. 
-	self layoutMorph addMorphUseAll: scrollPane.! !
+	^LayoutSpec proportionalWidth: 0.95 fixedHeight: aSection recommendedHeight! !
 
 !ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 13:03:15'!
 recommendedWidthForLabels: labels
@@ -230,21 +145,243 @@ row: aRowIndex wasSwappedWith: anotherRowIndex
 
 	self buildPreview.! !
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 13:04:47'!
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 16:50:26'!
 shouldStyle: text with: anSHTextStyler
 
-	anSHTextStyler classOrMetaClass: Object.
-	^true! !
-
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 10:44:42'!
-textInputReceivedKeyStroke
-
-	self buildPreview.! !
+	text = self previewUnavailableMessage ifFalse: [
+		anSHTextStyler classOrMetaClass: Object.
+		^true].
+	
+	^false.! !
 
 !ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 12:57:14'!
 textStylerClassFor: textGetter
 
 	^SHTextStylerST80 ! !
+
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:59:00'!
+buildActionButtonsSection
+
+	| section sectionLayoutSpec submorphsWidth sectionWidth submorphsHeight |
+	
+	section := LayoutMorph newRow.
+	section separation: 10.
+	
+	section addMorph: self buildCancelButton.
+	section addMorph: self buildSubmitButton.
+	
+	submorphsWidth := (section submorphs collect: [:aSubmorph | aSubmorph layoutSpec fixedWidth]) sum.
+	sectionWidth := submorphsWidth + (section xSeparation * (section submorphs size + 1)).
+	submorphsHeight := (section submorphs collect: [:aSubmorph | aSubmorph layoutSpec fixedHeight]) max.
+	sectionLayoutSpec := LayoutSpec fixedWidth: sectionWidth fixedHeight: submorphsHeight * 2.
+	sectionLayoutSpec minorDirectionPadding: 0.95.
+
+	section layoutSpec: sectionLayoutSpec.
+	
+	^section.
+	! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:41:09'!
+buildCancelButton
+
+	| button buttonLayoutSpec |
+	
+	button := IndependentlyColoredButton model: self action: #cancelButtonClicked label: 'Cancel'.
+	button color: Theme current cancelButton.
+	
+	buttonLayoutSpec := LayoutSpec 
+		fixedWidth: button morphWidth
+		fixedHeight: ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForHeight  * 2.
+	buttonLayoutSpec minorDirectionPadding: 0.85.
+	button layoutSpec: buttonLayoutSpec.
+	
+	^button! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:48:53'!
+buildInstanceCreationMessageSection	
+	
+	| columnsNames section previewExplanation previewLayoutSpec |
+	
+	section := FormGroup
+		withTitle: 'Instance creation message definition'
+		withExplanation: 'The collaborators will be passed in the MethodObject instance creation message. Pick the keyword and the formal parameter name corresponding to each collaborator:'
+		withColor: self backgroundColor .
+	
+	columnsNames := #('Keyword' 'Parameter name').
+	inputTable := InputTable withColumns: columnsNames withRows: variablesToParametrize withColor: self backgroundColor withPreviewModel: self.
+	section addMorph: inputTable.
+	
+	previewExplanation := ImmutableTextModelMorph 
+		withText: 'This is how the instance creation message header will look:'
+		withColor: self backgroundColor
+		withWidth: section width.
+	section addMorph: previewExplanation.
+	
+	preview := TextModelMorph textProvider: self.
+	preview model actualContents: self previewUnavailableMessage.
+	preview color: Color white.
+	preview disableEditing.
+	preview drawKeyboardFocusIndicator: false.
+	preview lock: true.
+	
+	previewLayoutSpec := LayoutSpec 
+		proportionalWidth: 0.95
+		fixedHeight: ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForHeight * 3.
+	previewLayoutSpec minorDirectionPadding: 0.3.
+	preview layoutSpec: previewLayoutSpec. 
+	
+	section addMorph: preview.
+	
+	section layoutSpec: (self layoutSpecForSection: section).
+	
+	^section! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:48:39'!
+buildInstanceVariablesSection
+
+	| maxLabelWidth section |
+
+	section := FormGroup 
+			withTitle: 'Instance variables names'
+			withExplanation: 'Instance, class and pool variables referenced by the method will be passed as collaborators to the MethodObject. The method object will have one instance variable corresponding to each of them. Pick their names:'
+			withColor: self backgroundColor.
+	
+	maxLabelWidth := self recommendedWidthForLabels: variablesToParametrize.
+	
+	variablesToParametrize do: [ :aVariable | section addMorph: (LabeledInput withLabel: aVariable withWidth: maxLabelWidth)].
+	
+	section layoutSpec: (self layoutSpecForSection: section).
+	
+	^section
+! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:47:58'!
+buildMethodObjectClassSection
+
+	| section maxLabelWidth |
+
+	section := FormGroup withTitle: 'Method Object class' withColor: self backgroundColor.
+
+	maxLabelWidth := self recommendedWidthForLabels: #( 'Name' 'Superclass name' 'Category' 'Evaluation message selector').
+
+	section addMorph: (LabeledInput withLabel: 'Name' withWidth: maxLabelWidth).
+	section addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name' withWidth: maxLabelWidth).
+	section addMorph: (LabeledInput withLabel: 'Category' withWidth: maxLabelWidth).
+	section addMorph: (LabeledInput withLabel: 'Evaluation message selector' withWidth: maxLabelWidth).
+	
+	section layoutSpec: (self layoutSpecForSection: section).
+	
+	^section
+! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:59:25'!
+buildMorphicWindow
+
+	| requiredExtent instanceCreationMessageSection requiredHeight methodObjectClassSection instanceVariablesSection actionButtonsSection |
+	
+	self setLabel: 'Extract Method to Method Object'.
+	variablesToParametrize := #(self anInstVar aClassVar).
+	
+	self initializeScrollableContainer.
+	self initializeFormLayout.
+	scrollPane scroller addMorph: formLayout.
+	
+	"Method object class section"
+	methodObjectClassSection := self buildMethodObjectClassSection.
+	formLayout addMorph: methodObjectClassSection.
+	
+	"Instance variables section"
+	instanceVariablesSection := self buildInstanceVariablesSection.
+	formLayout addMorph: instanceVariablesSection.
+	
+	"Instance creation message section"
+	instanceCreationMessageSection := self buildInstanceCreationMessageSection.
+	formLayout addMorph: instanceCreationMessageSection.
+
+	"Submit & Cancel buttons"
+	actionButtonsSection := self buildActionButtonsSection.
+	formLayout addMorph: actionButtonsSection.
+	
+	requiredHeight := methodObjectClassSection recommendedHeight 
+		+ instanceVariablesSection recommendedHeight 
+		+ instanceCreationMessageSection recommendedHeight 
+		+ actionButtonsSection layoutSpec fixedHeight
+		+ (formLayout ySeparation * 4).
+	
+	requiredExtent := ExtractToMethodObjectPanel recommendedWidth@requiredHeight.
+	formLayout morphExtent: requiredExtent.
+	scrollPane scroller morphExtent: requiredExtent.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:38:47'!
+buildSubmitButton
+
+	| submitButton submitButtonLayoutSpec |
+	
+	submitButton := IndependentlyColoredButton model: self action: #submitButtonClicked label: 'Refactor'.
+	submitButton color: Theme current acceptButton.
+	
+	submitButtonLayoutSpec := LayoutSpec 
+		fixedWidth: submitButton morphWidth
+		fixedHeight: ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForHeight  * 2.
+	submitButtonLayoutSpec minorDirectionPadding: 0.95.
+	submitButton layoutSpec: submitButtonLayoutSpec.
+	
+	^submitButton! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:29:28'!
+initializeFormLayout
+
+	formLayout := LayoutMorph newColumn.
+	formLayout separation: 10; color: self backgroundColor.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/7/2019 12:52:07'!
+initializeScrollableContainer
+
+	scrollPane := ColoredScrollPane initializedInstance.
+	scrollPane scroller color: self backgroundColor.
+	scrollPane scroller layoutSpec: LayoutSpec useAll.
+	scrollPane color: self backgroundColor. 
+	self layoutMorph addMorphUseAll: scrollPane.! !
+
+
+!ExtractToMethodObjectPanel methodsFor: 'messages' stamp: 'FGJ 2/11/2019 16:47:48'!
+previewUnavailableMessage
+
+	^'All the keywords and parameter names must be filled for the preview to appear here'! !
+
+
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/6/2019 13:12:47'!
+fontPreferenceChanged
+	"Copied from CodePackageListWindow"
+	"System fonts have changed; rebuild myself"
+	self layoutMorph removeAllMorphs.
+	super fontPreferenceChanged.
+	self buildMorphicWindow.
+! !
+
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/12/2019 14:50:19'!
+submitButtonClicked
+	
+	"
+	variablesToParametrizeToInstanceVariables := {'self' -> 'thePreviousSelf'.} asDictionary.
+	keywordToParametrizedVariable := {#with -> 'self'.}.
+	
+	refactor := ExtractToMethodObject 
+					from: self compiledMethodReferencingSelf
+					toMethodObjectClassNamed: self methodObjectClassName
+					subclassing: self methodObjectSuperclass
+					onCategory: self classCategoryOfTestData
+					withExtractedVariablesToInstanceVariables: variablesToParametrizeToInstanceVariables
+					withInstanceCreationMessageFrom: keywordToParametrizedVariable
+					evaluatedWith: self defaultEvaluationSelector.
+
+	"! !
+
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/11/2019 10:44:42'!
+textInputReceivedKeyStroke
+
+	self buildPreview.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -252,15 +389,20 @@ textStylerClassFor: textGetter
 ExtractToMethodObjectPanel class
 	instanceVariableNames: ''!
 
-!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 13:08:41'!
-fontProportionalUnitOfReference
+!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 18:27:41'!
+fontProportionalUnitOfReferenceForHeight
+
+	^AbstractFont default height! !
+
+!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 18:27:24'!
+fontProportionalUnitOfReferenceForWidth
 
 	^AbstractFont default widthOf: $A! !
 
-!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 13:08:52'!
+!ExtractToMethodObjectPanel class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 18:27:24'!
 recommendedWidth
 
-	^self fontProportionalUnitOfReference * 70! !
+	^self fontProportionalUnitOfReferenceForWidth * 70! !
 
 
 !classDefinition: #FormGroup category: #Playground!
@@ -279,15 +421,20 @@ drawOn: aCanvas
 		borderStyleSymbol: #simple
 		baseColorForBorder: Color darkGray ! !
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/6/2019 21:05:18'!
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 17:14:45'!
 recommendedHeight
 
-	^((self submorphs collect: [:aMorph | aMorph layoutSpec fixedHeight]) sum) + ( (self submorphs size + 1) * self ySeparation)! !
+	^((self submorphs collect: [:aMorph | aMorph layoutSpec fixedHeight]) sum) + ( (self submorphs size + 1) * self ySeparation) + self verticalMargins! !
 
 !FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 10:57:14'!
 textHeight
 	
 	^AbstractFont default height! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 17:14:53'!
+verticalMargins
+
+	^20! !
 
 !FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:07:50'!
 width
@@ -419,7 +566,7 @@ swapRowSubmorph: aRowIndex with: anotherRowIndex
 	self layoutSubmorphs.! !
 
 
-!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/11/2019 10:42:24'!
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/12/2019 15:09:58'!
 withColumns: inputColumsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel
 
 	| rowsSeparation recommendedHeight textHeight numberOfRows widthForInputs maxRowTitleWidth columnsTitlesRow columnWidths columnsTitles columnSeparation rowsLayoutSpec rowHeight |
@@ -447,7 +594,7 @@ withColumns: inputColumsTitles withRows: rowsTitles withColor: aColor withPrevie
 	maxRowTitleWidth := (rowsTitles collect: [:aRowTitle | AbstractFont default widthOfString: aRowTitle]) max + 20.
 	columnWidths add: maxRowTitleWidth.
 	
-	widthForInputs := ExtractToMethodObjectPanel fontProportionalUnitOfReference * 20.
+	widthForInputs := ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForWidth * 20.
 	inputColumsTitles size timesRepeat: [columnWidths add: widthForInputs].
 	
 	columnWidths add: (AbstractFont default widthOfString: 'Change order').
@@ -461,6 +608,7 @@ withColumns: inputColumsTitles withRows: rowsTitles withColor: aColor withPrevie
 	columnsTitles addFirst: ''; addLast: 'Change order'.
 	columnsTitles withIndexDo: [:aColumnTitle :columnIndex | | columnTitleLayoutSpec titleLayout |
 		titleLayout := LayoutMorph newRow.
+		titleLayout color: aColor.
 		titleLayout padding: #center.
 		titleLayout addMorph: (StringMorph contents: aColumnTitle).
 		columnTitleLayoutSpec := LayoutSpec fixedWidth: (columnWidths at: columnIndex).
@@ -538,12 +686,14 @@ drawOn: aCanvas
 		fillRectangle: self morphLocalBounds
 		color: Color lightGray.! !
 
-!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 13:09:13'!
+!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/12/2019 15:35:40'!
 withLabel: aLabel withWidth: aWidth
 
 	| labelLayoutSpec inputMorphLayoutSpec |
 	
 	self separation: 5.
+	layoutSpec := LayoutSpec proportionalWidth: 0.95 fixedHeight: LabeledInput recommendedHeight.
+	self layoutSpec: layoutSpec.
 	
 	labelMorph := StringMorph contents: aLabel.
 	labelLayoutSpec := LayoutSpec 
@@ -556,7 +706,7 @@ withLabel: aLabel withWidth: aWidth
 	inputMorph hideScrollBarsIndefinitely.
 	inputMorphLayoutSpec := 
 		LayoutSpec 
-			fixedWidth: ExtractToMethodObjectPanel fontProportionalUnitOfReference * 30
+			fixedWidth: ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForWidth * 30
 			fixedHeight: labelMorph morphHeight + 2.
 	self addMorph: inputMorph layoutSpec: inputMorphLayoutSpec.
 	
