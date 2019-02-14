@@ -97,7 +97,7 @@ getMenu
 
 !classDefinition: #ExtractToMethodObjectPanel category: #Playground!
 SystemWindow subclass: #ExtractToMethodObjectPanel
-	instanceVariableNames: 'scrollPane formLayout inputTable preview variablesToParametrize'
+	instanceVariableNames: 'scrollPane formLayout inputTable preview variablesToParametrize extractToMethodObjectRequest discardEdits'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Playground'!
@@ -127,10 +127,10 @@ buildPreview
 	
 	preview model actualContents: previewContent.! !
 
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/12/2019 15:48:19'!
+!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 20:07:25'!
 layoutSpecForSection: aSection
 
-	^LayoutSpec proportionalWidth: 0.95 fixedHeight: aSection recommendedHeight! !
+	^LayoutSpec proportionalWidth: 1.0 fixedHeight: aSection recommendedHeight! !
 
 !ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 13:03:15'!
 recommendedWidthForLabels: labels
@@ -139,11 +139,6 @@ recommendedWidthForLabels: labels
 	
 	rightMargin := 20.
 	^(labels collect: [:aLabel | AbstractFont default widthOfString: aLabel]) max + rightMargin! !
-
-!ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/10/2019 19:04:21'!
-row: aRowIndex wasSwappedWith: anotherRowIndex
-
-	self buildPreview.! !
 
 !ExtractToMethodObjectPanel methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 16:50:26'!
 shouldStyle: text with: anSHTextStyler
@@ -160,13 +155,14 @@ textStylerClassFor: textGetter
 	^SHTextStylerST80 ! !
 
 
-!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:59:00'!
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 14:10:54'!
 buildActionButtonsSection
 
 	| section sectionLayoutSpec submorphsWidth sectionWidth submorphsHeight |
 	
 	section := LayoutMorph newRow.
 	section separation: 10.
+	section color: self backgroundColor.
 	
 	section addMorph: self buildCancelButton.
 	section addMorph: self buildSubmitButton.
@@ -198,7 +194,7 @@ buildCancelButton
 	
 	^button! !
 
-!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:48:53'!
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/14/2019 12:20:15'!
 buildInstanceCreationMessageSection	
 	
 	| columnsNames section previewExplanation previewLayoutSpec |
@@ -209,13 +205,18 @@ buildInstanceCreationMessageSection
 		withColor: self backgroundColor .
 	
 	columnsNames := #('Keyword' 'Parameter name').
-	inputTable := InputTable withColumns: columnsNames withRows: variablesToParametrize withColor: self backgroundColor withPreviewModel: self.
+	inputTable := InputTable 
+		withColumns: columnsNames
+		withRows: variablesToParametrize
+		withColor: self backgroundColor
+		withPreviewModel: self
+		withRefactoringModel: extractToMethodObjectRequest.
 	section addMorph: inputTable.
 	
 	previewExplanation := ImmutableTextModelMorph 
 		withText: 'This is how the instance creation message header will look:'
 		withColor: self backgroundColor
-		withWidth: section width.
+		withWidth: section fixedWidthForTexts.
 	section addMorph: previewExplanation.
 	
 	preview := TextModelMorph textProvider: self.
@@ -237,7 +238,7 @@ buildInstanceCreationMessageSection
 	
 	^section! !
 
-!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:48:39'!
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/14/2019 11:01:33'!
 buildInstanceVariablesSection
 
 	| maxLabelWidth section |
@@ -249,39 +250,57 @@ buildInstanceVariablesSection
 	
 	maxLabelWidth := self recommendedWidthForLabels: variablesToParametrize.
 	
-	variablesToParametrize do: [ :aVariable | section addMorph: (LabeledInput withLabel: aVariable withWidth: maxLabelWidth)].
+	variablesToParametrize do: [ :aVariable | | labeledInput |
+		labeledInput := LabeledInput withLabel: aVariable withWidth: maxLabelWidth.
+		extractToMethodObjectRequest forVariableToParametrize: aVariable nameModel: labeledInput textModel.
+		section addMorph: labeledInput].
 	
 	section layoutSpec: (self layoutSpecForSection: section).
 	
 	^section
 ! !
 
-!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/12/2019 15:47:58'!
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/14/2019 10:58:22'!
 buildMethodObjectClassSection
 
-	| section maxLabelWidth |
+	| section maxLabelWidth nameInput superclassNameInput categoryInput evaluationMessageSelectorInput |
 
 	section := FormGroup withTitle: 'Method Object class' withColor: self backgroundColor.
 
 	maxLabelWidth := self recommendedWidthForLabels: #( 'Name' 'Superclass name' 'Category' 'Evaluation message selector').
 
-	section addMorph: (LabeledInput withLabel: 'Name' withWidth: maxLabelWidth).
-	section addMorph: (LabeledAutocompletedInput withLabel: 'Superclass name' withWidth: maxLabelWidth).
-	section addMorph: (LabeledInput withLabel: 'Category' withWidth: maxLabelWidth).
-	section addMorph: (LabeledInput withLabel: 'Evaluation message selector' withWidth: maxLabelWidth).
+	nameInput := LabeledInput withLabel: 'Name' withWidth: maxLabelWidth.
+	extractToMethodObjectRequest methodObjectClassNameModel: nameInput textModel.
+	section addMorph: nameInput.
+	
+	superclassNameInput := LabeledAutocompletedInput withLabel: 'Superclass name' withWidth: maxLabelWidth.
+	extractToMethodObjectRequest methodObjectSuperclassNameModel: superclassNameInput textModel.
+	section addMorph: superclassNameInput.
+	
+	categoryInput := LabeledInput withLabel: 'Category' withWidth: maxLabelWidth.
+	extractToMethodObjectRequest methodObjectCategoryModel: categoryInput textModel.
+	section addMorph: categoryInput.
+	
+	evaluationMessageSelectorInput := LabeledInput withLabel: 'Evaluation message selector' withWidth: maxLabelWidth.
+	extractToMethodObjectRequest 
+		methodObjectEvaluationMessageSelectorModel: evaluationMessageSelectorInput textModel.
+	section addMorph: evaluationMessageSelectorInput.
 	
 	section layoutSpec: (self layoutSpecForSection: section).
 	
 	^section
 ! !
 
-!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/13/2019 12:59:25'!
+!ExtractToMethodObjectPanel methodsFor: 'GUI building' stamp: 'FGJ 2/14/2019 20:00:03'!
 buildMorphicWindow
 
-	| requiredExtent instanceCreationMessageSection requiredHeight methodObjectClassSection instanceVariablesSection actionButtonsSection |
+	| requiredExtent instanceCreationMessageSection requiredHeight methodObjectClassSection instanceVariablesSection actionButtonsSection requiredWidth sections |
 	
+	discardEdits := false.
 	self setLabel: 'Extract Method to Method Object'.
-	variablesToParametrize := #(self anInstVar aClassVar).
+	variablesToParametrize := model variablesToParametrize.
+	
+	extractToMethodObjectRequest := ExtractToMethodObjectRequest initializedInstance.
 	
 	self initializeScrollableContainer.
 	self initializeFormLayout.
@@ -303,13 +322,13 @@ buildMorphicWindow
 	actionButtonsSection := self buildActionButtonsSection.
 	formLayout addMorph: actionButtonsSection.
 	
-	requiredHeight := methodObjectClassSection recommendedHeight 
-		+ instanceVariablesSection recommendedHeight 
-		+ instanceCreationMessageSection recommendedHeight 
+	sections := { methodObjectClassSection. instanceVariablesSection. instanceCreationMessageSection. }.
+	requiredHeight := (sections collect: [:aSection | aSection recommendedHeight]) sum 
 		+ actionButtonsSection layoutSpec fixedHeight
 		+ (formLayout ySeparation * 4).
-	
-	requiredExtent := ExtractToMethodObjectPanel recommendedWidth@requiredHeight.
+	requiredWidth := (sections collect: [:aSection | aSection recommendedWidth]) max + (formLayout xSeparation * 2).
+
+	requiredExtent := requiredWidth@requiredHeight.
 	formLayout morphExtent: requiredExtent.
 	scrollPane scroller morphExtent: requiredExtent.! !
 
@@ -351,6 +370,11 @@ previewUnavailableMessage
 	^'All the keywords and parameter names must be filled for the preview to appear here'! !
 
 
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/13/2019 15:29:04'!
+cancelButtonClicked
+	
+	model cancel.! !
+
 !ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/6/2019 13:12:47'!
 fontPreferenceChanged
 	"Copied from CodePackageListWindow"
@@ -360,28 +384,39 @@ fontPreferenceChanged
 	self buildMorphicWindow.
 ! !
 
-!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/12/2019 14:50:19'!
-submitButtonClicked
-	
-	"
-	variablesToParametrizeToInstanceVariables := {'self' -> 'thePreviousSelf'.} asDictionary.
-	keywordToParametrizedVariable := {#with -> 'self'.}.
-	
-	refactor := ExtractToMethodObject 
-					from: self compiledMethodReferencingSelf
-					toMethodObjectClassNamed: self methodObjectClassName
-					subclassing: self methodObjectSuperclass
-					onCategory: self classCategoryOfTestData
-					withExtractedVariablesToInstanceVariables: variablesToParametrizeToInstanceVariables
-					withInstanceCreationMessageFrom: keywordToParametrizedVariable
-					evaluatedWith: self defaultEvaluationSelector.
-
-	"! !
-
-!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/11/2019 10:44:42'!
-textInputReceivedKeyStroke
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/14/2019 11:37:10'!
+previewTextInputReceivedKeyStroke
 
 	self buildPreview.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/10/2019 19:04:21'!
+row: aRowIndex wasSwappedWith: anotherRowIndex
+
+	self buildPreview.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'events' stamp: 'FGJ 2/14/2019 17:41:50'!
+submitButtonClicked
+
+	model userSubmitted: extractToMethodObjectRequest.! !
+
+
+!ExtractToMethodObjectPanel methodsFor: 'open/close' stamp: 'FGJ 2/13/2019 16:00:39'!
+closeBoxHit
+
+	model panelWasClosed.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'open/close' stamp: 'FGJ 2/14/2019 19:58:44'!
+deleteDiscardingEdits
+	
+	discardEdits := true.
+	super delete.! !
+
+!ExtractToMethodObjectPanel methodsFor: 'open/close' stamp: 'FGJ 2/14/2019 19:59:35'!
+okToChange
+	
+	discardEdits 
+		ifTrue: [^true]
+		ifFalse: [super okToChange].! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -421,10 +456,20 @@ drawOn: aCanvas
 		borderStyleSymbol: #simple
 		baseColorForBorder: Color darkGray ! !
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 17:14:45'!
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 18:58:22'!
+fixedWidthForTexts
+
+	^ExtractToMethodObjectPanel recommendedWidth * 0.7! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 18:17:02'!
 recommendedHeight
 
 	^((self submorphs collect: [:aMorph | aMorph layoutSpec fixedHeight]) sum) + ( (self submorphs size + 1) * self ySeparation) + self verticalMargins! !
+
+!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 20:06:15'!
+recommendedWidth
+
+	^(self submorphs collect: [:aMorph | aMorph layoutSpec fixedWidth]) max + (self xSeparation * 2)! !
 
 !FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 10:57:14'!
 textHeight
@@ -436,13 +481,8 @@ verticalMargins
 
 	^20! !
 
-!FormGroup methodsFor: 'as yet unclassified' stamp: 'FGJ 2/7/2019 12:07:50'!
-width
 
-	^ExtractToMethodObjectPanel recommendedWidth * 0.7! !
-
-
-!FormGroup methodsFor: 'initialization' stamp: 'FGJ 2/9/2019 19:43:51'!
+!FormGroup methodsFor: 'initialization' stamp: 'FGJ 2/13/2019 18:57:34'!
 initializeWithTitle: aTitle withExplanation: anExplanation withColor: aColor
 
 	| titleLayoutSpec |
@@ -468,7 +508,7 @@ initializeWithTitle: aTitle withExplanation: anExplanation withColor: aColor
 		explanationMorph := ImmutableTextModelMorph 
 			withText: anExplanation 
 			withColor: aColor
-			withWidth: self width.
+			withWidth: self fixedWidthForTexts.
 		self addMorph: explanationMorph.
 	].! !
 
@@ -491,7 +531,7 @@ withTitle: aTitle withExplanation: anExplanation withColor: aColor
 
 !classDefinition: #InputTable category: #Playground!
 LayoutMorph subclass: #InputTable
-	instanceVariableNames: 'title borderMorph titleContainer titleMorph titleContainerLayoutSpec columns rowModels previewModel'
+	instanceVariableNames: 'rowModels previewModel backgroundColor refactoringModel columnWidths'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Playground'!
@@ -508,25 +548,19 @@ isBottomRow: aRowIndex
 
 	^aRowIndex == 1! !
 
-!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/10/2019 18:48:09'!
+!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 17:01:04'!
 moveDownRow: aRowIndex
 
 	(self isBottomRow: aRowIndex) ifFalse: [
-		self swapRowSubmorph: aRowIndex with: aRowIndex -1.
-		self swapRowModel: aRowIndex with: aRowIndex - 1.
-		self notifyPreviewModelThat: aRowIndex wasSwappedWith: aRowIndex - 1.
-		
+		self swapRow: aRowIndex with: aRowIndex -1.
 		self rowWasMovedDown: aRowIndex - 1.
 		self rowWasMovedUp: aRowIndex.].! !
 
-!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/10/2019 18:50:19'!
+!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 17:01:10'!
 moveUpRow: aRowIndex
 
 	aRowIndex <  self numberOfRowsWithoutHeaders ifTrue: [
-		self swapRowSubmorph: aRowIndex with: aRowIndex + 1.
-		self swapRowModel: aRowIndex with: aRowIndex + 1.
-		self notifyPreviewModelThat: aRowIndex wasSwappedWith: aRowIndex + 1.
-		
+		self swapRow: aRowIndex with: aRowIndex + 1.
 		self rowWasMovedUp: aRowIndex + 1.
 		self rowWasMovedDown: aRowIndex.].! !
 
@@ -535,20 +569,23 @@ notifyPreviewModelThat: aRowIndex wasSwappedWith: anotherRowIndex
 
 	previewModel row: aRowIndex wasSwappedWith: anotherRowIndex.! !
 
+!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 17:03:43'!
+notifyRefactoringModelThat: aRowIndex wasSwappedWith: anotherRowIndex
+
+	refactoringModel keywordOfIndex: aRowIndex wasSwappedWithKeywordOfIndex: anotherRowIndex.! !
+
 !InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/9/2019 16:59:36'!
 numberOfRowsWithoutHeaders
 
 	^self submorphs size - 1! !
 
-!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/9/2019 17:20:09'!
-rowWasMovedDown: aRowIndex
+!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 17:01:38'!
+swapRow: aRowIndex with: anotherRowIndex
 
-	(rowModels at: aRowIndex) wasMovedDown.! !
-
-!InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/9/2019 17:20:24'!
-rowWasMovedUp: aRowIndex
-
-	(rowModels at: aRowIndex) wasMovedUp.! !
+	self swapRowSubmorph: aRowIndex with: anotherRowIndex.
+	self swapRowModel: aRowIndex with: anotherRowIndex.
+	self notifyPreviewModelThat: aRowIndex wasSwappedWith: anotherRowIndex.
+	self notifyRefactoringModelThat: aRowIndex wasSwappedWith: anotherRowIndex.! !
 
 !InputTable methodsFor: 'as yet unclassified' stamp: 'FGJ 2/9/2019 17:16:44'!
 swapRowModel: aRowIndex with: anotherRowIndex
@@ -566,98 +603,174 @@ swapRowSubmorph: aRowIndex with: anotherRowIndex
 	self layoutSubmorphs.! !
 
 
-!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/12/2019 15:09:58'!
-withColumns: inputColumsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/13/2019 14:16:02'!
+backgroundColor
 
-	| rowsSeparation recommendedHeight textHeight numberOfRows widthForInputs maxRowTitleWidth columnsTitlesRow columnWidths columnsTitles columnSeparation rowsLayoutSpec rowHeight |
+	^backgroundColor ! !
 
-	rowModels := OrderedCollection new.
-	previewModel := aPreviewModel.
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/13/2019 14:14:52'!
+buildChangeOrderButtonsWith: aModel
 
-	rowsSeparation := 4.
-	self separation: rowsSeparation.
+	| downButton layoutButtons upButton |
 	
-	textHeight := AbstractFont default height.
-	numberOfRows := (rowsTitles size + 1).
-	rowHeight := textHeight * 1.6.
-	recommendedHeight :=  rowHeight * numberOfRows + (rowsSeparation * (numberOfRows + 1)).
-	self layoutSpec: (LayoutSpec fixedHeight: recommendedHeight).
+	upButton := PluggableButtonMorph new.
+	upButton icon: Theme current goUpIcon.
+	upButton model: aModel.
+	upButton action: #moveUp.
+			
+	downButton := PluggableButtonMorph new.
+	downButton icon: Theme current goDownIcon.
+	downButton model: aModel.
+	downButton action: #moveDown.
 	
-	columnSeparation := 4.
+	layoutButtons := LayoutMorph newRow.
+	layoutButtons padding: #center; color: self backgroundColor.
+	layoutButtons addMorph: downButton; addMorph: upButton.	
 	
-	rowsLayoutSpec := LayoutSpec fixedHeight: rowHeight.
+	^layoutButtons! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 12:19:23'!
+buildColumnTitlesRowFor: inputColumnsTitles
+
+	| columnsTitles row |
 	
+	row := LayoutMorph newRow.
+	row color: self backgroundColor.
+	row separation: self columnSeparation.
 	
-	"Calculate column widths"
+	columnsTitles := OrderedCollection newFrom: inputColumnsTitles.
+	columnsTitles addFirst: ''; addLast: 'Change order'.
+	columnsTitles withIndexDo: [:aColumnTitle :columnIndex | | columnTitleLayoutSpec titleLayout |
+		titleLayout := LayoutMorph newRow.
+		titleLayout color: self backgroundColor .
+		titleLayout padding: #center.
+		titleLayout addMorph: (StringMorph contents: aColumnTitle).
+		columnTitleLayoutSpec := LayoutSpec fixedWidth: (columnWidths at: columnIndex).
+		row 
+			addMorph: titleLayout
+			layoutSpec: columnTitleLayoutSpec].
+		
+	^row
+	
+	! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 14:14:16'!
+buildInputMorph
+
+	| inputMorph |
+	
+	inputMorph := PreviewTextModelMorph textProvider: self.
+	inputMorph textMorph previewModel: previewModel.
+			
+	inputMorph hideScrollBarsIndefinitely.
+	
+	^inputMorph! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 12:14:23'!
+columnSeparation
+
+	^4! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 11:56:07'!
+columnWidthsRequiredForRowTitles: rowsTitles forInputColumns: numberOfInputColumns
+
+	| columnWidths maxRowTitleWidth widthForInputs |
+	
 	columnWidths := OrderedCollection new.
 	
 	maxRowTitleWidth := (rowsTitles collect: [:aRowTitle | AbstractFont default widthOfString: aRowTitle]) max + 20.
 	columnWidths add: maxRowTitleWidth.
 	
 	widthForInputs := ExtractToMethodObjectPanel fontProportionalUnitOfReferenceForWidth * 20.
-	inputColumsTitles size timesRepeat: [columnWidths add: widthForInputs].
+	numberOfInputColumns timesRepeat: [columnWidths add: widthForInputs].
 	
 	columnWidths add: (AbstractFont default widthOfString: 'Change order').
 	
+	^columnWidths
+	
+	! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 12:09:59'!
+rowHeight
+
+	^AbstractFont default height * 1.6! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 12:11:01'!
+rowsLayoutSpec
+
+	^LayoutSpec fixedHeight: self rowHeight! !
+
+!InputTable methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 17:23:02'!
+withColumns: inputColumnsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel withRefactoringModel: aRefactoringModel
+
+	| rowsSeparation recommendedHeight numberOfRows columnsTitlesRow changeOrderButtons tableWidth |
+	
+	backgroundColor := aColor.
+	rowModels := OrderedCollection new.
+	previewModel := aPreviewModel.
+	refactoringModel := aRefactoringModel.
+
+	rowsSeparation := 4.
+	self separation: rowsSeparation.
+	
+	"Calculate table height"
+	numberOfRows := (rowsTitles size + 1).
+	recommendedHeight :=  self rowHeight * numberOfRows + (rowsSeparation * (numberOfRows + 1)).
+	
+	"Calculate column widths"
+	columnWidths := self columnWidthsRequiredForRowTitles: rowsTitles forInputColumns: inputColumnsTitles size.
+		
+	"Calculate table width"
+	tableWidth := columnWidths sum + (self columnSeparation * (columnWidths size + 1)).
+	
+	self layoutSpec: (LayoutSpec fixedWidth: tableWidth fixedHeight: recommendedHeight).
+	
 	
 	"Buid the columns titles row"
-	columnsTitlesRow := LayoutMorph newRow.
-	columnsTitlesRow color: aColor; separation: columnSeparation.
-	
-	columnsTitles := OrderedCollection newFrom: inputColumsTitles.
-	columnsTitles addFirst: ''; addLast: 'Change order'.
-	columnsTitles withIndexDo: [:aColumnTitle :columnIndex | | columnTitleLayoutSpec titleLayout |
-		titleLayout := LayoutMorph newRow.
-		titleLayout color: aColor.
-		titleLayout padding: #center.
-		titleLayout addMorph: (StringMorph contents: aColumnTitle).
-		columnTitleLayoutSpec := LayoutSpec fixedWidth: (columnWidths at: columnIndex).
-		columnsTitlesRow 
-			addMorph: titleLayout
-			layoutSpec: columnTitleLayoutSpec].
-	
-	self addMorph: columnsTitlesRow layoutSpec: rowsLayoutSpec.
+	columnsTitlesRow := self buildColumnTitlesRowFor: inputColumnsTitles.
+	self addMorph: columnsTitlesRow layoutSpec: self rowsLayoutSpec.
 	
 	"Build the input rows"
-	rowsTitles withIndexDo: [:aRowTitle :index | | aRow changeOrderModel upButton downButton layoutButtons |
+	rowsTitles withIndexDo: [:aRowTitle :index | | aRow changeOrderModel upButton downButton layoutButtons keywordModel keywordInputMorph inputMorphLayoutSpec parameternameInputMorph |
 		aRow := LayoutMorph newRow.
-		aRow color: aColor; separation: columnSeparation.
+		aRow color: self backgroundColor; separation: self columnSeparation.
 		
 		aRow 
 			addMorph: (StringMorph contents: aRowTitle)
 			layoutSpec: (LayoutSpec fixedWidth: (columnWidths at: 1)).
 			
-		inputColumsTitles withIndexDo: [:ignore :columnIndex | | inputMorph |
-			inputMorph := PreviewTextModelMorph textProvider: self.
-			inputMorph textMorph previewModel: aPreviewModel.
-			inputMorph hideScrollBarsIndefinitely.
-			aRow 
-				addMorph: inputMorph 
-				layoutSpec: (LayoutSpec fixedWidth: (columnWidths at: columnIndex + 1) fixedHeight: rowHeight)].
+		inputMorphLayoutSpec := LayoutSpec fixedWidth: (columnWidths at: 2) fixedHeight: self rowHeight.
 		
-		changeOrderModel := ChangeRowOrderButtonModel for: (rowsTitles size + 1 - index) notifying: self.
+		keywordInputMorph := self buildInputMorph.
+		aRow addMorph: keywordInputMorph layoutSpec: inputMorphLayoutSpec.
+		
+		parameternameInputMorph := self buildInputMorph.
+		aRow addMorph: parameternameInputMorph layoutSpec: inputMorphLayoutSpec.
+		
+		aRefactoringModel 
+			addKeyword: keywordInputMorph model 
+			for: aRowTitle
+			withParameterName: parameternameInputMorph model.
+				
+		changeOrderModel := ChangeRowOrderButtonModel for: (rowsTitles size - (index - 1)) notifying: self.
 		rowModels addFirst: changeOrderModel.
 		
-		upButton := PluggableButtonMorph new.
-		upButton icon: Theme current goUpIcon.
-		upButton model: changeOrderModel.
-		upButton action: #moveUp.
-				
-		downButton := PluggableButtonMorph new.
-		downButton icon: Theme current goDownIcon.
-		downButton model: changeOrderModel.
-		downButton action: #moveDown.
-		
-		layoutButtons := LayoutMorph newRow.
-		layoutButtons padding: #center; color: aColor.
-		layoutButtons addMorph: downButton; addMorph: upButton.	
-		
-		aRow
-			addMorph: layoutButtons
-			layoutSpec: (LayoutSpec fixedWidth: (columnWidths last)).
+		changeOrderButtons := self buildChangeOrderButtonsWith: changeOrderModel.
+		aRow addMorph: changeOrderButtons layoutSpec: (LayoutSpec fixedWidth: (columnWidths last)).
 			
-		self addMorph: aRow layoutSpec: rowsLayoutSpec.
+		self addMorph: aRow layoutSpec: self rowsLayoutSpec.
 	].! !
+
+
+!InputTable methodsFor: 'events' stamp: 'FGJ 2/9/2019 17:20:09'!
+rowWasMovedDown: aRowIndex
+
+	(rowModels at: aRowIndex) wasMovedDown.! !
+
+!InputTable methodsFor: 'events' stamp: 'FGJ 2/9/2019 17:20:24'!
+rowWasMovedUp: aRowIndex
+
+	(rowModels at: aRowIndex) wasMovedUp.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -665,10 +778,10 @@ withColumns: inputColumsTitles withRows: rowsTitles withColor: aColor withPrevie
 InputTable class
 	instanceVariableNames: ''!
 
-!InputTable class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/10/2019 18:33:48'!
-withColumns: columnsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel
+!InputTable class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 12:20:49'!
+withColumns: columnsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel withRefactoringModel: aRefactoringModel
 
-	^self newColumn withColumns: columnsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel. 
+	^self newColumn withColumns: columnsTitles withRows: rowsTitles withColor: aColor withPreviewModel: aPreviewModel withRefactoringModel: aRefactoringModel. 
 	
 	! !
 
@@ -685,6 +798,11 @@ drawOn: aCanvas
 	aCanvas
 		fillRectangle: self morphLocalBounds
 		color: Color lightGray.! !
+
+!LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/13/2019 17:11:46'!
+textModel
+
+	^inputMorph model! !
 
 !LabeledInput methodsFor: 'as yet unclassified' stamp: 'FGJ 2/12/2019 15:35:40'!
 withLabel: aLabel withWidth: aWidth
@@ -750,12 +868,12 @@ InnerTextMorph subclass: #PreviewInnerTextMorph
 	poolDictionaries: ''
 	category: 'Playground'!
 
-!PreviewInnerTextMorph methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 11:24:57'!
+!PreviewInnerTextMorph methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 11:37:10'!
 keyStroke: aKeyboardEvent
 	
 	super keyStroke: aKeyboardEvent.
 	
-	previewModel textInputReceivedKeyStroke.! !
+	previewModel previewTextInputReceivedKeyStroke.! !
 
 !PreviewInnerTextMorph methodsFor: 'as yet unclassified' stamp: 'FGJ 2/11/2019 10:40:05'!
 previewModel: aPreviewModel
@@ -807,3 +925,115 @@ ChangeRowOrderButtonModel class
 for: aRowIndex notifying: aTableModel
 
 	^self new for: aRowIndex notifying: aTableModel! !
+
+
+!classDefinition: #ExtractToMethodObjectRequest category: #Playground!
+Object subclass: #ExtractToMethodObjectRequest
+	instanceVariableNames: 'methodObjectClassNameModel methodObjectCategoryModel methodObjectSuperclassNameModel methodObjectEvaluationMessageSelectorModel variableToParametrizeToInstVarNameModel instanceCreationMessageModels'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Playground'!
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 14:19:54'!
+addToKeywords: keywordModel
+
+	instanceCreationMessageModels add: keywordModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 11:02:18'!
+forVariableToParametrize: aVariable nameModel: aModel
+
+	variableToParametrizeToInstVarNameModel at: aVariable put: aModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 11:07:57'!
+instVarNameFor: aVariableToParametrize
+
+	^(variableToParametrizeToInstVarNameModel at: aVariableToParametrize) actualContents! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 17:04:31'!
+keywordOfIndex: aKeywordIndex wasSwappedWithKeywordOfIndex: anotherKeywordIndex
+
+	instanceCreationMessageModels swap: aKeywordIndex with: anotherKeywordIndex.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 10:59:26'!
+methodObjectCategoryModel: aModel
+
+	methodObjectCategoryModel := aModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 10:58:55'!
+methodObjectClassNameModel: aModel
+	
+	methodObjectClassNameModel := aModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 11:00:19'!
+methodObjectEvaluationMessageSelectorModel: aModel
+	
+	methodObjectEvaluationMessageSelectorModel := aModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 10:59:54'!
+methodObjectSuperclassNameModel: aModel
+	
+	methodObjectSuperclassNameModel := aModel.! !
+
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:48:55'!
+keywordToParametrizedVariable
+
+	^instanceCreationMessageModels collect: [:aModel |
+		Association 
+			key: (aModel at: #keyword) actualContents string
+			value: (aModel at: #variableName)]! !
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:49:00'!
+methodObjectCategory
+
+	^methodObjectCategoryModel actualContents string! !
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:55:15'!
+methodObjectClassName
+
+	^methodObjectClassNameModel actualContents string asSymbol ! !
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:49:10'!
+methodObjectEvaluationMessageSelector
+
+	^methodObjectEvaluationMessageSelectorModel actualContents string! !
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:49:16'!
+methodObjectSuperclassName
+
+	^methodObjectSuperclassNameModel actualContents string! !
+
+!ExtractToMethodObjectRequest methodsFor: 'accessing' stamp: 'FGJ 2/14/2019 17:49:23'!
+variablesToParametrizeToInstanceVariables
+
+	^variableToParametrizeToInstVarNameModel collect: [:aInstVarNameModel | aInstVarNameModel actualContents string]! !
+
+
+!ExtractToMethodObjectRequest methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 17:25:45'!
+addKeyword: aKeywordModel for: aVariableName withParameterName: aParameterNameModel
+
+	| keywordModel |
+	
+	keywordModel := Dictionary new.
+	keywordModel at: #variableName put: aVariableName.
+	keywordModel at: #keyword put: aKeywordModel.
+	keywordModel at: #parameterName put: aParameterNameModel.
+	
+	instanceCreationMessageModels add: keywordModel.! !
+
+!ExtractToMethodObjectRequest methodsFor: 'initialization' stamp: 'FGJ 2/14/2019 11:14:55'!
+initialize
+
+	variableToParametrizeToInstVarNameModel := Dictionary new.
+	instanceCreationMessageModels := OrderedCollection new.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'ExtractToMethodObjectRequest class' category: #Playground!
+ExtractToMethodObjectRequest class
+	instanceVariableNames: ''!
+
+!ExtractToMethodObjectRequest class methodsFor: 'as yet unclassified' stamp: 'FGJ 2/14/2019 11:04:56'!
+initializedInstance
+
+	^self new initialize.! !
