@@ -1,0 +1,11 @@
+{
+    "editor.rulers": [100],
+    "todo-tree.regex": "((%|//|#|<!--|;|/\\*|^)\\s*($TAGS)|^\\s*- \\[ \\])",
+    "todo-tree.tags": [
+        "TODO",
+        "FIXME",
+        "REF",
+        "WRITE"
+    ]
+
+}
