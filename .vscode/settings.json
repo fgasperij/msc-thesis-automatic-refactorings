@@ -6,6 +6,6 @@
         "FIXME",
         "REF",
         "WRITE"
-    ]
-
+    ],
+	"latex-workshop.latex.autoBuild.run": "never",
 }
