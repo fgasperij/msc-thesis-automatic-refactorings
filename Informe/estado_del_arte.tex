@@ -1,4 +1,5 @@
 \section{Introducción a los refactorings, su historia y razón de ser}
+
 % De dónde salieron los refactorings
 \subsection{Desarrollo de software evolutivo}
 % Los proyectos de software evolucionan
@@ -82,7 +83,6 @@ incrementará los costos de extensibilidad, el tiempo de desarrollo se verá afe
 
 
 \subsection{Técnicas para preservar la mantenibilidad}
-
 Las decisiones de mantenimiento pueden ser más eficientes aceptando esta realidad del proceso de
 desarrollo, su esencia evolutiva. Existen varias metodologías de desarrollo de software con enfoques
 distintos y prioridades diferentes. Las metodologías ágiles engloban a varios frameworks de desarrollo
@@ -91,7 +91,7 @@ cuales prima la aceptación del cambio como guía del desarrollo. Algunos ejempl
 
 % REF a los frameworks
 \begin{itemize}
-    \item extreme programming (XP)
+    \item Extreme Programming (XP)
     \item Kanban
     \item Scrum
 \end{itemize}
@@ -103,6 +103,7 @@ entonces las modificaciones que le realiza lo vuelven más complejo. La erosión
 porque no es posible anticipar los cambios que se le realizarán al software en el futuro entonces el
 diseño original no es apropiado para incorporar todos los cambios que se le realizan luego al
 sistema. 
+
 
 \subsection{Los refactorings}
 Una de las prácticas del proceso continuo que propone XP para evitar la erosión es la de refactoring.
@@ -123,10 +124,6 @@ futuros cambios o funcionalidades que haya que agregarle. Por ejemplo, si se des
 funcionalidad y el diseño no la contempló originalmente se puede agregar al diseño actual o cambiar
 el diseño primero para que agregar la funcionalidad sea más simple y se pueda seguir extendiendo el
 software en esa dirección más fácilmente.
-
-
-
-
 
 
 
@@ -198,7 +195,7 @@ Los principales desafíos que presenta la investigación de refactorings son:
 \end{itemize}
 
 
-\subsection{Refactorings automáticos}
+\section{Refactorings automáticos}
 Extreme Programming acepta que el software evoluciona y el diseño constantemente cambia. La
 adaptación del software requiere energía del desarrollador constante y es necesaria para que la
 complejidad no crezca demasiado. Cambiar el diseño aplicando refactorings para que la complejidad
@@ -273,37 +270,73 @@ desarrollador crear sus propios refactorings automatizados y luego utilizarlos.
 
 
 \section{Refactorings automáticos de alto nivel}
-Existen opiniones encontradas. Algunos opinan que cuanto más se automatice mejor ya que modificar el
-código es una operación delicada, menor intervención humana implicaría menor espacio para el error.
-Sin embargo, estudios acerca de la utilización de estas herramientas no arrojan resultados claros
-que indiquen que los desarrolladores las utilicen con la frecuencia esperada. Incluso la correlación
-entre la complejidad del refactoring (cuán alto es su nivel) y la frecuencia de su utilización se
-muestra inversa. No queda claro a qué se debe esto. Hay estudios que intentan entender a qué se debe
-esto y cómo construir herramientas que automaticen los cambios y que los desarrolladores utilicen.
-(A discussion of software..) Los refactorings deben ser más complejos para poder ayudar al
-desarrollo de proyectos grandes. Por lo tanto, las herramientas deberían permitir componer
-refactorings para poder construir más complejos.
-(Practical Analysis for refactoring) La aplicación de patrones de diseño se correspondería con
-refactorings compuestos que permitirían ahorrar mucha energía del desarrollador y explorar opciones
-de diseño con un costo menor.
-(A Refactoring Tool... A Compositional Paradigm) Los refactorings complejos deberían realizarse como
-la composición de refactorings más simples automáticos. Algunos refactorings se realizan comúnmente
-y es tedioso realizarlos incluso con refactorings automáticos más simples porque no es fácil
-encontrar refactorings intermedios que simplifiquen la tarea (por ejemplo, introduce null object,
-cómo lo partirías en refactorings simples?)
-¿Qué forma toman los refactorings de alto nivel? por qué? Los refactorings de alto nivel son
-combinaciones comunes de refactorings más simples que pueden o no tener una semántica clara a nivel
-diseño del sistema. Los patrones de diseño son soluciones a problemas de diseño que surgen
-frecuentemente al construir sistemas con lenguajes orientados a objetos. Los patrones de diseño son
-soluciones vagamente definidas al nivel del diseño de un sistema que le permiten soportar cierta
-funcionalidad con más calidad. Su presencia es común y es por eso que los refactorings de alto nivel
-automáticos intentan aplicar estos patrones generalmente. Hay varios ejemplos de papers.
+% Qué son los refactorings de alto nivel?
+Los refactorings de alto nivel reciben su nombre por el nivel de abstracción al cual operan. Éstos
+suelen ser combinaciones comunes de refactorings más simples, o de bajo nivel, que pueden o no tener
+una semántica clara al nivel del diseño del sistema. Los refactorings de bajo nivel manipulan el código en
+un contexto más reducido. Ejemplos de refactorings de bajo nivel son:
 
-(A Methodology for the Automated Introduction of Design Pattern) Los refactorings de alto nivel
+\begin{itemize}
+    \item renombrar variables o métodos
+    \item nombrar constantes
+    \item extraer código a un método
+    \item inline de un método
+    \item cambiar la aridad de un método
+\end{itemize}
+
+Los de alto nivel son menos específicos pero tienen un alcance mayor:
+
+\begin{itemize}
+    \item introducción de un patrón de diseño
+    \item división de una clase en dos que colaboran
+    \item cambios a una jerarquía de clases del modelo
+\end{itemize}
+
+Estos refactorings realizan cambios que suelen tener una semántica en el nivel de diseño del modelo
+del sistema.
+
+% Intro sobre motivación de hacer de más alto nivel, ¿garpa o no garpa?
+Las investigaciones todavía no determinan si es mejor que los refactorings sean de más alto nivel.
+Modificar el código es una operación delicada, cuanto más se automaticen los cambios que debe
+realizar el desarrollador menor intervención humana y por lo tanto menor espacio para el error. Sin
+embargo, estudios acerca de la utilización de estas herramientas no arrojan resultados claros que
+indiquen que los desarrolladores las utilicen con la frecuencia esperada. Incluso la correlación
+entre la complejidad del refactoring (cuán alto es su nivel) y la frecuencia de su utilización se ha
+% REF programmer friendly y fitness for purpose
+mostrado inversa. Hay estudios que intentan entender a qué se debe esto y cómo construir
+herramientas que automaticen los cambios y que los desarrolladores utilicen.
+
+% Argumentos a favor de alto nivel
+% REF A discussion of software..) 
+(A discussion of software...) sostiene que los refactorings deben ser más complejos para poder
+ayudar al desarrollo de proyectos grandes, es decir que los refactorings simple no escalan para ser
+realmente útiles en el contexto de proyectos de mayor envergadura. Por lo tanto, las herramientas de
+refactoring deberían permitir al desarrollador componer refactorings para poder construir más
+complejos. La posibilidad de componer refactorings le proveería a las herramientas la escalabilidad
+necesaria.
+
+A la hora de decidir cómo implemtar y proveer refactorings de alto nivel se dividen dos vertientes:
+
+\begin{itemize}
+    \item compuestos: proveer refactorings simples que se compongan bien o proveer una buena forma
+    de componerlos.
+    \item compactos: proveer refactorings cuya unidad sea un cambio que tengan semántica a nivel
+    diseño.
+\end{itemize}
+
+% Cómo implementar esos refactorings de alto nivel
+% REF a refactoring tool... a compositional paradigm
+(A Refactoring Tool... A Compositional Paradigm) sostiene que los refactorings complejos deberían
+realizarse componiendo refactorings más simples. Sin embargo, algunos refactorings se realizan
+comúnmente y es tedioso realizarlos incluso con refactorings automáticos más simples porque no es
+fácil encontrar refactorings intermedios que simplifiquen la tarea. 
+
+% Características de los refactorings de alto nivel
+% REF A Methodology for the Automated Introduction of Design Patterns
+(A Methodology for the Automated Introduction of Design Pattern) muestra que los refactorings de alto nivel
 tienen más puntos de partida posibles y más destinos posibles ya que, a diferencia de refactorings
 más primitivos, están definidos de forma más relajada. Se puede decir que cuanto más alto el nivel
-de un refactoring menos específica es su definición. Se han clasificado los distintos puntos de
-partida posibles: 
+de un refactoring menos específica es su definición. Los distintos puntos de partida posibles son: 
 
 \begin{itemize}
     \item hoja en blanco: las entidades que se relacionarían en el patrón de diseño no se conocen
@@ -314,24 +347,37 @@ partida posibles:
     extensión debe cambiarse.
 \end{itemize}
 
-\section{Introducción de patrones de diseño}
-Al automatizar refactorings se
-quiere automatizar lo más posible para ahorrar la mayor cantidad de energía y tiempo del
-desarrollador, y al nivel más expresivo posible para que la aplicación del refactoring esté lo más
-cerca del nivel de abstracción al que está pensando el desarrollador el cambio. Las fuerzas que se
-contraponen son expresividad y precisión. Cuanto más alto el nivel de abstracción, más difícil es
-precisar a nivel de código en qué consiste el cambio. Los patrones de diseño presentan un balance
-atractivo porque son cambios semántico suficientemente específicos para precisarlos en el código que
-además están cerca de la forma que tiene el desarrollador de pensar su cambio.
 
-¿En qué escenarios se utilizarían estos refactorings? El desarrollador tiene que agregar una nueva
-funcionalidad al sistema pero su diseño actual no la acomoda de manera simple. El desarrollador
-identifica dónde puede realizar un cambio para lograr la flexibilidad deseada y qué cambio quiere
-realizar (la introducción de un patrónde diseño). En ese momento se puede automatizar la aplicación
-del refactoring. patrones de diseño (null object pattern paper) Se ha explorado la introducción
-automática de patrones de diseño orientada a root canal refactoring, ya que son herramientas que en
-batch analizan todo el código, presentan los candidatos identificados y proveen la opción de aplicar
-el refactoring. Las investigaciones se pueden clasificar según el tipo de patrones que analizaron:
+
+\section{Introducción de patrones de diseño}
+% Qué son los patrones de diseño
+Los patrones de diseño son soluciones a problemas de diseño que surgen frecuentemente al construir
+sistemas con lenguajes orientados a objetos. Los patrones de diseño son soluciones vagamente
+definidas al nivel del diseño de un sistema que le permiten soportar cierta funcionalidad con más
+% Por qué se intentan automatizar
+calidad. Su presencia es común y es por eso que los refactorings de alto nivel automáticos intentan
+aplicarlos. Al automatizar refactorings se quiere automatizar lo más posible para ahorrar la mayor
+cantidad de energía y tiempo del desarrollador. Además, se buscar un el nivel más expresivo posible
+para que la aplicación del refactoring esté lo más cerca del nivel de abstracción al que está
+pensando el desarrollador el cambio. Las fuerzas que se contraponen son expresividad y precisión.
+Cuanto más alto el nivel de abstracción, más difícil es precisar a nivel de código en qué consiste
+el cambio. Los patrones de diseño presentan un balance atractivo porque son cambios semántico
+suficientemente específicos para precisarlos en el código que además están cerca de la forma que
+tiene el desarrollador de pensar su cambio.
+(Practical Analysis for refactoring) La aplicación de patrones de diseño permitirían ahorrar mucha
+energía del desarrollador y explorar opciones de diseño con un costo menor.
+
+% ¿En qué escenarios se utilizarían estos refactorings?
+El desarrollador tiene que agregar una nueva funcionalidad al sistema pero su diseño actual no la
+acomoda de manera simple. El desarrollador identifica dónde puede realizar un cambio para lograr la
+flexibilidad deseada y qué cambio quiere realizar (la introducción de un patrónde diseño). En ese
+momento se puede automatizar la aplicación del refactoring.
+% REF null object pattern paper
+(null object pattern paper) exploró la introducción automática de patrones de diseño orientada a root canal
+% REF root canal refactoring programmer friendly
+refactoring, ya que son herramientas que en batch analizan todo el código, presentan los candidatos
+identificados y proveen la opción de aplicar el refactoring. Las investigaciones se pueden
+clasificar según el tipo de patrones que analizaron:
 
 \begin{itemize}
     \item estructurales (Abstract Factory y Composite)
@@ -341,6 +387,10 @@ el refactoring. Las investigaciones se pueden clasificar según el tipo de patro
 los métodos que utilizan para la identificación de oportunidades de mejora al diseño y la aplicación
 de los respectivos refactorings también es variada. Sin embargo, el principal problema que
 le vemos a estos trabajos es que no se ajustan a la forma de trabajo del programador.
+
+
+
+
 
 \section{Preservación del comportamiento}
 Este punto está presente en la misma definición de un refactoring y es de máxima importancia. Por el
