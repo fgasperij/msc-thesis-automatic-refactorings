@@ -84,54 +84,40 @@ incrementará los costos de extensibilidad, el tiempo de desarrollo se verá afe
 \subsection{Técnicas para preservar la mantenibilidad}
 
 Las decisiones de mantenimiento pueden ser más eficientes aceptando esta realidad del proceso de
-desarrollo, su esencia evolutiva. 
+desarrollo, su esencia evolutiva. Existen varias metodologías de desarrollo de software con enfoques
+distintos y prioridades diferentes. Las metodologías ágiles engloban a varios frameworks de desarrollo
+que se contraponen a los procesos pesados más tradicionales y proponen procesos más livianos en los
+cuales prima la aceptación del cambio como guía del desarrollo. Algunos ejemplos son:
 
-
-
-% Qué procesos de desarrollo existen? Cascada, ágiles?
-Existen varios procesos diseñados para poder desarrollar software que mantenga estos atributos 
-de calidad con el objetivo de mantener los costos de evolución bajos para que el software no muera.
-Uno de ellos son las metodologías ágiles.
-
-% ¿Por qué la evolución incrementa la complejidad? PERSEPECTIVA SIN MÉTRICAS
-La erosión del diseño se produce porque no es posible anticipar los cambios que se le realizarán al
-software en el futuro entonces el diseño original no es apropiado para incorporar todos los cambios
-que se le realizan luego al sistema. El desarrollador no modifica el diseño antes de extender o
-modificar el modelo, entonces las modificaciones que le realiza lo vuelven más complejo. Los
-proyectos de sotware industriales tienen restricciones de tiempo ajustadas entonces los desarrolladores
-introducen modificaciones de la forma más veloz posible sin tener en cuenta la pérdida de calidad.
-% WRITE El incremento de la complejidad reduce su mantenibilidad. ¿Qué consecuencias negativas trae esto?
-% ¿Qué técnicas existen para lidiar con este problema?
-Existen numerosas técnicas para minimizar o reducir el impacto negativo del cambio en los sistemas
-de software. Una metodología general para desarrollar software que se basa en la aceptación del
-cambio del mismo es la conocida
-% REF agregar referencia a extreme programming
-extreme programming, la cual utiliza técnicas como:
-
+% REF a los frameworks
 \begin{itemize}
-    \item scrum
-    \item tdd
-    \item unit testing
-    \item refactoring
-    \item pair programming
-    \item sprints
-    \item etc.
+    \item extreme programming (XP)
+    \item Kanban
+    \item Scrum
 \end{itemize}
 
-% ¿Qué son los refactorings?
-El refatoring del software es una de ellas. Se utiliza en técnicas de desarrollo iterativo
-incremental, no se han visto integradas en sistemas tradicionales con modelos de desarrollo de cascada lineales.
-En el contexto de las metodologías ágiles los refactorings se realizan durante el desarrollo del
-software como una parte integral del mismo y no como una etapa separada. El término fue acuñado por
-% REF agregar referencia a la tesis de Opdyke
-Opdyke en su tesis de doctorado y luego popularizado por Fowler, uno de los mayores evangelistas de
-% REF agregar referencia a el libro de Fowler
-la metodología extreme programming, en su libro \textit{Refactoring: Improving the design of existing code}.
-Un refactoring o reestructuración es una modificación al software que no cambia su funcionalidad. El objetivo
-de la misma es mejorar la calidad del sistema modificando su estructura interna para volverlo más mantenible,
-entendible o que se adapte mejor a futuros cambios o funcionalidades que haya que agregarle. Por
-ejemplo, si se desea agregar una funcionalidad y el diseño no la contempló originalmente se puede
-agregar al diseño actual o cambiar el diseño primero para que agregar la funcionalidad sea más
-simple y se pueda seguir extendiendo el software en esa dirección más fácilmente.
+Los proyectos de sotware industriales tienen restricciones de tiempo ajustadas entonces los
+desarrolladores introducen modificaciones de la forma más veloz posible sin tener en cuenta la
+pérdida de calidad. El desarrollador no modifica el diseño antes de extender o modificar el modelo,
+entonces las modificaciones que le realiza lo vuelven más complejo. La erosión del diseño se produce
+porque no es posible anticipar los cambios que se le realizarán al software en el futuro entonces el
+diseño original no es apropiado para incorporar todos los cambios que se le realizan luego al
+sistema. 
+Una de las prácticas del proceso continuo que propone XP para evitar la erosión es la de refactoring.
+Se utiliza en varios frameworks de desarrollo iterativo incremental pero no se ha visto integradas en
+sistemas tradicionales con modelos de desarrollo de cascada lineales. El refactoring es una parte
+integral del desarrollo en el contexto de las metodologías ágiles.
 
+% ¿Qué son los refactorings?
+% REF agregar referencia a la tesis de Opdyke
+El término fue acuñado por Opdyke en su tesis de doctorado y luego popularizado por Fowler, uno de
+% REF agregar referencia a el libro de Fowler
+los mayores evangelistas de la metodología extreme programming, en su libro \textit{Refactoring:
+Improving the design of existing code}. Un refactoring o reestructuración es una modificación al
 % Cuál es el objetivo de los refactorings
+software que no cambia su funcionalidad. El objetivo de la misma es mejorar la calidad del sistema
+modificando su estructura interna para volverlo más mantenible, entendible o que se adapte mejor a
+futuros cambios o funcionalidades que haya que agregarle. Por ejemplo, si se desea agregar una
+funcionalidad y el diseño no la contempló originalmente se puede agregar al diseño actual o cambiar
+el diseño primero para que agregar la funcionalidad sea más simple y se pueda seguir extendiendo el
+software en esa dirección más fácilmente.
