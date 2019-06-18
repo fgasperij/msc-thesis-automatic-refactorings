@@ -1,12 +1,5 @@
 \section{Introducción a los refactorings, su historia y razón de ser}
-% Los proyectos de software evolucionan
-% Qué quiere decir que un proyecto evolucione?
-% La complejidad de los proyectos de software se incrementa debido a que evolucionan. 
-Los sistemas de software evolucionan a lo largo del tiempo. Los requerimientos funcionales y no
-funcionales del sistema cambian, requieren mantenimiento e incluso el equipo que lo mantiene cambia.
 % REF agregar cita sobre Lehman
-La evolución de acuerdo a las leyes informales de Lehman lleva a un incremento de la complejidad del
-sistema, en gran parte debido a la erosión de su diseño, lo cual decrementa su mantenibilidad.
 % ¿Por qué la evolución incrementa la complejidad?
 La erosión del diseño se produce porque no es posible anticipar los cambios que se le realizarán al
 software en el futuro entonces el diseño original no es apropiado para incorporar todos los cambios
@@ -49,6 +42,12 @@ agregar al diseño actual o cambiar el diseño primero para que agregar la funci
 simple y se pueda seguir extendiendo el software en esa dirección más fácilmente.
 
 
+
+
+
+
+
+
 \section{Investigaciones sobre software refactorings}
 Los software refactorings son investigados desde numerosas perspectivas. Alguno de los temas más
 investigados son:
@@ -82,48 +81,74 @@ refactorings
     complejidad? tampoco está claro cómo hacerlo.
 \end{itemize}
 
+
 \section{¿Para qué realizar cambios que no impactan en la funcionalidad del software?}
-El software evoluciona porque a
-medida que el tiempo pasa los requerimientos que intenta satisfacer cambian. Para satisfacer los
-nuevos requerimientos es necesario modificar y extender el sistema, además de arreglar los posibles
-errores que surjan. Los atributos de calidad más relacionados con esta parte del desarrollo del
-software son: 1) extensibilidad 2) mantenibilidad 3) comprensiblidad.
+El software evoluciona porque a medida que el tiempo pasa los requerimientos que intenta satisfacer
+cambian. Para satisfacer los nuevos requerimientos es necesario modificar y extender el sistema,
+además de arreglar los posibles errores que surjan. Los atributos de calidad más relacionados con
+esta parte del desarrollo del software son: 
+
+\begin{itemize}
+    \item extensibilidad
+    \item mantenibilidad
+    \item comprensiblidad
+\end{itemize}
+
 
 \section{¿Son útiles los refactorings?}
-Los refactorings son útiles porque permiten preservar la calidad del software, principalment su: 1)
-extensibilidad 2) su mantenibilidad y 3) su comprensibilidad.
+Los refactorings son útiles porque permiten preservar la calidad del software, principalment su:
+
+\begin{itemize}
+    \item extensibilidad
+    \item mantenibilidad
+    \item comprensiblidad
+\end{itemize}
+
+(Empirical study on the impact...)
+Los refactorings aumentan la mantenibilidad del software.
 (Practical Analysis for Refactoring)
 Extreme Programming acepta que el software evoluciona y el diseño constantemente cambia. La
 adaptación del software requiere energía del desarrollador constante y es necesaria para que la
 complejidad no crezca demasiado. Cambiar el diseño aplicando refactorings para que la complejidad
 crezca lo menos posible solo será posible minimizando la energía que tiene que poner el
 desarrollador y esto se puede conseguir automatizando los refactorings.
-(Empirical study on the impact...)
-Los refactorings aumentan la mantenibilidad del software. ¿Qué relación tienen con la
-calidad del software? Permiten preservarla. Los 3 atributos mencionados en el punto anterior se van
+
+
+\section{¿Qué relación tienen con la calidad del software?}
+Permiten preservarla. Los 3 atributos mencionados en el punto anterior se van
 degradando a medida que el software evoluciona y se produce un fenómeno conocido como erosión del
 diseño. Los cambios que se introducen subsecuentemente en el software no fueron previstos por el
 diseñador original del sistema y en consecuencia la calidad decrece. Los refactorings modifican el
 diseño antes de agregar las nuevas funcionalidades para que el diseño pueda adoptar los nuevos
-cambios sin perder calidad. ¿Son útiles los refactorings automáticos? ¿qué se sabe? Detectar cuándo
-realizar un refactoring, dónde realizarlo y qué cambiar son todos problemas íntimamente
-relacionados. Existen investigaciones que intentan procesar el código y realizarle cambios sin
-intervención del desarrollador. Sin embargo, la mayoría de las herramientas automatizan la ejecución
-del cambio, el desarrollador elige cuándo, dónde y qué cambio se realizará. La cantidad de
-refactorings posibles es grande por lo cual se estima que sería útil contar con una herramienta que
-le permita al desarrollador crear sus propios refactorings automatizados y luego utilizarlos
-(Trends...). Hay pocos estudios en referencia a code smells (Trends...), la detección de los mismos
-y su utilización para elegir un refactoring no tiene atención.
+cambios sin perder calidad.
+
+
+\section{¿Son útiles los refactorings automáticos? ¿qué se sabe?}
+Detectar cuándo realizar un refactoring, dónde realizarlo y qué cambiar son todos problemas
+íntimamente relacionados. Existen investigaciones que intentan procesar el código y realizarle
+cambios sin intervención del desarrollador. Sin embargo, la mayoría de las herramientas automatizan
+la ejecución del cambio, el desarrollador elige cuándo, dónde y qué cambio se realizará. La cantidad
+de refactorings posibles es grande por lo cual se estima que sería útil contar con una herramienta
+que le permita al desarrollador crear sus propios refactorings automatizados y luego utilizarlos
+(Trends...). Hay pocos estudios en referencia a code smells, la detección de los mismos y su
+utilización para elegir un refactoring no tiene atención.
 (A Refactoring Tool for Smalltalk)
 Las modificaciones que se le realizan a un programa pueden ser divididas en dos etapas:
-1) refactoring del código/diseño para adaptarse mejor a las modificaciones
-2) las modificaciones. Si se cuenta con refactorings automáticos que preservan el comportamiento
+
+\begin{itemize}
+    \item refactoring del código/diseño para adaptarse mejor a las modificaciones
+    \item las modificaciones. Si se cuenta con refactorings automáticos que preservan el comportamiento
+\end{itemize}
+
 para realizar la primer etapa entonces la única fuente de errores al introducir cambios en un
 programa es la segunda etapa. Esto reduce la posible cantidad de errores agilizando el mantenimiento
 del software.
 (Programmer-Friendly...) Los dos principales riesgos al aplicar refactorings son:
 
-- introducir bugs - tiempo consumido
+\begin{itemize}
+    \item introducir bugs
+    \item tiempo consumido
+\end{itemize}
 
 los refactorings automáticos mitigan ambas.
 
@@ -133,12 +158,13 @@ identificación de diseños pobres y sus correspondientes refactorings sin inter
 desarrolladors son:
 
 \begin{itemize}
-    \item metric-based: low quality parts of code are identified by detecting the minimums of some
-    quality metric.
-    \item logic-based: the code is translated to an intermediate logic language which is analyzed
-    with logic rules to identify flaws.
-    \item search-based: the improvement of the design is translated into an optimization problem of
+    \item métodos basados en métricas: áreas del código con baja calidad son identificadas detectando
+    los mínimos de alguna métrica de calidad.
+    \item métodos basados en lógica: el código es traducido a un lenguaje lógico intermedio que es analizado
+    con reglas que verifican la calidad de las relaciones para identificar defectos.
+    \item métodos basado en búsqueda: la mejora del diseño se traduce a un problema de optimización de una función de 
     a fitness function whose search space consists of the alternative designs.
+    https://en.wikipedia.org/wiki/Fitness_function
     \item visualization techniques: differents forms of visualizing the code aim to aid the
     developer to gain new perspectives of the code that would allow him to spot flaws more easily.
 \end{itemize}
@@ -152,31 +178,31 @@ Categorización de los métodos utilizados para realizar refactorings automátic
 \end{itemize}
 
 \section{¿Son útiles los refactorings de alto nivel? ¿qué se sabe?}
-Existen opiniones encontradas. Algunos
-opinan que cuanto más se automatice mejor ya que modificar el código es una operación delicada,
-menor intervención humana implicaría menor espacio para el error. Sin embargo, estudios acerca
-de la utilización de estas herramientas no arrojan resultados claros que indiquen que los
-desarrolladores las utilicen con la frecuencia esperada. Incluso la correlación entre la
-complejidad del refactoring (cuán alto es su nivel) y la frecuencia de su utilización se muestra
-inversa. No queda claro a qué se debe esto. Hay estudios que intentan entender a qué se debe
-esto y cómo construir herramientas que automaticen los cambios y que los desarrolladores
-utilicen. (A discussion of software..) Los refactorings deben ser más complejos para poder
-ayudar al desarrollo de proyectos grandes. Por lo tanto, las herramientas deberían permitir
-componer refactorings para poder construir más complejos. (Practical Analysis for refactoring)
-La aplicación de patrones de diseño se correspondería con refactorings compuestos que
-permitirían ahorrar mucha energía del desarrollador y explorar opciones de diseño con un costo
-menor. (A Refactoring Tool... A Compositional Paradigm) Los refactorings complejos deberían
-realizarse como la composición de refactorings más simples automáticos. Algunos refactorings se
-realizan comúnmente y es tedioso realizarlos incluso con refactorings automáticos más simples
-porque no es fácil encontrar refactorings intermedios que simplifiquen la tarea (por ejemplo,
-introduce null object, cómo lo partirías en refactorings simples?) ¿Qué forma toman los
-refactorings de alto nivel? por qué? Los refactorings de alto nivel son combinaciones comunes de
-refactorings más simples que pueden o no tener una semántica clara a nivel diseño del sistema.
-Los patrones de diseño son soluciones a problemas de diseño que surgen frecuentemente al
-construir sistemas con lenguajes orientados a objetos. Los patrones de diseño son soluciones
-vagamente definidas al nivel del diseño de un sistema que le permiten soportar cierta
-funcionalidad con más calidad. Su presencia es común y es por eso que los refactorings de alto
-nivel automáticos intentan aplicar estos patrones generalmente. Hay varios ejemplos de papers.
+Existen opiniones encontradas. Algunos opinan que cuanto más se automatice mejor ya que modificar el
+código es una operación delicada, menor intervención humana implicaría menor espacio para el error.
+Sin embargo, estudios acerca de la utilización de estas herramientas no arrojan resultados claros
+que indiquen que los desarrolladores las utilicen con la frecuencia esperada. Incluso la correlación
+entre la complejidad del refactoring (cuán alto es su nivel) y la frecuencia de su utilización se
+muestra inversa. No queda claro a qué se debe esto. Hay estudios que intentan entender a qué se debe
+esto y cómo construir herramientas que automaticen los cambios y que los desarrolladores utilicen.
+(A discussion of software..) Los refactorings deben ser más complejos para poder ayudar al
+desarrollo de proyectos grandes. Por lo tanto, las herramientas deberían permitir componer
+refactorings para poder construir más complejos.
+(Practical Analysis for refactoring) La aplicación de patrones de diseño se correspondería con
+refactorings compuestos que permitirían ahorrar mucha energía del desarrollador y explorar opciones
+de diseño con un costo menor.
+(A Refactoring Tool... A Compositional Paradigm) Los refactorings complejos deberían realizarse como
+la composición de refactorings más simples automáticos. Algunos refactorings se realizan comúnmente
+y es tedioso realizarlos incluso con refactorings automáticos más simples porque no es fácil
+encontrar refactorings intermedios que simplifiquen la tarea (por ejemplo, introduce null object,
+cómo lo partirías en refactorings simples?)
+¿Qué forma toman los refactorings de alto nivel? por qué? Los refactorings de alto nivel son
+combinaciones comunes de refactorings más simples que pueden o no tener una semántica clara a nivel
+diseño del sistema. Los patrones de diseño son soluciones a problemas de diseño que surgen
+frecuentemente al construir sistemas con lenguajes orientados a objetos. Los patrones de diseño son
+soluciones vagamente definidas al nivel del diseño de un sistema que le permiten soportar cierta
+funcionalidad con más calidad. Su presencia es común y es por eso que los refactorings de alto nivel
+automáticos intentan aplicar estos patrones generalmente. Hay varios ejemplos de papers.
 
 (A Methodology for the Automated Introduction of Design Pattern) Los refactorings de alto nivel
 tienen más puntos de partida posibles y más destinos posibles ya que, a diferencia de refactorings
@@ -184,11 +210,14 @@ más primitivos, están definidos de forma más relajada. Se puede decir que cua
 de un refactoring menos específica es su definición. Se han clasificado los distintos puntos de
 partida posibles: 
 
-- hoja en blanco: las entidades que se relacionarían en el patrón de diseño no se conocen todavía.
-Este caso no ocurre en la práctica usualmente. - anti-patrón: este caso se debe a falta de
-conocimiento del programador. Se soluciona con educación, los posibles malos diseños son demasiados
-para considerarlos uno por uno. - precursor: es un buen diseño para un caso más simple pero que ante
-nuevas necesidades de extensión debe cambiarse.
+\begin{itemize}
+    \item hoja en blanco: las entidades que se relacionarían en el patrón de diseño no se conocen
+    todavía. Este caso no ocurre en la práctica usualmente.
+    \item anti-patrón: este caso se debe a falta de conocimiento del programador. Se soluciona con
+    educación, los posibles malos diseños son demasiados para considerarlos uno por uno.
+    \item precursor: es un buen diseño para un caso más simple pero que ante nuevas necesidades de
+    extensión debe cambiarse.
+\end{itemize}
 
 \section{¿Por qué refactorings automáticos que introducen patrones de diseño?}
 Al automatizar refactorings se
@@ -209,24 +238,27 @@ automática de patrones de diseño orientada a root canal refactoring, ya que so
 batch analizan todo el código, presentan los candidatos identificados y proveen la opción de aplicar
 el refactoring. Las investigaciones se pueden clasificar según el tipo de patrones que analizaron:
 
-- estructurales (Abstract Factory y Composite) - de comportamiento (Decorator, Template Method, Null
-Object y State/Strategy)
+\begin{itemize}
+    \item estructurales (Abstract Factory y Composite)
+    \item de comportamiento (Decorator, Template Method, Null Object y State/Strategy)
+\end{itemize}
 
 los métodos que utilizan para la identificación de oportunidades de mejora al diseño y la aplicación
 de los respectivos refactorings también es variada. Sin embargo, el principal problema que
 le vemos a estos trabajos es que no se ajustan a la forma de trabajo del programador.
-refactorings compuestos
 
 \section{Preservación del comportamiento}
-Este punto está presente en la misma
-definición de un refactoring y es de máxima importancia. Por el momento la preservación de
-comportamiento no se puede definir de una forma que permita implementarla en las
-herramientas. La preservación de la funcionalidad es difícil de formalizar y existen
-distintos tipos de software para los cuales preservar el comportamiento implica más que
-preservar su funcionalidad, por ejemplo:
+Este punto está presente en la misma definición de un refactoring y es de máxima importancia. Por el
+momento la preservación de comportamiento no se puede definir de una forma que permita implementarla
+en las herramientas. La preservación de la funcionalidad es difícil de formalizar y existen
+distintos tipos de software para los cuales preservar el comportamiento implica más que preservar su
+funcionalidad, por ejemplo:
 
-- tiempo de ejecución (sistemas de tiempo real) - memoria utilizada y consumo de energía (sistemas
-embebidos) - condiciones de seguridad (sistemas en los cuales la seguridad es crítica)
+\begin{itemize}
+    \item tiempo de ejecución (sistemas de tiempo real)
+    \item memoria utilizada y consumo de energía (sistemas embebidos) 
+    \item condiciones de seguridad (sistemas en los cuales la seguridad es crítica)
+\end{itemize}
 
 Por esta razón un testing sistematizado y ajustado a los requerimientos de cada sistema particular
 es la única y mejor herramienta con la que se cuenta actualmente.
@@ -234,32 +266,43 @@ es la única y mejor herramienta con la que se cuenta actualmente.
 (A Refactoring Tool for Smalltalk) No es posible asegurar que se preserva el comportamiento en un
 lenguaje con tipado dinámico como Smalltalk, la única forma de converger a un programa correcto es a
 través del análisis dinámico. Esto no lo realicé pero incluso el análisis dinámico se basa en una
-suite de tests representativa. (Improving refactoring tools in Smalltalk using static type
-inference) La única forma de asegurar que los refactorings son correctos es con pruebas formales.
-Las herramientas actuales no realizan esto porque la complejidad del software actual vuelve
-demasiado costoso aplicar modelos de verificación formal a los programas que nos interesa
-reestructurar.
-
+suite de tests representativa.
+(Improving refactoring tools in Smalltalk using static type inference) La única forma de asegurar
+que los refactorings son correctos es con pruebas formales. Las herramientas actuales no realizan
+esto porque la complejidad del software actual vuelve demasiado costoso aplicar modelos de
+verificación formal a los programas que nos interesa reestructurar.
 (Automated Application of Design Patterns: A Refactoring Approach) Perspectivas sobre la
 preservación de comportamiento Las principales técnicas que se utilizan para lidiar con la
 preservación de comportamiento son:
 
-- no prestarle atención - semi formal para tener una referencia de lo pensado y confianza en ello -
-verificación formal
+\begin{itemize}
+    \item no prestarle atención
+    \item semi formal para tener una referencia de lo pensado y confianza en ello
+    \item verificación formal
+\end{itemize}
 
 No se utiliza la verificación formal porque pocos lenguajes de programación ampliamente utlizados
-    tienen una semántica formal y un compilador que la verifica. Además, la complejidad de las
-    demostraciones de preservación de comportamiento para transformaciones no triviales es
-    intratable. Refactoring implementados en IDEs populares Enumerar y compara las implementaciones
-    de refactorings en IDEs. Eclipse IntelliJ
+tienen una semántica formal y un compilador que la verifica. Además, la complejidad de las
+demostraciones de preservación de comportamiento para transformaciones no triviales es intratable.
+
+\section{Refactoring implementados en IDEs populares}
+Enumeración y comparación de  las implementaciones de refactorings en IDEs.
+
+\begin{itemize}
+    \item Eclipse
+    \item IntelliJ
+    superficial de IntelliJ Pasos Elige el código Elige Delegate, Parameter, Method Elige nombre de la
+    clase y del método Elige opciones sobre los parámetros Prevee los cambios y los confirma No se puede
+    elegir cualquier parte del código, tiene que ser un conjunto de statements o expressions No
+    parametriza el contexto de la clase, solo lo local
+    \item NetBeans
+    \item Visual Studio
+    \item XCode
+\end{itemize}
 %    [Explicación](https://www.jetbrains.com/help/idea/extract-into-class-refactorings.html#extract_method_object)
-    superficial de IntelliJ Pasos Elige el código Elige Delegate, Parameter, Method Elige nombre de
-    la clase y del método Elige opciones sobre los parámetros Prevee los cambios y los confirma No
-    se puede elegir cualquier parte del código, tiene que ser un conjunto de statements o
-    expressions No parametriza el contexto de la clase, solo lo local NetBeans no tiene
-    ExtractToMethodObject tiene extract method tradicional Visual Studio CodeRush Visual Assist Wing
-    IDE XCode Extract to method object IntelliJ Idea Solo extrae a una clase interna, lo cual
-    simplifica bastante el refactoring porque compartimos el scope de variables de instancia, de
-    clase, etc. Visual Studio Solo realiza extract method y el nuevo método pertenece a la misma
-    clase. Si necesita devolver más de un resultado utiliza los parámetros de salida de C\#. Eclipse
-    Solo realiza extract method.
+ NetBeans no tiene ExtractToMethodObject tiene
+extract method tradicional Visual Studio CodeRush Visual Assist Wing IDE XCode Extract to method
+object IntelliJ Idea Solo extrae a una clase interna, lo cual simplifica bastante el refactoring
+porque compartimos el scope de variables de instancia, de clase, etc. Visual Studio Solo realiza
+extract method y el nuevo método pertenece a la misma clase. Si necesita devolver más de un
+resultado utiliza los parámetros de salida de C\#. Eclipse Solo realiza extract method.
