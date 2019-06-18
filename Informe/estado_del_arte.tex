@@ -130,40 +130,27 @@ software en esa dirección más fácilmente.
 
 
 
-
-
-
-
-
-
 \section{La investigación sobre refactorings}
 
 \subsection{¿Son útiles los refactorings?}
-Acá puedo hablar de los costos también.
-Los refactorings son útiles porque permiten preservar la calidad del software, principalment su:
+Los refactorings son útiles porque permiten preservar la calidad del software, principalmente su 
+mantenibildad a través de mejoras en:
 
 \begin{itemize}
     \item extensibilidad
-    \item mantenibilidad
     \item comprensiblidad
+    \item cambiabilidad
+    \item reusabilidad
 \end{itemize}
 
-(Empirical study on the impact...)
-Los refactorings aumentan la mantenibilidad del software.
-(Practical Analysis for Refactoring)
-Extreme Programming acepta que el software evoluciona y el diseño constantemente cambia. La
-adaptación del software requiere energía del desarrollador constante y es necesaria para que la
-complejidad no crezca demasiado. Cambiar el diseño aplicando refactorings para que la complejidad
-crezca lo menos posible solo será posible minimizando la energía que tiene que poner el
-desarrollador y esto se puede conseguir automatizando los refactorings.
-
-Los refactorings permiten preservar la calidad del software. Los 3 atributos mencionados en el punto
-anterior se van degradando a medida que el software evoluciona y se produce un fenómeno conocido
-como erosión del diseño. Los cambios que se introducen subsecuentemente en el software no fueron
-previstos por el diseñador original del sistema y en consecuencia la calidad decrece. Los
-refactorings modifican el diseño antes de agregar las nuevas funcionalidades para que el diseño
-pueda adoptar los nuevos cambios sin perder calidad.
-
+% REF agregar al estudio empírico (Empirical study on the impact...)
+Estudios empíricos muestran que los refactorings aumentan la mantenibilidad del software. Esto se
+debe a que previene la erosión del diseño ralentizando el incremento de la complejidad del sistema.
+Los cambios que se introducen en el software no fueron previstos por el diseñador original del
+sistema, por lo tanto si no se modifica el diseño su calidad se verá perjudicada. Los refactorings
+modifican el diseño antes de agregar las nuevas funcionalidades para que el diseño pueda adoptar los
+nuevos cambios sin perder calidad. Esto permite mantener la mantenibilidad del sistema resultando
+en una reducción de costos significativa para el proyecto.
 
 
 \subsection{Áreas principales}
@@ -190,50 +177,41 @@ refactorings
 
 
 \subsection{Complejidades de estudiar refactorings}
+Los principales desafíos que presenta la investigación de refactorings son:
 
 \begin{itemize}
-    \item cómo comparar las herramientas y los refactorings? taxonomía
-    \item cómo determinar si un refactoring preserva el comportamiento? poco formal, la mayoría de
-    los enfoques son semi formales o solo con los tests del sistema
-    \item entender cómo realizan refactorings los desarrolladores actualmente? difícil, los más
-    precisos son poco representativos, los más generales son poco precisos y solo uno analiza los
-    cambios en continuo.
-    \item métricas para determinar si un refactoring aumentó la calidad del software o no? redujo la
-    complejidad? tampoco está claro cómo hacerlo.
+    % REF agregar al paper de las taxonomías
+    \item Comparar y evaluar las herramientas y los refactorings: existen varias propuestas de taxonomías cuyo
+    objetivo es proveer un marco para comparar y evaluar las herramientas para realizar refactorings y los
+    refactorings en sí mismos pero ninguna que se haya aceptado por completo.
+    \item Determinar la preservación del comportamiento: la mayoría de los estudios utilizan
+    técnicas semi formales.
+    % REF agregar como referencia el estudio que analizaba a los programadores mientras programaban
+    \item Entender cómo realizan refactorings los desarrolladores: los estudios más precisos son
+    poco representativos, los más generales son poco precisos y solo uno analiza los cambios en
+    continuo. Sin una clara comprensión de este fenómeno la mayor parte de las herramientas basan
+    sus decisiones en hipótesis frágiles.
+    \item Métricas para evaluar la calidad del software: estas métricas permitirían determinar si un
+    refactoring aumentó la calidad del software o redujo la complejidad total del sistema. Existen 
+    varios intentos pero ninguno concluyente. Todavía en general se validan los resultados de los
+    refactorings mediante la evaluación de expertos ingenieros de software.
 \end{itemize}
 
 
 \subsection{Refactorings automáticos}
+Extreme Programming acepta que el software evoluciona y el diseño constantemente cambia. La
+adaptación del software requiere energía del desarrollador constante y es necesaria para que la
+complejidad no crezca demasiado. Cambiar el diseño aplicando refactorings para que la complejidad
+crezca lo menos posible solo será posible minimizando la energía que tiene que invertir el
+% REF (Practical Analysis for Refactoring)
+desarrollador y esto se puede conseguir automatizando los refactorings.
 Detectar cuándo realizar un refactoring, dónde realizarlo y qué cambiar son todos problemas
-íntimamente relacionados. Existen investigaciones que intentan procesar el código y realizarle
-cambios sin intervención del desarrollador. Sin embargo, la mayoría de las herramientas automatizan
-la ejecución del cambio, el desarrollador elige cuándo, dónde y qué cambio se realizará. La cantidad
-de refactorings posibles es grande por lo cual se estima que sería útil contar con una herramienta
-que le permita al desarrollador crear sus propios refactorings automatizados y luego utilizarlos
-(Trends...). Hay pocos estudios en referencia a code smells, la detección de los mismos y su
-utilización para elegir un refactoring no tiene atención.
-(A Refactoring Tool for Smalltalk)
-Las modificaciones que se le realizan a un programa pueden ser divididas en dos etapas:
-
-\begin{itemize}
-    \item refactoring del código/diseño para adaptarse mejor a las modificaciones
-    \item las modificaciones. Si se cuenta con refactorings automáticos que preservan el comportamiento
-\end{itemize}
-
-para realizar la primer etapa entonces la única fuente de errores al introducir cambios en un
-programa es la segunda etapa. Esto reduce la posible cantidad de errores agilizando el mantenimiento
-del software.
-(Programmer-Friendly...) Los dos principales riesgos al aplicar refactorings son:
-
-\begin{itemize}
-    \item introducir bugs
-    \item tiempo consumido
-\end{itemize}
-
-los refactorings automáticos mitigan ambas.
-
-(Automated refactoring of super-class method invocations to the Template Method design pattern) Los
-principales caminos que se están investigando actualmente para la automatización de la
+íntimamente relacionados. A priori, se puede pensar que todas esas decisiones, como diferentes
+etapas de la actividad de refactoring, son buenas candidatas para la automatización. De hecho,
+existen investigaciones que intentan procesar el código y realizarle cambios sin intervención del
+desarrollador. 
+% REF (Automated refactoring of super-class method invocations to the Template Method design pattern)
+Los principales caminos que se están investigando actualmente para la automatización de la
 identificación de diseños pobres y sus correspondientes refactorings sin intervención del
 desarrolladors son:
 
@@ -243,19 +221,55 @@ desarrolladors son:
     \item métodos basados en lógica: el código es traducido a un lenguaje lógico intermedio que es analizado
     con reglas que verifican la calidad de las relaciones para identificar defectos.
     \item métodos basado en búsqueda: la mejora del diseño se traduce a un problema de optimización de una función de 
-    a fitness function whose search space consists of the alternative designs.
-    % https://en.wikipedia.org/wiki/Fitness_function
-    \item visualization techniques: differents forms of visualizing the code aim to aid the
-    developer to gain new perspectives of the code that would allow him to spot flaws more easily.
+    % REF función de fitness
+    fitness cuyo espacio de búsqueda son los diseños alternativos.
+    \item técnicas de visualización: deferentes formas de visualizar el código que buscarn ayudar al
+    desarrolladosr a ganar nuevas perspectivas del código que le permitan identificar defectos más
+    facilmente.
 \end{itemize}
 
-Categorización de los métodos utilizados para realizar refactorings automáticos
+Sin embargo, la mayoría de las herramientas utilizadas en la industria automatizan la ejecución del
+cambio, el desarrollador elige cuándo, dónde y qué cambio se realizará.
+% REF (Trends...)
+Un área que se ha visto relegada es la de code smells. Los code smells son ciertas características
+del código que suelen ser síntomas de problemas más profundos del diseño del software. Esos problemas
+son buenos sujetos de refactorings que contribuyen de manera significativa a la mantenibildad del
+sistema. La detección de los mismos y la elección de un refactoring para remediarlo ha recibido
+poca atención.
+
+% REF (A Refactoring Tool for Smalltalk)
+Las modificaciones que se le realizan a un programa pueden ser divididas en dos etapas:
 
 \begin{itemize}
-    \item método de aplicación: ¿cuán automático es? automatiza identificación, elección de nombres, aplicación del refactoring, cuándo, dónde.
-    \item preservación del comportamiento: manual, semi-formal, formal.
-    \item composición de los refactorings: dinámica o estática.
+    \item refactorings para incluir o modificar funcionalidad sin perjudicar a la mantenibilidad
+    \item las modificaciones o extensiones
 \end{itemize}
+
+Si se cuenta con refactorings automáticos que preservan el comportamiento para realizar la primer
+etapa entonces la única fuente de errores al introducir cambios en un programa es la segunda etapa.
+Esto reduce la posible cantidad de errores agilizando el mantenimiento del software. Pero realizar
+% REF (Programmer-Friendly...)
+refactorings manuales conlleva sus propios riesgos, los más frecuentes son:
+
+\begin{itemize}
+    \item introducir bugs
+    \item consumir más tiempo del disponible
+\end{itemize}
+
+los refactorings automáticos mitigan ambas. La forma de automatizar los refactorings no es única. Existen
+numerosas formas de automatizar el mismo refactoring. Se pueden categorizar los métodos para la realización
+de refactorings automáticos considerando las siguientes dimensiones:
+
+\begin{itemize}
+    \item método de aplicación: ¿cuán automático es? ¿automatiza la identificación del lugar donde
+    aplicar el refactoring? ¿elige los nombres de las nuevas entidades que haya que crear? ¿lo
+    aplica automáticamente? ¿cuándo?
+    \item preservación del comportamiento: manual, semi-formal, formal.
+    \item composición de los refactorings: dinámica o estática. La cantidad de refactorings posibles
+es grande por lo cual se estima que sería útil contar con una herramienta que le permita al
+desarrollador crear sus propios refactorings automatizados y luego utilizarlos.
+\end{itemize}
+
 
 
 \section{Refactorings automáticos de alto nivel}
