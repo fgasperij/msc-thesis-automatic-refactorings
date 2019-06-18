@@ -103,6 +103,8 @@ entonces las modificaciones que le realiza lo vuelven más complejo. La erosión
 porque no es posible anticipar los cambios que se le realizarán al software en el futuro entonces el
 diseño original no es apropiado para incorporar todos los cambios que se le realizan luego al
 sistema. 
+
+\subsection{Los refactorings}
 Una de las prácticas del proceso continuo que propone XP para evitar la erosión es la de refactoring.
 Se utiliza en varios frameworks de desarrollo iterativo incremental pero no se ha visto integradas en
 sistemas tradicionales con modelos de desarrollo de cascada lineales. El refactoring es una parte
@@ -123,54 +125,21 @@ el diseño primero para que agregar la funcionalidad sea más simple y se pueda 
 software en esa dirección más fácilmente.
 
 
-\section{Investigaciones sobre software refactorings}
-Los software refactorings son investigados desde numerosas perspectivas. Alguno de los temas más
-investigados son:
-% REF a Trends, opportunities...
-\begin{itemize}
-    % REF a el paper que definía floss refactoring
-    \item refactoring tools: qué factores afectan el uso de refactorings automáticos? qué
-refactorings automáticos usan los programadores? cuáles no y por qué? cómo mejorar las herramientas actuales?
-    \item la relación entre los bad smells y los refactorings que podrían ayudar a lidiar con ellos. No hay estudios
-empíricos que lleguen a conclusiones claras sobre la utilidad de los code smells para lo
-programadores o si ayudan a determinar que un refactoring es necesario en ese lugar o qué
-refactoring es necesario.
-    \item refactorings en artifacts que no son código: especificación de requerimientos, diseño de más alto nivel, documentación, etc.
-    \item patrones de diseño: su utilidad, cuánto ayudarían, cuán de alto nivel se pueden hacer es una interrogante
-    \item TDD, refactoring es una importante etapa de esta técnica 
-    \item métricas del software sobre los atributos de calidad para medir el impacto de los
-refactorings  
-\end{itemize}
 
 
-\section{Complejidades de estudiar refactorings}
-
-\begin{itemize}
-    \item cómo comparar las herramientas y los refactorings? taxonomía
-    \item cómo determinar si un refactoring preserva el comportamiento? poco formal, la mayoría de
-    los enfoques son semi formales o solo con los tests del sistema
-    \item entender cómo realizan refactorings los desarrolladores actualmente? difícil, los más
-    precisos son poco representativos, los más generales son poco precisos y solo uno analiza los
-    cambios en continuo.
-    \item métricas para determinar si un refactoring aumentó la calidad del software o no? redujo la
-    complejidad? tampoco está claro cómo hacerlo.
-\end{itemize}
 
 
-\section{¿Para qué realizar cambios que no impactan en la funcionalidad del software?}
-El software evoluciona porque a medida que el tiempo pasa los requerimientos que intenta satisfacer
-cambian. Para satisfacer los nuevos requerimientos es necesario modificar y extender el sistema,
-además de arreglar los posibles errores que surjan. Los atributos de calidad más relacionados con
-esta parte del desarrollo del software son: 
-
-\begin{itemize}
-    \item extensibilidad
-    \item mantenibilidad
-    \item comprensiblidad
-\end{itemize}
 
 
-\section{¿Son útiles los refactorings?}
+
+
+
+
+
+\section{La investigación sobre refactorings}
+
+\subsection{¿Son útiles los refactorings?}
+Acá puedo hablar de los costos también.
 Los refactorings son útiles porque permiten preservar la calidad del software, principalment su:
 
 \begin{itemize}
@@ -188,17 +157,53 @@ complejidad no crezca demasiado. Cambiar el diseño aplicando refactorings para 
 crezca lo menos posible solo será posible minimizando la energía que tiene que poner el
 desarrollador y esto se puede conseguir automatizando los refactorings.
 
-
-\section{¿Qué relación tienen con la calidad del software?}
-Permiten preservarla. Los 3 atributos mencionados en el punto anterior se van
-degradando a medida que el software evoluciona y se produce un fenómeno conocido como erosión del
-diseño. Los cambios que se introducen subsecuentemente en el software no fueron previstos por el
-diseñador original del sistema y en consecuencia la calidad decrece. Los refactorings modifican el
-diseño antes de agregar las nuevas funcionalidades para que el diseño pueda adoptar los nuevos
-cambios sin perder calidad.
+Los refactorings permiten preservar la calidad del software. Los 3 atributos mencionados en el punto
+anterior se van degradando a medida que el software evoluciona y se produce un fenómeno conocido
+como erosión del diseño. Los cambios que se introducen subsecuentemente en el software no fueron
+previstos por el diseñador original del sistema y en consecuencia la calidad decrece. Los
+refactorings modifican el diseño antes de agregar las nuevas funcionalidades para que el diseño
+pueda adoptar los nuevos cambios sin perder calidad.
 
 
-\section{¿Son útiles los refactorings automáticos? ¿qué se sabe?}
+
+\subsection{Áreas principales}
+Los software refactorings son investigados desde numerosas perspectivas. Alguno de los temas más
+investigados son:
+
+% REF a Trends, opportunities...
+\begin{itemize}
+    \item refactoring tools: ¿Qué factores afectan el uso de refactorings automáticos? ¿Qué
+refactorings automáticos usan los programadores? ¿Cuáles no y por qué? ¿Cómo mejorar las
+herramientas actuales?
+    \item bad smells: la relación entre los bad smells y los refactorings que podrían ayudar a
+lidiar con ellos. No hay estudios empíricos que lleguen a conclusiones claras sobre si los code
+smells son útiles o no para lo programadores; si ayudan a determinar el lugar en el que un
+refactoring es necesario o qué refactoring es necesario.
+    \item refactorings en artifacts que no son código: especificación de requerimientos, diseño de
+    más alto nivel, documentación, etc.
+    \item patrones de diseño: su utilidad, cuánto ayudarían, cuán de alto nivel se pueden hacer es
+    una interrogante.
+    \item TDD: refactoring es una importante etapa de esta técnica.
+    \item métricas del software sobre los atributos de calidad para medir el impacto de los
+refactorings  
+\end{itemize}
+
+
+\subsection{Complejidades de estudiar refactorings}
+
+\begin{itemize}
+    \item cómo comparar las herramientas y los refactorings? taxonomía
+    \item cómo determinar si un refactoring preserva el comportamiento? poco formal, la mayoría de
+    los enfoques son semi formales o solo con los tests del sistema
+    \item entender cómo realizan refactorings los desarrolladores actualmente? difícil, los más
+    precisos son poco representativos, los más generales son poco precisos y solo uno analiza los
+    cambios en continuo.
+    \item métricas para determinar si un refactoring aumentó la calidad del software o no? redujo la
+    complejidad? tampoco está claro cómo hacerlo.
+\end{itemize}
+
+
+\subsection{Refactorings automáticos}
 Detectar cuándo realizar un refactoring, dónde realizarlo y qué cambiar son todos problemas
 íntimamente relacionados. Existen investigaciones que intentan procesar el código y realizarle
 cambios sin intervención del desarrollador. Sin embargo, la mayoría de las herramientas automatizan
@@ -252,7 +257,8 @@ Categorización de los métodos utilizados para realizar refactorings automátic
     \item composición de los refactorings: dinámica o estática.
 \end{itemize}
 
-\section{¿Son útiles los refactorings de alto nivel? ¿qué se sabe?}
+
+\section{Refactorings automáticos de alto nivel}
 Existen opiniones encontradas. Algunos opinan que cuanto más se automatice mejor ya que modificar el
 código es una operación delicada, menor intervención humana implicaría menor espacio para el error.
 Sin embargo, estudios acerca de la utilización de estas herramientas no arrojan resultados claros
@@ -294,7 +300,7 @@ partida posibles:
     extensión debe cambiarse.
 \end{itemize}
 
-\section{¿Por qué refactorings automáticos que introducen patrones de diseño?}
+\section{Introducción de patrones de diseño}
 Al automatizar refactorings se
 quiere automatizar lo más posible para ahorrar la mayor cantidad de energía y tiempo del
 desarrollador, y al nivel más expresivo posible para que la aplicación del refactoring esté lo más
@@ -360,7 +366,9 @@ No se utiliza la verificación formal porque pocos lenguajes de programación am
 tienen una semántica formal y un compilador que la verifica. Además, la complejidad de las
 demostraciones de preservación de comportamiento para transformaciones no triviales es intratable.
 
-\section{Refactoring implementados en IDEs populares}
+\section{Herramientas actuales de uso popular}
+Esta es una buena justificación de que a pesar de que hay investigación en el área el soporte actual
+es bastante limitado.
 Enumeración y comparación de  las implementaciones de refactorings en IDEs.
 
 \begin{itemize}
