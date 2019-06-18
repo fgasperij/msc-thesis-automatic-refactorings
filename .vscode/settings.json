@@ -3,9 +3,9 @@
     "todo-tree.regex": "((%|//|#|<!--|;|/\\*|^)\\s*($TAGS)|^\\s*- \\[ \\])",
     "todo-tree.tags": [
         "TODO",
-        "FIXME",
         "REF",
-        "WRITE"
+        "WRITE",
+        "FORMAT"
     ],
 	"latex-workshop.latex.autoBuild.run": "never",
 }
