@@ -1,0 +1,39 @@
+\section{Explicación}
+
+- el problema
+    - explicación del problema
+      La evidencia contra los refactorings automáticos de alto nivel es débil. Las IDEs más utilizadas y poderosas no proveen actualmente refactorings automáticos de este tipo, los disponibles son más simples. Se necesitan implementaciones de refactorings de este tipo para poder evaluar sus potenciales beneficios y analizar el uso y sus limitaciones para construir alternativas superadoras en caso de que las conclusiones extraídas sean negativas para ellos.
+Implementaremos refactorings automáticos de alto nivel como parte de un análisis de las limitaciones de los mismo y para poder obtener más información en el futuro acerca de su uso y efectividad.
+        - los dos objetivos contrapuestos de los refactorings
+          (Refactoring Object-Oriented Frameworks) Un objetivo es que el refactoring sea expresivo, que su nivel sea lo más alto posible para mantener al usuario lo más lejos posible de toda la complejidad que implica realizar el cambio, y el otro es que preserve el comportamiento. Cuanto más alto es su nivel más difícil es asegurar que preserva el comportamiento del programa, por lo tanto queremos que los refactorings sean suficientemente pequeños para poder asegurar que preserven el comportamiento. Se usan precondiciones para preservar el comportamiento, las condiciones más comúnmente violadas por los refactorings, no se cuenta con un modelo formal del comportamiento del programa. 
+        - exploratorio
+          queremos ver si estos refactorings serían útiles y si los programadores los usarían. Además queremos ver si son bien definibles o cada situación es tan particular que no ayudarían.
+            - queremos analizar los tradeoffs de estos refactorings
+              Al implementarlos, qué casos nos encontramos, cuán fácil es trasmitirle la complejidad al usuario, qué balance encontramos entre configurabilidad para que el usuario controle lo más posible pero haciéndole ganar el mayor tiempo posible. 
+        - por qué nos interesan los refactorings de alto nivel?
+            - Son más escalables y performantes
+              referencia? qué quiere decir más performante? y escalable?
+        - por qué nos interesan los refactorings automáticos?
+          porque aumentan la velocidad de desarrollo, resultando en una reducción de costos y un aumento de la calidad del software porque los usuarios prueban más cambios con menos esfuerzos.
+    - justificar con referencias al estado del arte que no se ha resuelto
+      tengo varios papers que dicen que no hay nada relacionado, más allá de lo de micro patterns.
+
+El trabajo más parecido es el Factory Method porque parece ser que sería útil para floss refactoring pero no queda claro si hicieron un frontend o no. La mayoría se orienta hacia el lado de automatización de la detección y la transformación sin consultar al usuario. El problema que vemos con eso es que no ayuda al programador actualmente, es una propuesta de desarrollo de software distinta a la actual. Este trabajo intenta mejorar la forma de desarrollo contemporánea.
+No hay laburo de este estilo en Smalltalk. Un lenguaje dinámico y puro permitirá iterar más rápidamente por lo tanto es una herramienta ideal para el prototipado y la naturaleza exploratoria de este trabajo.
+    - explicación sobre la utilidad de contar con una solución para el problema
+        - tendremos una herramienta que permitirá medir y evaluar si se utilizan y cómo se utilizan estos refactorings de alto nivel en el futuro
+        - sabremos cuáles son los desafíos a la hora de definir refactorings de tan alto nivel, si son viables o no
+        - es complicado incluso con refactorings primitivos componerlos
+          esta es una de nuestras hipótesis. (A Refactoring Tool for Smalltalk) se pueden ver ejemplos en los cuales se hace retrofitting the patrones de diseño en los que la cantidad de cambios es grandes y no es fácil identificar refactorings de tamaño intermedio que permitan simplificar el cambio.
+        - chequear postcondiciones y precondiciones intermedias de algunos refactorings es más complicado
+          otra hipótesis que tenemos. 
+    - el trabajo que se realiza también contribuye a la identificaciónd de smells porque tiene que encontrar todos los casos en los que se produce una asignación a null
+      Actualmente las herramientas no detectan dónde o cuándo realizar un refactoring, cómo detectar smells o complejidad. Eso sería un primer paso en esa dirección.
+    - por qué no hacerlos completamente automáticos?
+      El principal problema que vemos con los refactorings que no requieren intervención del programador y no se ajustan a su forma de trabajo es que corren dos riesgos grandes:
+
+- no se usados. Nadie los usaría ya que asumen que son parte de una etapa del desarrollo que no existe.
+- incrementar los costos de un proyecto en términos de tiempo de desarrollo como mínimo. El problema es que si el refactoring toma decisiones buenas pero que perjudican la mantenibilidad del código por hacerlo más complejo o menos entendible como luego el proyecto lo tienen que seguir interviniendo programadores humanos cada vez les tomará más tiempo realizarle modificaciones.
+
+Mientras no haya una manera precisa de expresar comprensibilidad y diseño del dominio entonces la intervención humana es necesaria y proveerá una reducción de costos mayor que la utilización de refactorings completamente automáticos.
+    - aportar en esta dirección aporta valor porque el mantenimiento del software es su mayor costo, el estado del arte lo justifica
