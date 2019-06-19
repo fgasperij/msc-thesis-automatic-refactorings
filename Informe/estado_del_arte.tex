@@ -352,32 +352,32 @@ de un refactoring menos específica es su definición. Los distintos puntos de p
 \section{Introducción de patrones de diseño}
 % Qué son los patrones de diseño
 Los patrones de diseño son soluciones a problemas de diseño que surgen frecuentemente al construir
-sistemas con lenguajes orientados a objetos. Los patrones de diseño son soluciones vagamente
-definidas al nivel del diseño de un sistema que le permiten soportar cierta funcionalidad con más
+sistemas con lenguajes orientados a objetos. Los patrones de diseño son soluciones definidas de una
+forma que abstrae los detalles de cada situación pero preserva las fuerzas en contraposición que la
+solución pretende balancear. Están definidos al nivel del diseño de un sistema y contribuyen a que
+el mismo pueda soportar cierta funcionalidad con más calidad. Su presencia es común y es por eso que
 % Por qué se intentan automatizar
-calidad. Su presencia es común y es por eso que los refactorings de alto nivel automáticos intentan
-aplicarlos. Al automatizar refactorings se quiere automatizar lo más posible para ahorrar la mayor
-cantidad de energía y tiempo del desarrollador. Además, se buscar un el nivel más expresivo posible
-para que la aplicación del refactoring esté lo más cerca del nivel de abstracción al que está
-pensando el desarrollador el cambio. Las fuerzas que se contraponen son expresividad y precisión.
-Cuanto más alto el nivel de abstracción, más difícil es precisar a nivel de código en qué consiste
-el cambio. Los patrones de diseño presentan un balance atractivo porque son cambios semántico
-suficientemente específicos para precisarlos en el código que además están cerca de la forma que
-tiene el desarrollador de pensar su cambio.
-(Practical Analysis for refactoring) La aplicación de patrones de diseño permitirían ahorrar mucha
-energía del desarrollador y explorar opciones de diseño con un costo menor.
+los refactorings de alto nivel automáticos intentan aplicarlos. Al automatizar refactorings se
+quiere automatizar lo más posible para ahorrar la mayor cantidad de energía y tiempo del
+desarrollador. Además, se busca el nivel más expresivo posible para que la aplicación del
+refactoring esté lo más cerca del nivel de abstracción al que está pensando el desarrollador el
+cambio que quiere realizar. Las fuerzas que se contraponen son expresividad y precisión. Cuanto más alto el nivel de
+abstracción, más difícil es precisar a nivel de código en qué consiste el cambio. Los patrones de
+diseño presentan un balance atractivo porque son cambios semántico suficientemente específicos para
+precisarlos en el código que además están cerca de la forma que tiene el desarrollador de pensar su
+cambio.
+% REF (Practical Analysis for refactoring)
+(Practical Analysis for refactoring) sostiene la aplicación automática de patrones de diseño
+permitiría reducir significativamente la energía que necesita el desarrollador para aplicarlos, lo
+cual le permitiría explorar más opciones de diseño con un costo menor.
 
-% ¿En qué escenarios se utilizarían estos refactorings?
-El desarrollador tiene que agregar una nueva funcionalidad al sistema pero su diseño actual no la
-acomoda de manera simple. El desarrollador identifica dónde puede realizar un cambio para lograr la
-flexibilidad deseada y qué cambio quiere realizar (la introducción de un patrónde diseño). En ese
-momento se puede automatizar la aplicación del refactoring.
 % REF null object pattern paper
 (null object pattern paper) exploró la introducción automática de patrones de diseño orientada a root canal
 % REF root canal refactoring programmer friendly
-refactoring, ya que son herramientas que en batch analizan todo el código, presentan los candidatos
-identificados y proveen la opción de aplicar el refactoring. Las investigaciones se pueden
-clasificar según el tipo de patrones que analizaron:
+refactoring. Las herramientas que crearon analizan todo el código en batch, presentan los candidatos
+identificados y proveen la opción de aplicar el refactoring. Como esas existen más investigaciones
+que exploran la introducción automática de patrones de diseño, se puede clasificar a las mismas
+según el tipo de patrones que analizaron:
 
 \begin{itemize}
     \item estructurales (Abstract Factory y Composite)
@@ -390,14 +390,18 @@ le vemos a estos trabajos es que no se ajustan a la forma de trabajo del program
 
 
 
-
-
 \section{Preservación del comportamiento}
-Este punto está presente en la misma definición de un refactoring y es de máxima importancia. Por el
-momento la preservación de comportamiento no se puede definir de una forma que permita implementarla
-en las herramientas. La preservación de la funcionalidad es difícil de formalizar y existen
-distintos tipos de software para los cuales preservar el comportamiento implica más que preservar su
-funcionalidad, por ejemplo:
+% Qué significa preservar el comportamiento
+La preservación del comportamiento está presente en la misma definición de un refactoring y es de
+máxima importancia. En general, el comportamiento de un programa suele describirse como una función
+que va de el conjunto de todos los posibles inputs al conjunto de todos los posibles outputs. Una
+reestructuración del mismo preserva su comportamiento si para todo input el output es el mismo que
+antes de la aplicación del refactoring. Esta definición no es útil para implementarla en las
+herramientas de automatización.
+% Por qué es difícil asegurar la preservación
+Además, una dificultad adicional a la hora de formalizar la preservación de la funcionalidad de un
+programa es que existen ciertos tipos de software para los cuales preservar el comportamiento
+implica más que preservar su funcionalidad, por ejemplo:
 
 \begin{itemize}
     \item tiempo de ejecución (sistemas de tiempo real)
@@ -406,50 +410,62 @@ funcionalidad, por ejemplo:
 \end{itemize}
 
 Por esta razón un testing sistematizado y ajustado a los requerimientos de cada sistema particular
-es la única y mejor herramienta con la que se cuenta actualmente.
+es la mejor herramienta con la que se cuenta actualmente.
+% REF (Improving refactoring tools in Smalltalk using static type inference)
+(Improving refactoring tools in Smalltalk using static type inference) dice que la única forma de
+asegurar que los refactorings son correctos es con pruebas formales pero que las herramientas
+actuales no realizan esto porque la complejidad del software actual vuelve demasiado costoso aplicar
+modelos de verificación formal a los programas que nos interesa reestructurar.
 
-(A Refactoring Tool for Smalltalk) No es posible asegurar que se preserva el comportamiento en un
-lenguaje con tipado dinámico como Smalltalk, la única forma de converger a un programa correcto es a
-través del análisis dinámico. Esto no lo realicé pero incluso el análisis dinámico se basa en una
-suite de tests representativa.
-(Improving refactoring tools in Smalltalk using static type inference) La única forma de asegurar
-que los refactorings son correctos es con pruebas formales. Las herramientas actuales no realizan
-esto porque la complejidad del software actual vuelve demasiado costoso aplicar modelos de
-verificación formal a los programas que nos interesa reestructurar.
-(Automated Application of Design Patterns: A Refactoring Approach) Perspectivas sobre la
-preservación de comportamiento Las principales técnicas que se utilizan para lidiar con la
-preservación de comportamiento son:
+% Las limitaciones particulares de Smalltalk
+% REF (A Refactoring Tool for Smalltalk)
+(A Refactoring Tool for Smalltalk) muestra que no es posible asegurar que se preserva el
+comportamiento en un lenguaje con tipado dinámico como Smalltalk, que la única forma de converger a
+un programa correcto es a través del análisis dinámico. Incluso el análisis dinámico realizado por
+el trabajo anterior se basa en una suite de tests representativa.
+
+% Técnicas para mostrar la preservación del comportamiento
+% REF (Automated Application of Design Patterns: A Refactoring Approach)
+(Automated Application of Design Patterns: A Refactoring Approach) clasifica las técnicas que se
+utilizan para lidiar con la preservación de comportamiento en:
 
 \begin{itemize}
-    \item no prestarle atención
-    \item semi formal para tener una referencia de lo pensado y confianza en ello
-    \item verificación formal
+    \item informales: la verificación consiste en las experiencia del desarrollador.
+    \item semiformales: se describen con lógica las precondiciones y poscondiciones y se muestra por
+    qué se cree que preservan el comportamiento. Sirve como referencia de lo pensado, para ganar
+    confianza en el trabajo realizado y si en el futuro surgiera algún error puede corregirse en las
+    descripciones logrando acumular el conocmiento.
+    \item formales: verificaciones formales que demuestran la preservación del comportamiento.
 \end{itemize}
 
-No se utiliza la verificación formal porque pocos lenguajes de programación ampliamente utlizados
-tienen una semántica formal y un compilador que la verifica. Además, la complejidad de las
-demostraciones de preservación de comportamiento para transformaciones no triviales es intratable.
+Es poco frecuente la utilización de verificaciones formales porque pocos lenguajes de programación
+ampliamente utlizados tienen una semántica formal y un compilador que la verifica. Además, la
+complejidad de las demostraciones de preservación de comportamiento para transformaciones no
+triviales es intratable.
+
+
 
 \section{Herramientas actuales de uso popular}
-Esta es una buena justificación de que a pesar de que hay investigación en el área el soporte actual
-es bastante limitado.
-Enumeración y comparación de  las implementaciones de refactorings en IDEs.
+Esta sección busca mostrar brevemente cuáles son las herramientas de refactorings automáticos
+de utilización más generalizada, qué tipos de refactorings tienen y con qué alcance. Las herramientas
+que realizan refactorings automáticos se encuentran como parte de una IDE o como un plugin de la
+% REF survey de stackoverflow de qué IDEs usa la gente
+misma. La enumeración no es exhaustiva pero creemos que sí es representativa. Todas las IDEs proveen
+algún tipo de refactoring automático simple como extract method o renombre de entidades. Detallamos
+a continuación el soporte presentado para los refactorings extract method to method object e
+introduce null object que trataremos en este trabajo:
 
+% REF a cada uno de los sitios de las IDEs
 \begin{itemize}
-    \item Eclipse
-    \item IntelliJ
-    superficial de IntelliJ Pasos Elige el código Elige Delegate, Parameter, Method Elige nombre de la
-    clase y del método Elige opciones sobre los parámetros Prevee los cambios y los confirma No se puede
-    elegir cualquier parte del código, tiene que ser un conjunto de statements o expressions No
-    parametriza el contexto de la clase, solo lo local
-    \item NetBeans
-    \item Visual Studio
-    \item XCode
+    \item Visual Studio Code: no presenta soporte para ninguno.
+    \item Visual Studio: solo realiza extract method y el nuevo método tiene que pertenecer a la
+misma clase. Si necesita devolver más de un resultado utiliza los parámetros de salida de C\#.
+    \item IntelliJ: provee soporte solo para extract method to method object con un scope limitado.
+    % REF https://www.jetbrains.com/help/idea/extract-into-class-refactorings.html#extract_method_object
+    No parametriza el contexto de la clase, solo el contexto local del método. La extracción se realiza a una clase 
+    interna de la clase base, lo cual simplifica bastante el refactoring porque compartimos el scope de
+    variables de instancia, de clase, etc.
+    \item Eclipse: solo realiza extract method.
+    \item XCode: extract to method object.
+    \item NetBeans: no presenta soporte para ninguno.
 \end{itemize}
-%    [Explicación](https://www.jetbrains.com/help/idea/extract-into-class-refactorings.html#extract_method_object)
- NetBeans no tiene ExtractToMethodObject tiene
-extract method tradicional Visual Studio CodeRush Visual Assist Wing IDE XCode Extract to method
-object IntelliJ Idea Solo extrae a una clase interna, lo cual simplifica bastante el refactoring
-porque compartimos el scope de variables de instancia, de clase, etc. Visual Studio Solo realiza
-extract method y el nuevo método pertenece a la misma clase. Si necesita devolver más de un
-resultado utiliza los parámetros de salida de C\#. Eclipse Solo realiza extract method.
