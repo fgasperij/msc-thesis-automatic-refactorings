@@ -6,8 +6,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
 \usepackage[left=3cm,right=3cm,bottom=3.5cm,top=3.5cm]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\input{smalltalk_code_listing.tex}
 
 \begin{document}
+
 
 %%%% CARATULA
 
@@ -39,6 +43,8 @@
 \mainmatter
 \pagestyle{headings}
 
+
+
 %%%% ACA VA EL CONTENIDO DE LA TESIS
 
 \chapter{Introducción}
@@ -67,9 +73,7 @@ Presentar toda la investigación relevante con respecto al problema que estás i
 \input{definicion_del_problema.tex}
 
 \chapter{Descripción de la herramienta}
-% Por qué en Smalltalk
-Un lenguaje dinámico y puro permitirá iterar más rápidamente por lo tanto es una herramienta ideal
-para el prototipado y la naturaleza exploratoria de este trabajo.
+\input{la_solucion.tex}
 
 \chapter{Conclusiones}
 
