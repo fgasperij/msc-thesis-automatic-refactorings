@@ -1,0 +1,22 @@
+\section{Introduce Null Object}
+
+% Descripción del refactoring
+% historia, quién lo inventó?
+% qué code smells motivan el introduce null object
+% en qué consiste?
+% en el paper del pattern muestran 3 formas de implementarla, está bueno repasarlas
+% el chequeo por null de una variable. Reducir la cantidad de condicionales simplifica el código, lo
+% vuelve más simple. El chequeo por null estará duplicado en cada utilización de esa variable
+% WRITE En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
+
+% WRITE Ejemplo concreto
+% WRITE Precursor del refactoring en referencia al paper de Methodology
+
+% Limitaciones
+- qué pasa si hay asignaciones que no es claro si es un null o no?
+no estaría bueno tener un assignOptionalField para que en el contexto de la clase siempre sea NullObject?
+- qué pasa si algún método devuelve esa ivar? no tendrá algún null check?
+en el paper de null object lo resolvieron agregando un método getReference()
+- qué pasa si se usa como colaborador en un envío de mensaje?
+- qué pasa si hay chequeos por null que no se pueden refactorear?
+se corta el refactoring o se reemplazan por isNull() y se refactorea lo que se puede

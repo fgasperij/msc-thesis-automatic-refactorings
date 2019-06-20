@@ -1,0 +1,41 @@
+\section{Extract Method to Method Object}
+
+% WRITE Descripción del refactoring
+% historia, quién lo inventó?
+% qué code smells motivan el introduce null object
+un método demasiado largo, con demasiadas responsabilidades. Es poco claro, difícil de testear y de
+modificar. No se puede aplicar extractMethod porque hay demasiadas variables temporales
+relacionadas.
+% en qué consiste?
+
+% WRITE Ejemplo concreto
+% WRITE Precursor del refactoring en referencia al paper de Methodology
+
+% Limitaciones
+- solo extrae métodos completos
+Creemos que agregar un return explícito y parametrizar self en un caso en el que no es necesario
+agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self
+implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito
+no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
+
+% Decisiones tomadas
+- el método tiene un return self implícito
+
+\begin{code}
+
+unaryMessageSelector
+
+ 1 + 1.
+
+unaryMessageSelector
+ 
+ (MethodObject new) value.
+
+unaryMessageSelector
+
+ ^(MethodObject with: self) value.
+
+\end{code}
+
+% Corte de scope
+- agregar un setter de la variable de clase

@@ -1,138 +1,100 @@
 \section{Decisiones sobre la implementación}
+
 % Por qué en Smalltalk
 Un lenguaje dinámico y puro permitirá iterar más rápidamente por lo tanto es una herramienta ideal
 para el prototipado y la naturaleza exploratoria de este trabajo.
-decisiones generales sobre la solución
-    por qué elegimos Smalltalk
-    al ser un trabajo explorativo no queríamos invertir en lidiar con casos o dificultades de aplicar los refactorings a un lenguaje particular, por lo tanto se eligió un lenguaje dinámico y simple para poder realizar cambios a través de metaprogramación. Smalltalk ya ha probado ser una buen campo de experimentación para refactorings (A Refactoring Tool for Smalltalk)
-        necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar introduciendo patrones de diseño
-        los usuarios de smalltalk conocen mucho de patrones de diseño??
-        Smalltalk es reflexivo
-        (A Refactoring Tool for Smalltalk) esto permite utilizar el mismo lenguaje que se está modificando para modificarlo, no es necesario un metalenguaje intermedio.
-    por qué elegimos cuis
-        tiene una distribución para la universidad de buenos aires
-    por qué elegimos estos dos refactorings
-    existen relaciones entre los refactorings, de generalidad y complejidad. Estos parecen ser el principio sobre el que el resto se basaría.
-        introduce null object
-        es el más específico de replaceIfWithPolymorphism y introduceSpecialCase
-        extract to method object
-        creemos que es muy útil y sienta las bases para extract method
+Al ser un trabajo explorativo no queríamos invertir en lidiar con casos o dificultades de aplicar
+los refactorings a un lenguaje particular, por lo tanto se eligió un lenguaje dinámico y simple para
+poder realizar cambios a través de metaprogramación.
+% REF (A Refactoring Tool for Smalltalk)
+Smalltalk ya ha probado ser una buen campo de experimentación para refactorings (A Refactoring Tool for Smalltalk)
+Necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar introduciendo patrones de diseño.
+% REF (A Refactoring Tool for Smalltalk)
+Smalltalk es reflexivo (A Refactoring Tool for Smalltalk) esto permite utilizar el mismo lenguaje
+que se está modificando para modificarlo, no es necesario un metalenguaje intermedio.
 
+% Por qué elegimos Cuis
+Tiene una distribución para la Universidad de Buenos Aires.
+
+% Por qué elegimos estos dos refactorings
+Existen relaciones entre los refactorings, de generalidad y complejidad. Estos parecen ser el
+principio sobre el que el resto se basaría:
+
+\begin{itemize}
+    \item introduce null object es el más específico de replaceIfWithPolymorphism e
+    introduceSpecialCase
+    \item extract to method object creemos que es muy útil y sienta las bases para extract method
+\end{itemize}
 
 
 
 \section{Los refactorings}
 
-cosas que aplican a ambos refactorings
-    descripción del refactoring
-    ejemplo concreto
-    limitaciones, precondiciones
-        se realiza en el contexto de una clase
-        si se realizara en un contexto más amplio qué problemas encontraríamos?
-        no pueden haber returns
-        ¿por qué?
-        no pueden haber referencias a super
-        ¿por qué?
-        por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? \#requiresConfirmation 
-        en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces podríamos seguir chequándolo.
-        no puede haber shadowing de variables porque dejó de estar permitido
-    parametrización
-    qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
-        no saber bien qué hace el refactoring
-        explicaciones en texto y visualización de los cambios
-        hasta dónde llegan los cambios
-        luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
-    dónde se cortó el scope?
-    Varios cambios que formarían parte del refactoring si se realizara manualmente quedaron fuera del scope porque no vimos fácilmente cómo automatizarlo o por que dadas las limitaciones de tiempo no entraron dentro de la priorización. Dejamos asentadas acá qué cosas quedaron fuera y en qué categorías se encuentran. Además, explicamos cómo creemos que podrían resolverse en el futuro o cómo hacemos nosotros para guiar al usuario en las tareas manuales que debería realizar luego de aplicar el refactoring.
+% MOVE a la sección de cada refactoring
+\subsection{Descripción del refactoring}
+\subsection{Ejemplo concreto}
 
-En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería difícil debido a la complejidad que hay que trasmitir.
-        el método no puede contar con asignaciones a variables no temporales
-        si hay una asignación a una ivar, por ejemplo, deberíamos preguntar por setters y considerar esos casos.
-        las asignaciones a la variable de instancia en la que se está introduciendo el null object
-        reemplazamos las asignaciones de nil pero no las de colaboraciones.
-            qué se necesitaría para reemplazar las asignaciones de colaboraciones?
-        ifNilChecks anidados
-        lo implemento o no? Falta que defina cuan complejo es.
-    reseña de la implementación y el diseño
-    UI diseño y decisiones
-        validaciones que impedirían aplicar el refactoring
-        Estas validaciones se realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo configurándolo.
-    conclusiones sobre la implementación
-    pruebas de validación de la preservación del comportamiento
-    aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
+% Precondiciones
+% WRITE explicarl el por qué y dar ejemplos concretos
+- no pueden haber returns
+- no pueden haber referencias a super
+
+% Limitaciones
+- se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
+- no puede haber shadowing de variables porque dejó de estar permitido
+% INO
+- por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
+en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
+tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
+podríamos seguir chequándolo. 
+
+% Parametrización
+% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
+
+% Interfaz de usuario (UI & UX)
+- qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
+    - no saber bien qué hace el refactoring
+    explicaciones en texto y visualización de los cambios
+    - hasta dónde llegan los cambios
+    luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
+- validaciones que impedirían aplicar el refactoring, cómo se muestran? Estas validaciones se
+realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos
+casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible
+que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo
+configurándolo.
 
 
-\section{Introduce Null Object}
 
-introduce null object
-    descripción del refactoring
-    En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
-        en qué consiste?
-        en el paper del pattern muestran 3 formas de implementarla, está bueno repasarlas
-        historia, quién lo inventó?
-        qué code smells motivan el introduce null object
-        el chequeo por null de una variable. Reducir la cantidad de condicionales simplifica el código, lo vuelve más simple. El chequeo por null estará duplicado en cada utilización de esa variable
-    ejemplo concreto
-    limitaciones, precondiciones
-        precursor del refactoring en referencia al paper de Methodology
-        se realiza en el contexto de una clase
-        si se realizara en un contexto más amplio qué problemas encontraríamos?
-        por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? \#requiresConfirmation 
-        en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces podríamos seguir chequándolo.
-        no puede haber shadowing de variables porque dejó de estar permitido
-        qué pasa si hay asignaciones que no es claro si es un null o no? no estaría bueno tener un assignOptionalField para que en el contexto de la clase siempre sea NullObject?
-        qué pasa si algún método devuelve esa ivar? no tendrá algún null check?
-        en el paper de null object lo resolvieron agregando un método getReference()
-        qué pasa si se usa como colaborador en un envío de mensaje?
-        qué pasa si hay chequeos por null que no se pueden refactorear?
-        se corta el refactoring o se reemplazan por isNull() y se refactorea lo que se puede
-    parametrización
-    dónde se cortó el scope?
-        las asignaciones a la variable de instancia en la que se está introduciendo el null object
-        reemplazamos las asignaciones de nil pero no las de colaboraciones.
-            qué se necesitaría para reemplazar las asignaciones de colaboraciones?
-        ifNilChecks anidados
-        lo implemento o no? Falta que defina cuan complejo es.
-    reseña de la implementación y el diseño
-    UI diseño y decisiones
-    conclusiones sobre la implementación
+% Límites del scope
+% WRITE explicación de lo que describe este párrafo
+Varios cambios que formarían parte del refactoring si se realizara manualmente quedaron fuera
+del scope porque no vimos fácilmente cómo automatizarlo o por que dadas las limitaciones de
+tiempo no entraron dentro de la priorización. Dejamos asentadas acá qué cosas quedaron fuera y
+en qué categorías se encuentran. Además, explicamos cómo creemos que podrían resolverse en el
+futuro o cómo hacemos nosotros para guiar al usuario en las tareas manuales que debería realizar
+luego de aplicar el refactoring.
+
+% WRITE dar ejemplos de todas estos items
+En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y
+tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería
+difícil debido a la complejidad que hay que trasmitir.
+% INO
+- ifNilChecks anidados
+- las asignaciones a la variable de instancia en la que se está introduciendo el null object
+reemplazamos las asignaciones de nil pero no las de colaboraciones.
+% ETMO
+- el método no puede contar con asignaciones a variables no temporales
+- si hay una asignación a una ivar, por ejemplo, deberíamos preguntar por setters y considerar esos
+casos.
+
+% Implementación
+% WRITE qué contar sobre la implementación y sobre el diseño?
+
+% Preservación del comportamiento
+% WRITE resumir cómo ganamos confianza y los tests más importantes
+Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
 
 
-\section{Extract Method to Method Object}
+\input{introduce_null_object.tex}
 
-extract to method object
-    descripción del refactoring
-        en qué consiste?
-        historia, quién lo inventó?
-        Qué code smells motivan extract method object
-        un método demasiado largo, con demasiadas responsabilidades. Es poco claro, difícil de testear y de modificar. No se puede aplicar extractMethod porque hay demasiadas variables temporales relacionadas.
-    ejemplo concreto
-    limitaciones, precondiciones
-        precursor del refactoring en referencia al paper de Methodology
-    parametrización
-    decisiones funcionales que se tomaron?
-        solo extrae métodos completos
-        el método tiene un return self implícito
-        Creemos que agregar un return explícito y parametrizar self en un caso en el que no es necesario agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
-
-\begin{code}
-
-unaryMessageSelector
-
- 1 + 1.
-
-unaryMessageSelector
- 
- (MethodObject new) value.
-
-unaryMessageSelector
-
- ^(MethodObject with: self) value.
-
-\end{code}
-
-    dónde se cortó el scope?
-        agregar un setter de la variable de clase
-    reseña de la implementación y el diseño
-    UI diseño y decisiones
-    conclusiones sobre la implementación
+\input{extract_to_method_object.tex}
