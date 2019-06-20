@@ -5,7 +5,8 @@
         "TODO",
         "REF",
         "WRITE",
-        "FORMAT"
+        "FORMAT",
+        "MOVE"
     ],
 	"latex-workshop.latex.autoBuild.run": "never",
 }
