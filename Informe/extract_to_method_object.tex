@@ -39,3 +39,54 @@ unaryMessageSelector
 
 % Corte de scope
 - agregar un setter de la variable de clase
+
+% Precondiciones
+% WRITE explicarl el por qué y dar ejemplos concretos
+- no pueden haber returns
+- no pueden haber referencias a super
+
+
+
+% Limitaciones
+- se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
+- no puede haber shadowing de variables porque dejó de estar permitido
+% INO
+- por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
+en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
+tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
+podríamos seguir chequándolo. 
+
+
+% Parametrización
+% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
+
+% Interfaz de usuario (UI & UX)
+- qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
+    - no saber bien qué hace el refactoring
+    explicaciones en texto y visualización de los cambios
+    - hasta dónde llegan los cambios
+    luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
+- validaciones que impedirían aplicar el refactoring, cómo se muestran? Estas validaciones se
+realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos
+casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible
+que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo
+configurándolo.
+
+
+
+% WRITE dar ejemplos de todas estos items
+En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y
+tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería
+difícil debido a la complejidad que hay que trasmitir.
+% ETMO
+- el método no puede contar con asignaciones a variables no temporales
+- si hay una asignación a una ivar, por ejemplo, deberíamos preguntar por setters y considerar esos
+casos.
+
+
+% Implementación
+% WRITE qué contar sobre la implementación y sobre el diseño?
+
+% Preservación del comportamiento
+% WRITE resumir cómo ganamos confianza y los tests más importantes
+Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.

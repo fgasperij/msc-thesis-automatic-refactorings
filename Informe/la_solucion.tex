@@ -1,70 +1,47 @@
 \section{Decisiones sobre la implementación}
 
-% Por qué en Smalltalk
-Un lenguaje dinámico y puro permitirá iterar más rápidamente por lo tanto es una herramienta ideal
-para el prototipado y la naturaleza exploratoria de este trabajo.
-Al ser un trabajo explorativo no queríamos invertir en lidiar con casos o dificultades de aplicar
-los refactorings a un lenguaje particular, por lo tanto se eligió un lenguaje dinámico y simple para
-poder realizar cambios a través de metaprogramación.
+\subsection*{¿Por qué Smalltalk?}
+Necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar introduciendo refactorings
+que son propios de el diseño orientado a objetos. Un lenguaje dinámico y puro permitirá iterar más
+rápidamente sobre la herramienta, por lo tanto es ideal para la realización de un prototipo y nos
+permite explorar con más soltura. Al ser un trabajo exploratorio no queríamos vernos limitados por
+las particularidades de un lenguaje de programación o que las mayores dificultades provengan de la
+navegación de una sintaxis compleja y sobrecargada. Smalltalk cuenta con una sintaxis simple y al
+ser un lenguaje de objetos puro y reflexivo provee la posibilidad de manipular los programas a
+través de metaprogramación de una manera simple y poderosa. La reflexividad de Smalltalk además (A
+Refactoring Tool for Smalltalk) permite utilizar el mismo lenguaje que se está modificando para
+modificarlo, no es necesario un metalenguaje intermedio.
 % REF (A Refactoring Tool for Smalltalk)
-Smalltalk ya ha probado ser una buen campo de experimentación para refactorings (A Refactoring Tool for Smalltalk)
-Necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar introduciendo patrones de diseño.
+Smalltalk ya ha probado ser una buen campo de experimentación para refactorings (A Refactoring Tool
+for Smalltalk)
 % REF (A Refactoring Tool for Smalltalk)
-Smalltalk es reflexivo (A Refactoring Tool for Smalltalk) esto permite utilizar el mismo lenguaje
-que se está modificando para modificarlo, no es necesario un metalenguaje intermedio.
 
-% Por qué elegimos Cuis
-Tiene una distribución para la Universidad de Buenos Aires.
 
-% Por qué elegimos estos dos refactorings
-Existen relaciones entre los refactorings, de generalidad y complejidad. Estos parecen ser el
-principio sobre el que el resto se basaría:
+\subsection*{¿Por qué CuisUniversity?}
+% REF a cuis y a OpenSmalltalk VM
+Cuis es un entorno enfocado en Smalltalk-80 gratuito y Open Source. Está basado en la OpenSmalltalk
+% REF a cuisUniversity
+VM, como Squeak, y su principal objetivo es mantenerse su base pequeña y simple. CuisUniversity es
+un ambiente basado en Cuis creado con el objetivo de enseñar programación orientada a objetos.
+Actualmente, es utilizado en la Universidad de Buenos Aires, en la Universidad de Quilmes y en la
+Universidad Católica Argentina. Uno de los objetivos de este trabajo es que permitir a los alumnos
+experimentar con este tipo de refactorings.
 
-\begin{itemize}
-    \item introduce null object es el más específico de replaceIfWithPolymorphism e
-    introduceSpecialCase
-    \item extract to method object creemos que es muy útil y sienta las bases para extract method
-\end{itemize}
 
+\subsection*{¿Por qué Introduce Null Object y Extract Method To Method Object?}
+Luego de analizar varios refactorings de alto nivel, la mayoría variaciones de patrones de diseño,
+nos enfocamos en estos dos porque creemos que presentan un buen balance de abstracción y
+simplicidad. Son lo suficientemente abstractos para ser considerados de alto nivel, no son
+refactorings simples que ya estén presentes en otras IDEs ni manipulan elementos diminutos como un
+nombre ya que operan al nivel de diseño del código. Sin embargo, son más simples que otros, lo cual
+nos permitirá explorar y aprender para poder sentar la bases hacia refactorings futuros. El
+Introduce Null Object es un caso particular de Introduce Special Case y de Replace If With
+Polymorphism, por lo tanto consideramos que es un buen precursor de ellos. De la misma forma,
+Extract Method To Method Object es un precursor de todos los refactorings que requieren extraer
+código y hacer reemplazos contextuales.
 
 
 \section{Los refactorings}
-
-% MOVE a la sección de cada refactoring
-\subsection{Descripción del refactoring}
-\subsection{Ejemplo concreto}
-
-% Precondiciones
-% WRITE explicarl el por qué y dar ejemplos concretos
-- no pueden haber returns
-- no pueden haber referencias a super
-
-% Limitaciones
-- se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
-- no puede haber shadowing de variables porque dejó de estar permitido
-% INO
-- por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
-en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
-tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
-podríamos seguir chequándolo. 
-
-% Parametrización
-% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
-
-% Interfaz de usuario (UI & UX)
-- qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
-    - no saber bien qué hace el refactoring
-    explicaciones en texto y visualización de los cambios
-    - hasta dónde llegan los cambios
-    luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
-- validaciones que impedirían aplicar el refactoring, cómo se muestran? Estas validaciones se
-realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos
-casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible
-que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo
-configurándolo.
-
-
-
 % Límites del scope
 % WRITE explicación de lo que describe este párrafo
 Varios cambios que formarían parte del refactoring si se realizara manualmente quedaron fuera
@@ -73,26 +50,6 @@ tiempo no entraron dentro de la priorización. Dejamos asentadas acá qué cosas
 en qué categorías se encuentran. Además, explicamos cómo creemos que podrían resolverse en el
 futuro o cómo hacemos nosotros para guiar al usuario en las tareas manuales que debería realizar
 luego de aplicar el refactoring.
-
-% WRITE dar ejemplos de todas estos items
-En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y
-tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería
-difícil debido a la complejidad que hay que trasmitir.
-% INO
-- ifNilChecks anidados
-- las asignaciones a la variable de instancia en la que se está introduciendo el null object
-reemplazamos las asignaciones de nil pero no las de colaboraciones.
-% ETMO
-- el método no puede contar con asignaciones a variables no temporales
-- si hay una asignación a una ivar, por ejemplo, deberíamos preguntar por setters y considerar esos
-casos.
-
-% Implementación
-% WRITE qué contar sobre la implementación y sobre el diseño?
-
-% Preservación del comportamiento
-% WRITE resumir cómo ganamos confianza y los tests más importantes
-Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
 
 
 \input{introduce_null_object.tex}
