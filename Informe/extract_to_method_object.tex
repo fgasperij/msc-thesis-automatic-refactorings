@@ -1,6 +1,4 @@
-\section{Extract Method to Method Object}
-
-\subsection{Motivación y smells}
+\section{Motivación y smells}
 El software evoluciona y con él todos sus componentes. Uno de ellos son los métodos, los cuales a
 medida que pasa el tiempo van ganando funcionalidad y cada vez se vuelven más complejos. Los
 atributos más tangibles que hacen crecer esa complejidad son:
@@ -51,7 +49,7 @@ método o una reducción de su complejidad:
 En estos casos la sugerencia es utilizar Extract Method to Method Object.
 
 
-\subsection{¿En qué consiste?}
+\section{¿En qué consiste?}
 
 Algunos detalles dependen específicamente del lenguaje de programación utilizado, esta descripción
 de alto nivel asumirá un caso estándar en Smalltalk. Los pasos a seguir para extraer el código
@@ -113,13 +111,9 @@ ExampleClass>>methodToExtract: aParam1 with: aParam2
     ^(MethodObject with: aParam1 with: aParam2 with: ivar1 with: self) value
 \end{code}
 
-% Limitaciones
-- solo extrae métodos completos
-Creemos que agregar un return explícito y parametrizar self en un caso en el que no es necesario
-agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self
-implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito
-no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
 
+
+\section{Descripción completa de la funcionalidad del refactoring implementado del modelo}
 % Decisiones tomadas
 - el método tiene un return self implícito
 
@@ -139,23 +133,37 @@ unaryMessageSelector
 
 \end{code}
 
-% Corte de scope
-- agregar un setter de la variable de clase
+
+% Parametrización
+% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
+El 
+
+
+% Quizás estaría bueno contar cómo nos acercamos al problema
+%  - se desarrolló con TDD
+% WRITE explicar cómo es la colaboración entre el modelo, la UI y el applier
+
 
 % Precondiciones
 % WRITE explicarl el por qué y dar ejemplos concretos
 - no pueden haber returns
 - no pueden haber referencias a super
+- el método no puede contar con asignaciones a variables no temporales
 
+\section{Más allá de la funcionalidad}
+% Corte de scope
+- agregar un setter de la variable de clase, era demasiado complejo y no era claro cómo presentárselo al usuario.
+- solo extrae métodos completos y en general se utiliza así
+Creemos que agregar un return explícito y parametrizar self en un caso en el que no es necesario
+agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self
+implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito
+no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
 
-
-% Limitaciones
+% Decisiones tomadas
 - se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
 - no puede haber shadowing de variables porque dejó de estar permitido
 
-% Parametrización
-% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
-
+\section{¿Cómo se utiliza? (UI & UX)}
 % Interfaz de usuario (UI & UX)
 - qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
     - no saber bien qué hace el refactoring
@@ -169,20 +177,6 @@ que primero resuelva ese problema o directamente no aplique el refactoring y no 
 configurándolo.
 
 
-
-% WRITE dar ejemplos de todas estos items
-En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y
-tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería
-difícil debido a la complejidad que hay que trasmitir.
-% ETMO
-- el método no puede contar con asignaciones a variables no temporales
-- si hay una asignación a una ivar, por ejemplo, deberíamos preguntar por setters y considerar esos
-casos.
-
-
-% Implementación
-% WRITE qué contar sobre la implementación y sobre el diseño?
-
-% Preservación del comportamiento
+\section{Preservación del comportamiento}
 % WRITE resumir cómo ganamos confianza y los tests más importantes
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
