@@ -1,15 +1,117 @@
 \section{Extract Method to Method Object}
 
-% WRITE Descripción del refactoring
-% historia, quién lo inventó?
-% qué code smells motivan el introduce null object
-un método demasiado largo, con demasiadas responsabilidades. Es poco claro, difícil de testear y de
-modificar. No se puede aplicar extractMethod porque hay demasiadas variables temporales
-relacionadas.
-% en qué consiste?
+\subsection{Motivación y smells}
+El software evoluciona y con él todos sus componentes. Uno de ellos son los métodos, los cuales a
+medida que pasa el tiempo van ganando funcionalidad y cada vez se vuelven más complejos. Los
+atributos más tangibles que hacen crecer esa complejidad son:
 
-% WRITE Ejemplo concreto
-% WRITE Precursor del refactoring en referencia al paper de Methodology
+\begin{itemize}
+    \item el largo medido líneas de código o statements
+    \item la cantidad de parámetros que recibe
+    \item la cantidad de variables temporales que define
+\end{itemize}
+
+% REF Fowler y Beck
+Este crecimiento hace que el método sea más grande y reduce su entendibilidad. Al encontrarse con un
+método con estas características el programador aplicará un refactoring para poder reducir su
+complejidad y entenderlo más fácilmente. Sin volverlo más entendible corre el riesgo de
+malinterpretarlo y modificarlo erróneamente o utilizarlo erróneamente, lo cual introduciría un bug
+en el programa. Además, aplicar un refactoring le permite correr menos riesgos a él y aumenta la
+mantenibilidad del código lo cual implica un gran ahorro de costos.
+Existen dos principales razones por las cuales un método se vuelve complejo:
+
+% WRITE puedo poner un ejemplo de cada una de éstas.
+\begin{itemize}
+    \item tiene más de una responsabilidad
+    \item trabaja en más de un nivel de abstracción
+\end{itemize}
+
+% WRITE ejemplo de extract method
+La principal herramienta para reducir la complejidad producida por esas razones es el refactoring
+Extract Method. En el primer caso se delega la responsabilidad a otro método y en el segundo se
+realizan las tareas de un nivel de abstracción menor al del método en otro método al que también se
+delega. De esta forma el método realizará un solo trabajo a partir de un solo nivel de abstracción
+revelando la intención del mismo y no cómo se consigue si no delegando a otros métodos. Se agrega un
+nivel de indirección por la llamada al método, la delegación, pero se gana en claridad lo cual deja
+un saldo positivo para el sistema. Sin embargo, existen casos en los que Extract Method no se puede
+realizar o las formas en las que se puede realizar no consiguen un aumento de la entendibilidad del
+método o una reducción de su complejidad:
+
+% WRITE mostrar ejemplos
+% WRITE acá me podría extender con secciones de código que expliquen los dos casos, el pasar varios
+% parámetros y el asignar a más de una variable.
+\begin{itemize}
+    \item las variables temporales y los parámetros están tan entrelazados en el código que al extraer 
+    un método hay que pasarle demasiados parámetros
+    \item cualquier sección significativa que se intenta extraer modifica más de una variable que
+    luego se sigue utilizando
+\end{itemize}
+
+% REF Fowler + Beck
+En estos casos la sugerencia es utilizar Extract Method to Method Object.
+
+
+\subsection{¿En qué consiste?}
+
+Algunos detalles dependen específicamente del lenguaje de programación utilizado, esta descripción
+de alto nivel asumirá un caso estándar en Smalltalk. Los pasos a seguir para extraer el código
+del método M a un Method Object son:
+
+\begin{enumerate}
+    \item Se crea una clase para el Method Object.
+    \item Se le agrega un mensaje de creación de instancia que recibe todos los parámetros y
+    variables de instancia utilizadas en M y los asigna a variables de instancia.
+    \item Se le agrega el mensaje \#value.
+    \item Se copia el código de M dentro del método \#value del Method Object.
+    \item Se reemplazan en \#value los nombres de las variables que fueron pasadas por parámetro
+    por el nombre de su variable de instancia correspondiente.
+    \item Se reemplaza el cuerpo M por la instanciación del Method Object pasándole todos los
+    parámetros y variables de instancia previamente utilizadas.
+    \item Se corren los tests para verificar la preservación de comportamiento.
+    \item Se aplican los refactorings que antes no se podían sobre el método \#value del Method
+    Object.
+\end{enumerate}
+
+Veamos los pasos en un caso concreto:
+
+\begin{code}
+ExampleClass>>methodToExtract: aParam1 with: aParam2
+    | temp1 |
+
+    temp1 := self doSomething: ivar1.
+
+    ^(param1 + param2) > 3 and: [temp1 > 5]
+\end{code}
+
+\lstinline{methodToExtract} es el método objeto de nuestro refactoring. Luego de crear la clase del
+Method Object le agregaremos el mensaje de creación de instancia:
+
+\begin{code}
+MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
+    ivarParam1 := aParam1.
+    ivarParam2 := aParam2.
+    ivarIvar1 := anIvar1.
+    client := client.
+\end{code}
+
+Luego agregamos el mensaje \lstinline{value} al Method Object con el contenido de
+\lstinline{methodToExtract} y reemplazamos las variables recibidas como parámetro:
+
+\begin{code}
+MethodObject>>value
+    | temp1 |
+
+    temp1 := client doSomething: ivarIvar1.
+
+    ^(ivarParam1 + ivarParam2) > 3 and: [temp1 > 5]
+\end{code}
+
+finalmente reemplazamos el cuerpo del \lstinline{methodToExtract}:
+
+\begin{code}
+ExampleClass>>methodToExtract: aParam1 with: aParam2
+    ^(MethodObject with: aParam1 with: aParam2 with: ivar1 with: self) value
+\end{code}
 
 % Limitaciones
 - solo extrae métodos completos
@@ -50,12 +152,6 @@ unaryMessageSelector
 % Limitaciones
 - se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
 - no puede haber shadowing de variables porque dejó de estar permitido
-% INO
-- por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
-en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
-tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
-podríamos seguir chequándolo. 
-
 
 % Parametrización
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
