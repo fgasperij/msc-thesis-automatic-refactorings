@@ -4,7 +4,7 @@ medida que pasa el tiempo van ganando funcionalidad y cada vez se vuelven más c
 atributos más tangibles que hacen crecer esa complejidad son:
 
 \begin{itemize}
-    \item el largo medido líneas de código o statements
+    \item el largo medido en líneas de código o statements
     \item la cantidad de parámetros que recibe
     \item la cantidad de variables temporales que define
 \end{itemize}
@@ -16,7 +16,7 @@ complejidad y entenderlo más fácilmente. Sin volverlo más entendible corre el
 malinterpretarlo y modificarlo erróneamente o utilizarlo erróneamente, lo cual introduciría un bug
 en el programa. Además, aplicar un refactoring le permite correr menos riesgos a él y aumenta la
 mantenibilidad del código lo cual implica un gran ahorro de costos.
-Existen dos principales razones por las cuales un método se vuelve complejo:
+Existen dos principales razones que reducen la comprensibilidad de un método:
 
 % WRITE puedo poner un ejemplo de cada una de éstas.
 \begin{itemize}
@@ -28,12 +28,13 @@ Existen dos principales razones por las cuales un método se vuelve complejo:
 La principal herramienta para reducir la complejidad producida por esas razones es el refactoring
 Extract Method. En el primer caso se delega la responsabilidad a otro método y en el segundo se
 realizan las tareas de un nivel de abstracción menor al del método en otro método al que también se
-delega. De esta forma el método realizará un solo trabajo a partir de un solo nivel de abstracción
-revelando la intención del mismo y no cómo se consigue si no delegando a otros métodos. Se agrega un
-nivel de indirección por la llamada al método, la delegación, pero se gana en claridad lo cual deja
-un saldo positivo para el sistema. Sin embargo, existen casos en los que Extract Method no se puede
-realizar o las formas en las que se puede realizar no consiguen un aumento de la entendibilidad del
-método o una reducción de su complejidad:
+delega. De esta forma el método contará con una sola responsabilidad y la cumplirá realizando
+acciones en un solo nivel de abstracción. Así consigue revelar la intención del método y solo
+mostrar como se consigue su objetivo delegando a otros métodos. Se agrega un nivel de indirección
+por la llamada al método, la delegación, pero se gana en claridad lo cual deja un saldo positivo
+para el sistema. Sin embargo, existen casos en los que Extract Method no se puede realizar o las
+formas en las que se puede realizar no consiguen un aumento de la entendibilidad del método o una
+reducción de su complejidad. En estos casos Extract Method no puede aplicarse porque:
 
 % WRITE mostrar ejemplos
 % WRITE acá me podría extender con secciones de código que expliquen los dos casos, el pasar varios
@@ -58,8 +59,8 @@ del método M a un Method Object son:
 \begin{enumerate}
     \item Se crea una clase para el Method Object.
     \item Se le agrega un mensaje de creación de instancia que recibe todos los parámetros y
-    variables de instancia utilizadas en M y los asigna a variables de instancia.
-    \item Se le agrega el mensaje \#value.
+    variables de instancia utilizadas en M y los asigna a variables de instancia del Method Object.
+    \item Se le agrega el mensaje \#value al Method Object.
     \item Se copia el código de M dentro del método \#value del Method Object.
     \item Se reemplazan en \#value los nombres de las variables que fueron pasadas por parámetro
     por el nombre de su variable de instancia correspondiente.
@@ -89,7 +90,7 @@ MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
     ivarParam1 := aParam1.
     ivarParam2 := aParam2.
     ivarIvar1 := anIvar1.
-    client := client.
+    client := aSelf.
 \end{code}
 
 Luego agregamos el mensaje \lstinline{value} al Method Object con el contenido de
@@ -115,12 +116,165 @@ ExampleClass>>methodToExtract: aParam1 with: aParam2
 
 \section{Descripción completa de la funcionalidad del refactoring implementado del modelo}
 
+% WRITE voy a contar cómo funciona el refactoring de manera top down hasta llegar al detalle del código
+% e incluso mostrar partes de código específicas. Todo lo que necesite contar en el camino lo contaré.
+% No voy a desarrollar todo, solo lo que crea necesario y dejo señalados los lugares en los que se puede 
+% expandir la explicación.
+
 % WRITE explicar los conceptos del refactoring
 % - qué son las variables a parametrizar?
+% - qué es un CompileMethod? qué otras cosas se usan? Encoder?
+
+El refactoring implementado tiene como objeto central al encargado de efectivamente aplicar el refactoring,
+un objeto llamado \lstinline{ExtractToMethodObject}. Comenzaremos explicando en detalle el comportamiento,
+las limitaciones y el funcionamiento de este objeto. Luego pasaremos a ver cómo colabora con el resto del
+modelo para ofrecer al usuarion una funcionalidad completa.
+
+A partir de ahora nos referiremos como \lstinline{ExtractToMethodObject} al objeto que aplica el refactoring
+especificando en cada caso si hablamos de la clase o una instancia del mismo. \lstinline{ExtractToMethodObject} es
+subclase de \lstinline{Refactoring} que tiene al mensaje \lstinline{apply} como único mensaje polimórfico.
+% DIAGRAM mostrar un diagrama de clases con refactoring, etmo y el apply
+Veamos un ejemplo de utilización del refactoring:
+
+\begin{code}
+refactoring := ExtractToMethodObject 
+    from: methodToExtract
+    toMehtodObjectClassNamed: #MethodObject
+    subclassing: Object
+    onCategory: 'ThesisExamples'
+    withExtractedVariablesToInstanceVariables: variablesNameMapping
+    withInstanceCreationMessageFrom: keywordsDefinitions
+    evaluatedWith: #value.
+
+refactoring apply.
+\end{code}
+
+El mensaje de creación de instancia se encargará de validar todos los colaboradores recibidos para
+asegurarse de que la instancia creada será válida y el refactoring podrá ser aplicado. Una vez
+instanciado el refactoring, a menos que alguna de las condiciones validadas sea modificada en el
+espacio de tiempo entre la creación de la instancia y la aplicación del refactoring, posibilidad que
+siempre existe en Smalltalk por ser un entorno de objetos vivos y reflexivo, la aplicación del
+refactoring no debería fallar. Es decir, si por alguna razón el refactoring no puede ser aplicado la
+responsabilidad de detectarlo es de la clase, no creará instancias que no puedan ser aplicadas ya
+que las consideraremos inválidas.
 
 \section{Parametrización}
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
-El modelo del refactoring recibe:
+El mensaje de creación de instancia tiene como primer parámetro al método a extraer con el keyword
+\lstinline{from:}. Este método a extraer es una instancia de \lstinline{CompiledMethod}, objeto que 
+representa un método compilado que la máquina virtual puede interpretar. Este objeto encapsula dos
+elementos necesarios del refactoring:
+
+\begin{itemize}
+    \item el código del método a extraer y su representación en un AST de objetos a través del mensaje
+    \lstinline{methodNode} que nos devuelve una instancia de \lstinline{MethodNode} correspondiente
+    al método a extraer.
+    \item la clase que es el contexto y para la cual está compilado el método accesible a través
+    del mensaje \lstinline{methodClass}, que devuelve una instancia de \lstinline{MethodClass class}
+    que es una sublcase de \lstinline{Metaclass}.
+\end{itemize}
+
+\subsection*{Validaciones sobre el método a extraer}
+
+\subsubsection*{No puede contener referencias a la pseudovariable \lstinline{super}}
+
+No se permite realizar el refactoring sobre métodos que contienen referencias a \lstinline{super}
+porque no se puede replicar el comportamiento de enviar un mensaje a \lstinline{super} en el Method
+Object sin modificar considerablemente la clase que contiene el método a extraer, complejizándo el
+refactoring demasiado para la utilización que envisionamos por ahora. El receptor de un envío de
+mensaje a \lstinline{super} es el mismo que el receptor de un envío de mensaje a la pseudovariable
+\lstinline{self}, es decir, la instancia que es el contexto del método que se está ejecutando. La
+diferencia reside en que el method lookup inicia en la superclase del receptor, en lugar de
+iniciarse en su clase. Por lo tanto, para poder replicar el mismo comportamiento los envíos a
+\lstinline{super} deberían seguir realizándose desde la clase del método. Esto se podría conseguir
+agregando mensajes a la clase del método que realicen los envíos a \lstinline{super} pero configurar
+la creación de estos mensajes para que se realice automáticamente hubiera agregado más pasos a la aplicación
+del refactoring y no nos pareció prudente agregarlo sin contar con evidencia de que una versión más simple,
+sin esta funcionalidad, fuera aceptada y entendida con facilidad por los usuarios. Veremos un pequeño ejemplo
+para ilustrar el caso. Supongamos que el método a extraer es:
+
+\begin{code}
+ExampleClass>>methodToExtract
+    | temp1 |
+
+    temp1 := ivar1 + super value
+
+    ^temp 1
+\end{code}
+
+la forma de replicar el comportamiento sería agregar un mensaje a la clase que realice la llamada a super:
+
+\begin{code}
+ExampleClass>>sendToSuper
+
+    ^super value
+\end{code}
+
+y utilizar este mensaje desde el método de evaluación del Method Object:
+
+\begin{code}
+MehtodObjectClass>>value
+    | temp1 |
+
+    temp1 := correspondingIvar + client sendToSuper
+
+    ^temp 1
+\end{code}
+
+
+\subsubsection*{No contiene asignaciones a variables que no sean temporales}
+
+Las variables no temporales son las variables del contexto de la clase:
+
+\begin{itemize}
+    \item variables de instancia
+    \item variables de clase
+    \item variables de pool
+\end{itemize}
+
+Estas variables solo son accesibles desde el contexto de la clase, concretamente desde dentro de
+un método de la clase. La única forma de asignarles un valor desde fuera de la clase es enviándole
+a la clase un mensaje con el valor que queremos asignarles y el método lo asigna, por ejemplo:
+
+\begin{code}
+ExampleClass>>>setInstanceVariableTo: aValue
+
+    instanceVariable := aValue.
+\end{code}
+
+Estos métodos pueden ser creados automáticamente para replicar el comportamiento de la asignación
+desde el Method Object. Sin embargo, como en el caso con las referencias a \lstinline{super} no lo
+implementamos porque priorizamos mantener la primer versión del refactoring simple ya que su principal
+objetivo es exploratorio. Implementarlo hubiera requerido detectar todas las asignaciones a este tipo 
+de variables, ofrecerle la posibilidad al usuario de configurar cómo serán los mensajes para asignarlas
+desde el Method Object y luego crearlos automáticamente. El código para detectar las asignaciones
+es parte de la validación, si en el futuro quisiera implementarse el flujo completo solo restaría
+agregar la parte de configuración para la creación automática de los métodos.
+
+
+
+\subsection*{Validaciones sobre los parámetros de la creación de la Method Object Class}
+
+Los siguientes parámetros son los de los keywords \lstinline{toMehtodObjectClassNamed:} que recibe
+el nombre de la Method Object class, \lstinline{subclassing:} que recibe la superclase de la Method
+Object class y, por último, \lstinline{onCategory:} que recibe la categoría en la cual se ubicará la
+Method Object class. Las validaciones sobre estos elementos son las mínimas necesarias para la
+definición de una nueva clase, son validaciones que también realiza Cuis cuando intentamos definir
+una nueva clase manualmente. Las agregamos aquí también para poder controlar de forma más granular
+el feedback que se le da al usuario y los flujos que se siguen.
+% WRITE cuando Wilki me responda agregar por qué no puede ser una metaclase
+La única validación extra es realizada sobre la superclase, consiste en verificar que no sea una
+Meta Clase.
+
+
+
+
+
+
+
+
+
+
 
 \begin{itemize}
     \item el método sobre el cual aplicar el refactoring
