@@ -121,10 +121,6 @@ ExampleClass>>methodToExtract: aParam1 with: aParam2
 % No voy a desarrollar todo, solo lo que crea necesario y dejo señalados los lugares en los que se puede 
 % expandir la explicación.
 
-% WRITE explicar los conceptos del refactoring
-% - qué son las variables a parametrizar?
-% - qué es un CompileMethod? qué otras cosas se usan? Encoder?
-
 El refactoring implementado tiene como objeto central al encargado de efectivamente aplicar el refactoring,
 un objeto llamado \lstinline{ExtractToMethodObject}. Comenzaremos explicando en detalle el comportamiento,
 las limitaciones y el funcionamiento de este objeto. Luego pasaremos a ver cómo colabora con el resto del
@@ -158,7 +154,7 @@ refactoring no debería fallar. Es decir, si por alguna razón el refactoring no
 responsabilidad de detectarlo es de la clase, no creará instancias que no puedan ser aplicadas ya
 que las consideraremos inválidas.
 
-\section{Parametrización}
+\section{Validaciones}
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
 El mensaje de creación de instancia tiene como primer parámetro al método a extraer con el keyword
 \lstinline{from:}. Este método a extraer es una instancia de \lstinline{CompiledMethod}, objeto que 
@@ -261,12 +257,77 @@ Object class y, por último, \lstinline{onCategory:} que recibe la categoría en
 Method Object class. Las validaciones sobre estos elementos son las mínimas necesarias para la
 definición de una nueva clase, son validaciones que también realiza Cuis cuando intentamos definir
 una nueva clase manualmente. Las agregamos aquí también para poder controlar de forma más granular
-el feedback que se le da al usuario y los flujos que se siguen.
+el feedback que se le da al usuario y los flujos que se siguen. También entra en esta categoría
+el selector de evaluación que se recibe en el keyword \lstinline{evaluatedWith:} ya que es un selector
+unario que es validado de la misma manera que Cuis.
 % WRITE cuando Wilki me responda agregar por qué no puede ser una metaclase
 La única validación extra es realizada sobre la superclase, consiste en verificar que no sea una
 Meta Clase.
 
 
+
+\subsection*{Validaciones sobre las variables de instancia de la clase del Method Object}
+
+El keyword \lstinline{withExtractedVariablesToInstanceVariables:} recibe un parámetro que define
+cómo debe llamarse la variable de instancia correspondiente a cada variable a parametrizar. 
+
+\subsubsection*{¿Qué son las variables a parametrizar?}
+Las variables a parametrizar son todas aquellas variables referenciadas en el método a extraer que
+no son temporales:
+
+\begin{code}
+ExampleClass>>methodToExtract: aParam
+    | aTemp |
+
+    aTemp := self doSomethingWith: ivar1.
+    
+    ^aTemp
+\end{code}
+
+Este método referencia 4 variables que usaremos como ejemplo de las 4 categorías de variables que podemos
+encontrar en un método:
+
+\begin{itemize}
+    \item aParam: parámetros del método.
+    \item aTemp: las variables temporales del método.
+    \item self: las pseudovariables (self y super).
+    \item ivar1: las variables del contexto de la clase (variables de instancia, variables de clase y variables de pool)
+\end{itemize}
+
+Todas las categorías de variables deben ser parametrizadas excepto las temporales, ya que pertencen
+al contexto del método. En el ejemplo anterior el conjunto de variables a parametrizar, es decir que
+tenemos que pasarle al Method Object al instanciarlo para que pueda referenciarlas, son: \lstinline{aParam},
+\lstinline{self} y \lstinline{ivar1}.
+
+\subsubsection{Continuo hablando sobre las validaciones}
+
+Las variables a parametrizar serán variables de instancia del Method Object, lo cual las hará
+disponibles desde cualquier contexto dentro del Method Object y así se podrá descomponer de manera
+simple el método extraido. Los nombres son uno de los atributos que más influyen en la
+entendibilidad del código y por lo tanto no deben tomarse a la ligera. Los nombres se eligen de
+manera contextual, referencian a un objeto por su rol en ese contexto específico. Al cambiar el
+contexto, como en este caso que pasan de un método a la clase del Method Object, algunos nombres
+deben cambiar. En algunos casos necesitan cambiar por el cambio de contexto pero en otros también
+por limitaciones sintácticas como en el caso de las pseudovariables. Si \lstinline{self} es una
+variable a parametrizar la variable de instancia correspondiente no puede llamarse también self
+porque es un nombre reservado. Las validaciones verifican principalmente que no existan colisiones
+de nombres. Los nombres elegidos para las variables de instancia del Method Object no tienen que
+pertenecer a ninguna variable de la jerarquía del Method Object, esto incluye variables de
+instancia, de clase y de pool de todas las superclases del Method Object. Además, no pueden ser
+iguales a los nombres de los parámetros del mensaje de creación de instancia ni a las temporales del
+método a extraer. Respetando esa consistencia los nombres pueden ser elegidos libremente. El objeto recibido
+es un diccionario que tiene como clave el nombre de la variable a parametrizar y como valor de destino
+el nombre que se le debe dar a la variable de instancia correspondiente.
+
+
+
+\subsection*{Validaciones sobre las definiciones del mensaje de creación de instancia}
+
+El mensaje de creación de instancia tiene tantos parámetros como variables a parametrizar, por lo tanto
+el usuario debe definir cómo se llamará cada keyword y el nombre del parámetro correspondiente. El objeto
+que se recibe en el keyword \lstinline{withInstanceCreationMessageFrom:} es una colección ordenada
+de objetos que contienen el keyword elegido, el nombre del parámetro que irá en ese keyword y a qué
+variable
 
 
 
