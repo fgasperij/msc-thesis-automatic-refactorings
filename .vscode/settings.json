@@ -6,7 +6,8 @@
         "REF",
         "WRITE",
         "FORMAT",
-        "MOVE"
+        "MOVE",
+        "DIAGRAM"
     ],
 	"latex-workshop.latex.autoBuild.run": "never",
 }
