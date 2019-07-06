@@ -114,29 +114,30 @@ ExampleClass>>methodToExtract: aParam1 with: aParam2
 
 
 \section{Descripción completa de la funcionalidad del refactoring implementado del modelo}
-% Decisiones tomadas
-- el método tiene un return self implícito
 
-\begin{code}
+% WRITE explicar los conceptos del refactoring
+% - qué son las variables a parametrizar?
 
-unaryMessageSelector
-
- 1 + 1.
-
-unaryMessageSelector
- 
- (MethodObject new) value.
-
-unaryMessageSelector
-
- ^(MethodObject with: self) value.
-
-\end{code}
-
-
-% Parametrización
+\section{Parametrización}
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
-El 
+El modelo del refactoring recibe:
+
+\begin{itemize}
+    \item el método sobre el cual aplicar el refactoring
+    \item los valores necesarios para declarar el Method Object
+    \begin{itemize}
+        \item el nombre que recibirá la clase del Method Object
+        \item la superclase del Method Object
+        \item la categoría en la cual declarar el Method Object
+    \end{itemize}
+    \item los nombres de las variables de instancia para las variables parametrizadas
+    \item la definición del mensaje de creación de instancia
+    \begin{itemize}
+        \item las keywords
+        \item los nombres de los parámetros
+    \end{itemize}
+    \item el nombre para el mensaje de evaluación
+\end{itemize}
 
 
 % Quizás estaría bueno contar cómo nos acercamos al problema
@@ -158,12 +159,30 @@ Creemos que agregar un return explícito y parametrizar self en un caso en el qu
 agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self
 implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito
 no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
+% Decisiones tomadas
+- el método tiene un return self implícito
+
+\begin{code}
+
+unaryMessageSelector
+
+ 1 + 1.
+
+unaryMessageSelector
+ 
+ (MethodObject new) value.
+
+unaryMessageSelector
+
+ ^(MethodObject with: self) value.
+
+\end{code}
 
 % Decisiones tomadas
 - se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
 - no puede haber shadowing de variables porque dejó de estar permitido
 
-\section{¿Cómo se utiliza? (UI & UX)}
+\section{¿Cómo se utiliza? (UI \& UX)}
 % Interfaz de usuario (UI & UX)
 - qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
     - no saber bien qué hace el refactoring
