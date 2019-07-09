@@ -506,57 +506,53 @@ del AST. La generación del código fuente con los reemplazos se divide en los s
     la segunda coordenada, el nombre de la variable de instancia correspondiente. La generación de
     esta colección se realiza consultando al \lstinline{Encoder} por los rangos de la variables a
     parametrizar y colocando cada rango con el nombre de su correspondiente variable de instancia.
-    \item 
+    \item Se realiza el reemplazo de los rangos por los nombres correspondientes.
+    \item Se reemplaza el encabezado del método original por el selector de evaluación elegido.
+    \item Se compila el código fuente generado en el Method Object.
 \end{enumerate}
 
+Finalmente, el último paso es reemplazar el método a extraer por la evaluación del Method Object.
+Esta parte es parecida a la de la generación del código para el mensaje de creación de instancia. La
+evaluación del Method Object se realiza enviandole el mensaje de creación de instancia a la clase
+pero, en lugar de utilizar los nombres de los parámetros se utilizan las variables a parametrizar y
+se utiliza el selector de evaluación elegido para evaluarlo. Un detalle de esta parte es qué hacer
+si el método a extraer no cuenta con un statement de return, es decir el return es implícito. Los
+métodos que no cuentan con un return explícito en Cuis devuelven self, el receptor del mensaje.
+Decidimos preservar el nuevo método lo más parecido al anterior y no agregar returns, por lo tanto
+si contaba con un return implícito el nuevo código también utiliza un return implícito. Solo se
+agrega un return a la evaluación del Method Object en los casos en los que hay algún return
+explícito y el valor a devolver es distinto de self.
 
 
 
+\section{¿Cómo se utiliza?}
 
-% WRITE explicar cómo es la colaboración entre el modelo, la UI y el applier
+El modelo \lstinline{ExtractToMethodObject} colabora con un \lstinline{RefactoringApplier} y un
+\lstinline{ExtractToMethodObjectForm} para ofrecerle la funcionalidad al usuario y que pueda configurar
+el refactoring. Una secuencia exitosa:
+% DIAGRAM un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
+% cómo es una secuencia exitosa
+% DIAGRAM un diagrama de objetos de las tres clases relacionadas. Lo hice en el cuaderno.
 
-\section{Más allá de la funcionalidad}
-% Corte de scope
-- solo extrae métodos completos y en general se utiliza así
-Creemos que agregar un return explícito y parametrizar self en un caso en el que no es necesario
-agregaría complejidad innecesaria al refactoring. Por lo tanto, elegimos preservar el return self
-implícito del método. Si encontramos que el método a refactorear cuenta con un return self implícito
-no incluimos el return de la evaluación del MethodObject para preservar el return self implícito:
-% Decisiones tomadas
-- el método tiene un return self implícito
+en Cuis se puede ver de esta forma:
 
-\begin{code}
+% DIAGRAM secuencia de screenshots que muestran cómo se aplica.
 
-unaryMessageSelector
+Unan secuencia con un error sigue estos pasos:
 
- 1 + 1.
+% DIAGRAM un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
 
-unaryMessageSelector
- 
- (MethodObject new) value.
+y en Cuis el usuario lo ve así:
 
-unaryMessageSelector
+% DIAGRAM secuencia de screenshots que muestran cómo se aplica.
 
- ^(MethodObject with: self) value.
-
-\end{code}
-
-% Decisiones tomadas
-- se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
-- no puede haber shadowing de variables porque dejó de estar permitido
-
-\section{¿Cómo se utiliza? (UI \& UX)}
-% Interfaz de usuario (UI & UX)
-- qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
-    - no saber bien qué hace el refactoring
-    explicaciones en texto y visualización de los cambios
-    - hasta dónde llegan los cambios
-    luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
-- validaciones que impedirían aplicar el refactoring, cómo se muestran? Estas validaciones se
-realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos
-casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible
-que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo
-configurándolo.
+Vemos que en este caso si alguna validación falla el usuario puede seguir modificando los parámetros
+hasta pasarla. Además, las validaciones que no dependen del input del usuario son realizadas también
+antes de presentarle el formulario al usuario, de esta forma si el método contiene una referencia a
+\lstinline{super} el usuario se entera inmediatamente y no después de llenar todos los parámetros
+necesarios. Al finalizar el refactoring si detectamos algo que probablemente deba ser modificado pero
+no es realizado automáticamente se le informa al usuario para que sepa las limitaciones del refactoring
+que aplicó.
 
 
 \section{Preservación del comportamiento}
