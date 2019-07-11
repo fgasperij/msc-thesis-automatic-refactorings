@@ -1,71 +1,101 @@
-% Descripción del refactoring
-% historia, quién lo inventó?
-% qué code smells motivan el introduce null object
-% en qué consiste?
+\section{Motivación y smells}
+
+Existen pocos lenguajes de programación orientados a objetos, y de uso extendido ninguno, que no
+cuenten con una u otra forma de representar el valor especial null. La utilización de null conlleva
+como principal riesgo el enviarle un mensaje o derefenciarlo, dependiendo el lenguaje utilizado, lo
+cual resulta en un error en runtime o una terminación abnormal del programa. La forma más simple de
+prevenir estos errores es realizar chequeos sobre las variables que se sospecha pueden contener null
+para evitar enviarles mensajes. Veamos un ejemplo en la clase \lstinline{Behavior} de Cuis:
+
+\begin{code}
+Behavior>>allSuperclasses
+	"Answer an OrderedCollection of the receiver's and the receiver's  
+	ancestor's superclasses. The first element is the receiver's immediate  
+	superclass, followed by its superclass; the last element is Object."
+	| temp |
+	^ superclass
+		ifNil: [OrderedCollection new]
+		ifNotNil: [temp := superclass allSuperclasses.
+			temp addFirst: superclass.
+            temp]
+\end{code}
+
+En este caso se verifica si la variable de instancia \lstinline{superclass} es nil para evitar
+enviarle el mensaje \lstinline{allSuperclasses} y además por que la ausencia de superclase indica
+que estamos en la raíz de la jerarquía.
+% REF a fowler y a woolf
+Fowler y Woolf describen que la motivación para realizar el refactoring son repetidos chequeos por
+null de un colaborador. Los condicionales reducen la entendibilidad del código y al chequear siempre
+la misma condición producen código repetido, lo cual suele aumentar la posibilidad de que el
+programador introduzca bugs olvidándose de chequear por null antes de enviarle un mensaje al
+colaborador correspondiente. Una de las principales herramientas del paradigma de objetos para
+lidiar con la proliferación de condicionales repetidos en el código es la utilización de
+polimorfismo. En lugar de chequear manualmente en qué tipo de situación nos encontramos para decidir
+qué hacer, se envía un mensaje polimórfico a un objeto que realizará la tarea correspondiente para
+esa situación dependiendo en su tipo. La introducción de un Null Object sigue esta guía. Se
+reemplazará la utilización de null por un Null Object, un objeto que representa la ausencia o la
+nada del tipo correspondiente y encapsula el comportamiento necesario en las situaciones en las
+cuales hay una ausencia de ese tipo. Al contar con un Null Object ya no es necesario verificar si el
+objeto es null, nunca debería ser null, y se le puede enviar los mismos mensajes que a un Concrete
+Object, ya que son polimórficos, contando con que el Null Object sabrá qué hacer.
+
+
+% WRITE En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
+- hay ifs en los que se chequea si una variable es null: siempre que se usa la variable hay que recordar
+que puede ser null. Esa lógica se repite cada vez que se usa la variable.
+- hay una ivar que a veces puede ser null porque solo se usa en ciertos momentos, se recomienda
+extract class o INO
+- tenés varios casos en los que se chequea si una variable es null
+
+Características
+- null objects son siempre constantes, no cambian. Se pueden implementar como Singletons.
+
+
+Contar acerca de Woolf.
+
+\section{¿En qué consiste?}
+
+Fowler muestra una forma de aplicarlo que previene contra los errores más comunes. En este caso se pueden
+saltear varios pasos porque está programado.
+
+casos
+- qué se puede modificar? la concreteClass? 
+si no se puede modificar X se puede usar una testing interface, en Smalltalk no existe esto. No sé
+si tiene sentido decirlo más que que no aplica.
+
 % en el paper del pattern muestran 3 formas de implementarla, está bueno repasarlas
 % el chequeo por null de una variable. Reducir la cantidad de condicionales simplifica el código, lo
 % vuelve más simple. El chequeo por null estará duplicado en cada utilización de esa variable
-% WRITE En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
-
-% WRITE Ejemplo concreto
 % WRITE Precursor del refactoring en referencia al paper de Methodology
 
-% Precondiciones
-% WRITE explicarl el por qué y dar ejemplos concretos
-- no pueden haber returns
-- no pueden haber referencias a super
+% WRITE Ejemplo concreto
+
+El cambio que implementamos está encapsulado en una clase. Si sucede que varias clases tienen el mismo
+problema simplemente habría que implementarlo en cada clase. Por ahora no estamos contemplando este caso
+porque siempre se crea un mensaje nuevo, habría que soportar métodos ya existentes para reutilizar esto.
 
 
-% Limitaciones
-- qué pasa si hay asignaciones que no es claro si es un null o no?
-no estaría bueno tener un assignOptionalField para que en el contexto de la clase siempre sea NullObject?
-- qué pasa si algún método devuelve esa ivar? no tendrá algún null check?
-en el paper de null object lo resolvieron agregando un método getReference()
-- qué pasa si se usa como colaborador en un envío de mensaje?
-- qué pasa si hay chequeos por null que no se pueden refactorear?
-se corta el refactoring o se reemplazan por isNull() y se refactorea lo que se puede
 
-% Limitaciones
-- se realiza en el contexto de una clase, si se realizara en un contexto más amplio qué problemas encontraríamos?
-- no puede haber shadowing de variables porque dejó de estar permitido
+\section{Descripción completa de la funcionalidad}
+
+
+
+
+
+
+
+
+
+
+
 % INO
 - por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
 en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
 tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
 podríamos seguir chequándolo. 
 
-
-
-% Parametrización
-% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
-
-% Interfaz de usuario (UI & UX)
-- qué desaniman a los usuarios de utilizar los refactorings automáticos y qué hicimos al respecto?
-    - no saber bien qué hace el refactoring
-    explicaciones en texto y visualización de los cambios
-    - hasta dónde llegan los cambios
-    luego de aplicar el refactoring se muestra qué se identificó como una posible necesidad de cambio manual
-- validaciones que impedirían aplicar el refactoring, cómo se muestran? Estas validaciones se
-realizan antes de mostrar la UI. Completar la UI, osea configurar el refactoring, en algunos
-casos puede ser una tarea que demande cierto tiempo, si ya sabemos que no se puede es preferible
-que primero resuelva ese problema o directamente no aplique el refactoring y no pierda tiempo
-configurándolo.
-
-
-
-% WRITE dar ejemplos de todas estos items
-En varios casos, se produce una explosión de posibilidades (como en las asignaciones de ivars) y
-tomar una de todas sería sobresimplificar el problema y presentárselas al usuario sería
-difícil debido a la complejidad que hay que trasmitir.
 % INO
 - ifNilChecks anidados
-- las asignaciones a la variable de instancia en la que se está introduciendo el null object
-reemplazamos las asignaciones de nil pero no las de colaboraciones.
-
-
-% Implementación
-% WRITE qué contar sobre la implementación y sobre el diseño?
 
 % Preservación del comportamiento
-% WRITE resumir cómo ganamos confianza y los tests más importantes
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
