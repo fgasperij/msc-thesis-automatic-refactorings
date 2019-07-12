@@ -151,6 +151,141 @@ Context>>launchRocket
 
 \section{Descripción completa de la funcionalidad del refactoring implementado}
 
+El modelo de IntroduceNullObject es más complejo que el de ExtractToMethodObject. Ambos fueron desarrollados
+% REf a TDD
+utilizando TDD y la principal diferencia que se encontró es que al empezar a desarrollar de manera incremental
+las precondiciones del refactoring eran complejas y requerían que las estructuras recibidas
+por el objeto central del modelo, el encargado de aplicar el refactoring, una instancia de la clase
+\lstinline{IntroduceNullObject}, fueran también complejas (colleciones con varios niveles de profundidad).
+Resultó conveniente repartir las responsabilidades y encapsular las distintas estructuras que necesita
+el refactoring en otros objetos que luego recibirá este. Las precondiciones chequeadas por el refactoring
+se redujeron porque los objetos que recibe son válidos entonces las validaciones espcíficas de esas estructuras
+están encapsuladas en esos objetos.
+
+El refactoring se utiliza de la siguiente manera:
+
+\begin{code}
+refactoring := IntroduceNullObject
+    on: 'ivar1'
+    of: aRocket class
+    usingAsConcreteClass: ConcreteFuelTank
+    usingAsNullClass: NullFuelTank
+    for: replacementParameters
+refactoring apply.
+\end{code}
+
+\lstinline{IntroduceNullObject} es subclase de \lstinline{Refactoring} y por lo tanto sobrescribe el
+mensaje \lstinline{apply}. Los colaboradores que recibe en el mensaje de creación de instancia son 
+lo que necesita para poder aplicar el refactoring.
+
+\subsection*{La variable de instancia y la clase}
+En el keyword \lstinline{on:} recibe el nombre de la variable de instancia que se reemplazará por el
+Null Object. Hasta ahora el refactoring Introduce Null Object parecía aplicarse a un tipo. El tipo
+que utilizamos de referencia era Componente y los cambios, reemplazo de asignaciones de null o 
+chequeos por null, se realizaban sin un scope determinado, es decir, se aplicaban a lo largo de todo
+el sistema. Realizar algo así en un sistema dinámico como Cuis no es posible sin sacrificar
+demasiada confianza sobre la preservación del comportamiento del refactoring. El proceso para encontrar
+todos los lugares en los que se utiliza una instancia de la clase Component no es claro y, aunque lo
+fuera, como los tipos son dinámicos la variable podría contener un conjunto de tipos durante su
+vida, no solo Component, dependiendo el momento de ejecución. Por último siempre queda el problema de
+la metaprogramación que vuelve inútil cualquier intento de inferencia de tipos estática. Por esta
+razón decidimos darle al cambio un scope determinado y que el usuario guíe al refactoring con su
+conocimiento del modelo.
+
+El scope elegido es el de una clase. La clase provee un equilibrio entre el método, que sería
+demasiado restrictivo, probablemente existan pocos casos en los que se justifique introducir este
+refactoring solo para eliminar los condicionales de un solo método, y todo el sistema, ya que no
+existe un scope claro más grande que la clase o por lo menos Cuis no lo provee ya que las categorías
+o los paquetes no permiten ese tipo de funcionalidad. La clase que se utilizará como contexto es la 
+recibida en el keyword \lstinline{of:}.
+
+Dentro de una clase se eligirá un colaborador interno o variable de instancia en particular sobre la
+cual se realicen chequeos por nil para aplicar el refactoring. Al no contar con un tipo específico
+para buscar todas las variables es necesario fijar la o las variables que el programador, por su
+conocimiento del modelo, ya sabe que deberían pertenecer a ese tipo. Esto se apoya en las ventajas
+ya expuestas de floss refactoring, el caso en el que el programador tiene claro el cambio que quiere
+realizar y la herramienta lo automatiza para reducir la posibilidad de errores y aumentar la
+velocidad de ejecución. La herramienta no asume entender el modelo ni poder cambiarlo sin guía del
+usuario. Se elige como variable a fijar una variable de instancia porque son las variables que están
+disponibles a través de todo el scope de la clase y son más comunes que las variables de clase o
+las variables de pool.
+
+Todo el refactoring tendrá como centro a la variable de instancia elegida, todo los condicionales
+modificados serán sobre esa variable. La única precondición que solo incluyea al la variable de
+instancia y la clase es que la variable pertenezca a la clase.
+
+\subsection*{La jerarquía de Null Object}
+
+La jerarquía que se asumirá será aquella en la que Component y NullComponent heredan de
+AbstractComponent, veremos por qué más adelante. Sin embargo, no es necesario que efectivamente la
+implementen, no es una precondición. La única precondición con respecto a las clases Component y
+NullComponent es que no sean iguales. Si se utilizara la misma clase no se podrían enviar mensajes
+polimórficos que se respondan de forma distinta dependiendo el tipo de la variable.
+
+\subsection*{Los argumentos para los condicionales a reemplazar}
+
+Los condicionales a reemplazar ya están determinados por la variable de instancia y su clase. Smalltalk no
+cuenta con condicionales como parte de su sintaxis, éstos se implementan con polimorfismo. Por lo tanto,
+los tipos de condicionales soportados por el refactoring no son más que un conjunto mensajes:
+
+\begin{itemize}
+    \item Nil Selectors
+    \begin{itemize}
+        \item \lstinline{ifNil:}
+        \item \lstinline{ifNil:ifNotNil:}
+        \item \lstinline{ifNotNil:}
+        \item \lstinline{ifNotNil:ifNil:}
+    \end{itemize}
+
+    \item Boolean Selectors
+    \begin{itemize}
+        \item \lstinline{ifTrue:}
+        \item \lstinline{ifTrue:ifFalse:}
+        \item \lstinline{ifFalse:}
+        \item \lstinline{ifFalse:ifTrue:}
+    \end{itemize}
+\end{itemize}
+
+Los Nil Selectors siempre tienen que tener como receptor del mensaje a la variable de instancia y los
+Boolean Selectors tienen que tener como receptor del mensaje a un envío de mensaje \lstinline{==} a la
+variable de instancia con el argumento nil:
+
+\begin{code}
+"Nil Selector: ejemplo de receptor"
+component ifNil: [^4]    
+
+"Boolean Selector: ejemplo de receptor"
+component == nil ifTrue: [^4]    
+\end{code}
+
+Todos los condicionales soportados serán reemplazados por el envío de un mensaje polimórfico:
+
+\begin{code}
+Context>>fuel
+    component ifNil: [0] ifNotNil: [component fuelLeftIn: unit]
+
+"Pasará a ser:"
+Context>>fuel
+    component polymorphicSelector: units
+
+"Agregando:"
+Component>>polymorphicSelector: aUnit
+    ^self fuelLeftIn: aUnit
+
+NullComponent>>polymorphicSelector: aUnit
+    ^0
+\end{code}
+
+
+
+
+% WRITE ¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas se nos ocurrieron
+% en un sistema dinámico como Smalltalk en el que no contamos con el tipo o la clase de una variable?
+Ya veremos que es fácil pasar de realizar el cambio en el contexto de una clase a realizarlo en todo el sistema.
+Bueno quizás no es tan fácil en un sistema dinámico como Smalltalk. Pero tiene ventajas y desventajas realizarlo
+de esta manera, si lo vamos aplicando progresivamente podemos identificar más fácil si algo se rompe y dónde.
+
+
 % WRITE Precursor del refactoring en referencia al paper de Methodology
 
 % WRITE Ejemplo concreto
@@ -158,10 +293,6 @@ Context>>launchRocket
 El cambio que implementamos está encapsulado en una clase. Si sucede que varias clases tienen el mismo
 problema simplemente habría que implementarlo en cada clase. Por ahora no estamos contemplando este caso
 porque siempre se crea un mensaje nuevo, habría que soportar métodos ya existentes para reutilizar esto.
-
-
-
-\section{Descripción completa de la funcionalidad}
 
 
 
