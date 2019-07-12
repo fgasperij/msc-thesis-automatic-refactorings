@@ -124,30 +124,33 @@ Context>>sendTask
 \end{code}
 
 Se agrega un mensaje que asignará a la variable de instancia una instancia de NullComponent cuando
-el valor que devuelva la colaboración del lado derecho sea null.
+el valor que devuelva la colaboración del lado derecho sea null. Esto debe ser así cuando no tenemos
+control sobre esas colaboraciones o queremos encapsular la utilización del NullComponent a cierta parte
+del código, si se reemplazan todos los lugares donde se utiliza un null por un Component por un NullComponent
+entonces el mensaje de asignación no debería ser necesario.
 
 Luego de realizar las operaciones anteriores la variable de instancia \lstinline{component} no
-debería contener en ningún caso null, solo instancias de Component o NullComponent.
+debería contener en ningún caso null, solo instancias de Component o NullComponent. El siguiente y
+último paso es reemplazar los condicionales por el envío de mensajes polimórficos y el traslado
+del comportamiento de null a el NullComponent:
+
+\begin{code}
+Context>>launchRocket
+    rocketHeight := component ifNil: [0] ifNotNil: [component ignite].
+
+"Luego de aplicar el refactoring"
+
+NullComponent>>ignite
+    ^0
+
+Context>>launchRocket
+    rocketHeight := component ignite.
+\end{code}
 
 
 
-Características
-- null objects son siempre constantes, no cambian. Se pueden implementar como Singletons.
-- representan la ausencia de un tipo de colaborador y por lo tanto no tienen comportamiento o devuelven
-constantes u null objects de otros tipos.
+\section{Descripción completa de la funcionalidad del refactoring implementado}
 
-
-Fowler muestra una forma de aplicarlo que previene contra los errores más comunes. En este caso se pueden
-saltear varios pasos porque está programado.
-
-casos
-- qué se puede modificar? la concreteClass? 
-si no se puede modificar X se puede usar una testing interface, en Smalltalk no existe esto. No sé
-si tiene sentido decirlo más que que no aplica.
-
-% en el paper del pattern muestran 3 formas de implementarla, está bueno repasarlas
-% el chequeo por null de una variable. Reducir la cantidad de condicionales simplifica el código, lo
-% vuelve más simple. El chequeo por null estará duplicado en cada utilización de esa variable
 % WRITE Precursor del refactoring en referencia al paper de Methodology
 
 % WRITE Ejemplo concreto
