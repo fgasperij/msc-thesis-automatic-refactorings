@@ -149,18 +149,23 @@ Context>>launchRocket
 
 
 
+
+
+
+
 \section{Descripción completa de la funcionalidad del refactoring implementado}
 
-El modelo de IntroduceNullObject es más complejo que el de ExtractToMethodObject. Ambos fueron desarrollados
+El modelo de IntroduceNullObject es más complejo que el de ExtractToMethodObject. Ambos fueron
+desarrollados
 % REf a TDD
-utilizando TDD y la principal diferencia que se encontró es que al empezar a desarrollar de manera incremental
-las precondiciones del refactoring eran complejas y requerían que las estructuras recibidas
-por el objeto central del modelo, el encargado de aplicar el refactoring, una instancia de la clase
-\lstinline{IntroduceNullObject}, fueran también complejas (colleciones con varios niveles de profundidad).
-Resultó conveniente repartir las responsabilidades y encapsular las distintas estructuras que necesita
-el refactoring en otros objetos que luego recibirá este. Las precondiciones chequeadas por el refactoring
-se redujeron porque los objetos que recibe son válidos entonces las validaciones espcíficas de esas estructuras
-están encapsuladas en esos objetos.
+utilizando TDD y la principal diferencia que se encontró es que al empezar a desarrollar de manera
+incremental las precondiciones del refactoring eran complejas y requerían que las estructuras
+recibidas por el objeto central del modelo, el encargado de aplicar el refactoring, una instancia de
+la clase \lstinline{IntroduceNullObject}, fueran también complejas (colleciones con varios niveles
+de profundidad). Resultó conveniente repartir las responsabilidades y encapsular las distintas
+estructuras que necesita el refactoring en otros objetos que luego recibirá este. Las precondiciones
+chequeadas por el refactoring se redujeron porque los objetos que recibe son válidos entonces las
+validaciones espcíficas de esas estructuras están encapsuladas en esos objetos.
 
 El refactoring se utiliza de la siguiente manera:
 
@@ -280,6 +285,8 @@ El usuario deberá elegir el selector polimórfico y los nombres de los parámet
 a parametrizar. En el ejemplo anterior el selector polimórfico es \lstinline{polymorphicSelector} y
 el nombre del parámetro \lstinline{aUnit}.
 
+% DIAGRAM un diagrama de objetos mostrando cómo intereactúan INO con RINWPP
+
 \section{Funcionalidad de ReplaceIfNilWithPolymorphismParameters}
 
 \lstinline{ReplaceIfNilWithPolymorphismParameters} es una clase que representa los argumentos necesarios
@@ -295,6 +302,7 @@ los parámetros.
 soportado por el refactoring.
 
 % WRITE Explicar cómo se valida que el mensaje sea soportado y las complicaciones que trae eso.
+% esto no lo voy a escribir hasta que no haga los tests para ver si ya funciona todo bien o no 
 Verificar que el \lstinline{MessageNode} represente un envío de mensaje soportado es un poco más 
 complicado que verificar que el selector del nodo pertenezca al conjunto de selectores soportados
 y que el receptor del mensaje sea una variable de instancia de la clase del método. La causa son algunas
@@ -302,52 +310,114 @@ optimizaciones que se realizan al construir el AST, en específico los MessageNo
 dentro de los cuales encontramos a ifNil:ifNotNil: ifNotNil: y ifNotNil:ifNil:.
 
 
-
-
 Además, verifica que la definición del mensaje polimórfico sea consistente con las variables a parametrizar
 en los bloques y que no existan colisiones entre los nombres de los parámetros del mensaje polimórfico
 y las variables temporales de los bloques que recibe el chequeo por null como argumento.
 
 
+\subsection{Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters}
+
+% WRITE esto debería cambiar cuando demos la posibilidad de seleccionar un mensaje que ya existe
+% para crearlo solo de un lado
+\lstinline{IntroduceNullObject} valida que los selectores seleccionados para los mensajes polimórficos
+no colisionen con otro mensaje de la jerarquía del Null Object. 
 
 
+\subsection{Aplicación del refactoring}
+
+Al contar con la colección de \lstinline{ReplaceIfNilWithPolymorphismParameters} la aplicación del
+refactoring reemplaza cada uno de esos chequeos de nil con lo argumentos correspondientes. Los
+cambios que se deben realizar son:
+
+\begin{itemize}
+    \item agregar el mensaje polimórfico al Component
+    \item agregar el mensaje polimórfico al NullComponent
+    \item reemplazar el chequeo de nil por el envío del mensaje polimórfico
+\end{itemize}
+
+El proceso para compilar el nuevo método en las clases Component y NullComponent es igual, lo que 
+cambia es el bloque utilizado como fuente:
+
+\begin{code}
+component ifNil: ['The NullComponent block'] ifNotNil: ['The Component block']
+\end{code}
+
+Los mensajes que tienen un solo keyword no cuentan con un bloque para alguna de las dos clases, en
+ese caso el método que se compilará será vacío ya que no se requiere ningún comportamiento si el
+objeto tiene ese tipo. Veamos un ejemplo:
+
+\begin{code}
+Context>>fuel
+    ^component ifNotNil: [
+        self fuelLevelChecked.
+        component fuelLevel]
+
+Component>>fuelLevelWithLog: context
+    context fuelLevelChecked.
+    ^self fuelLevel
+
+NullComponent>>fuelLevelWithLog: context
+    "Empty method"
+
+Context>>fuel
+    component fuelLevelWithLog: self
+\end{code}
+
+El chequeo por nil se realizó con el mensaje \lstinline{ifNotNil:}, por lo tanto si el objeto es nil
+no se espera comportamiento alguno. Por esa razón el método en la clase \lstinline{NullComponent} resulta
+vacío.
+
+La generación del código de los métodos para cada caso se realiza reemplazando todas las variables
+a parametrizar, todas las variables que se referencian en el bloque excepto las que sean temporales
+% WRITE qué sucedía con los argumentos de los bloques? puede ser que no tenían?
+del bloque, por el nombre del parámetros correspondiente. Para realizar esto necesitamos obtener el 
+código fuente del bloque y luego obtener el rango en el código fuente del método de cada variable a
+parametrizar y restarle el offset del inicio del bloque.
+
+Finalmente, se reemplaza el chequeo de nil por el envío del mensaje polimórfico. Se toma el código
+fuente del método, se realiza el reemplazo y luego se vuelve a compilar en la clase Context. El
+único detalle de este proceso es que la obtención del rango que comprende el chequeo de nil se debe
+realizar manualmente porque el \lstinline{Encoder} no posee esta información. En el caso de
+\lstinline{MessageNode}s se cuenta con el rango de los keywords y sus argumentos pero no del
+receptor. Por lo tanto el rango de un \lstinline{MessageNode} incluyendo al receptor debe tomar el
+lado derecho del rango del envío de mensaje y el lado izquierdo del receptor. El receptor en nuestro
+caso puede ser una variable o un envío de mensaje (\lstinline{instVar isNil}) por lo cual es simple
+obtener el rango consultando al Encoder. La construcción del envío del mensaje la realiza el
+\lstinline{ReplaceIfNilWithPolymorphismParameters} correspondiente, ya que cuenta con el mapeo entre
+variable a parametrizar y keyword del selector polimórfico. 
 
 
-\subsection{The rest}
+\subsection{¿Cómo se utiliza?}
 
+El usuario puede iniciar el refactoring desde el listado de clases en el System Browser porque lo que
+necesita el \lstinline{RefactoringApplier} para iniciar la obtención de los argumentos es la clase
+a utilizar como contexto:
+
+% DIAGRAM mostrar cómo se selecciona el refactoring
+
+El \lstinline{RefactoringApplier} es el encargado de recabar los argumentos para el
+\lstinline{IntroduceNullObject}, crear el refactoring y aplicarlo. Colaborará con el
+\lstinline{IntroduceNullObjectForm} y el \lstinline{IntroduceNullObjectRequest} para conseguir esto.
+La distribución de responsabilidades quedará reflejada en el siguiente diagrama de secuencia
+que muestra cómo colaborane en un caso exitoso:
+
+% DIAGRAM colaboración en caso exitoso
+
+y la experiencia para el usuario sería:
+
+% DIAGRAM mostrar el paso a paso de aplicación del refactoring.
+
+\subsection{Comentarios adicionales}
 % WRITE ¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas se nos ocurrieron
 % en un sistema dinámico como Smalltalk en el que no contamos con el tipo o la clase de una variable?
-Ya veremos que es fácil pasar de realizar el cambio en el contexto de una clase a realizarlo en todo el sistema.
-Bueno quizás no es tan fácil en un sistema dinámico como Smalltalk. Pero tiene ventajas y desventajas realizarlo
-de esta manera, si lo vamos aplicando progresivamente podemos identificar más fácil si algo se rompe y dónde.
+Ya veremos que es fácil pasar de realizar el cambio en el contexto de una clase a realizarlo en todo
+el sistema. Bueno quizás no es tan fácil en un sistema dinámico como Smalltalk. Pero tiene ventajas
+y desventajas realizarlo de esta manera, si lo vamos aplicando progresivamente podemos identificar
+más fácil si algo se rompe y dónde.
 
 
 % WRITE Precursor del refactoring en referencia al paper de Methodology
 
-% WRITE Ejemplo concreto
+\subsection{Preservación del comportamiento}
 
-El cambio que implementamos está encapsulado en una clase. Si sucede que varias clases tienen el mismo
-problema simplemente habría que implementarlo en cada clase. Por ahora no estamos contemplando este caso
-porque siempre se crea un mensaje nuevo, habría que soportar métodos ya existentes para reutilizar esto.
-
-
-
-
-
-
-
-
-
-
-
-% INO
-- por qué se reemplazan todos los ifNilChecks y no está soportada la posibilidad de preservar algunos ifNilChecks? 
-en el contexto de una clase no tiene sentido porque suponemos que la variable de instancia no
-tomará más el valor nil. Pero si le agregamos un mensaje `isNull` a las clases entonces
-podríamos seguir chequándolo. 
-
-% INO
-- ifNilChecks anidados
-
-% Preservación del comportamiento
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr los tests.
