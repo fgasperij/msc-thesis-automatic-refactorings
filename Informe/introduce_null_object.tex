@@ -101,7 +101,7 @@ null a la variable de instancia. Por ejemplo:
 Context>>initialize
     component := null.
 
-"Pasará a ser"
+"Pasara a ser"
 
 Context>>initialize
     component := NullComponent new.
@@ -114,7 +114,7 @@ null. Esos casos deben reemplazarse por una delegación que permita asignar el N
 Context>>sendTask
     component := self latestComponent.
 
-"Se reemplazará por:"
+"Se reemplazara por:"
 
 Context>>assignComponentWith: aComponentOrNull
     component := aComponentOrNull ifNil: [NullComponent new] ifNotNil: [aComponentOrNull].
@@ -247,15 +247,15 @@ los tipos de condicionales soportados por el refactoring no son más que un conj
 \end{itemize}
 
 Los Nil Selectors siempre tienen que tener como receptor del mensaje a la variable de instancia y los
-Boolean Selectors tienen que tener como receptor del mensaje a un envío de mensaje \lstinline{==} a la
-variable de instancia con el argumento nil:
+Boolean Selectors tienen que tener como receptor del mensaje a un envío de mensaje \lstinline{isNil} a la
+variable de instancia:
 
 \begin{code}
 "Nil Selector: ejemplo de receptor"
 component ifNil: [^4]    
 
 "Boolean Selector: ejemplo de receptor"
-component == nil ifTrue: [^4]    
+component isNil ifTrue: [^4]    
 \end{code}
 
 Todos los condicionales soportados serán reemplazados por el envío de un mensaje polimórfico:
@@ -264,7 +264,7 @@ Todos los condicionales soportados serán reemplazados por el envío de un mensa
 Context>>fuel
     component ifNil: [0] ifNotNil: [component fuelLeftIn: unit]
 
-"Pasará a ser:"
+"Pasara a ser:"
 Context>>fuel
     component polymorphicSelector: units
 
@@ -276,8 +276,44 @@ NullComponent>>polymorphicSelector: aUnit
     ^0
 \end{code}
 
+El usuario deberá elegir el selector polimórfico y los nombres de los parámetros para las variables
+a parametrizar. En el ejemplo anterior el selector polimórfico es \lstinline{polymorphicSelector} y
+el nombre del parámetro \lstinline{aUnit}.
+
+\section{Funcionalidad de ReplaceIfNilWithPolymorphismParameters}
+
+\lstinline{ReplaceIfNilWithPolymorphismParameters} es una clase que representa los argumentos necesarios
+para reemplazar un chequeo por null con polimorfirsmo. Los colaboradores internos de la clase son el
+\lstinline{methodNode} del método, la raíz del AST, en el cual se encuentra el chequeo por null,
+el \lstinline{messageNode} correspondiente al chequeo por null y una instancia de
+\lstinline{VariablesToParametrizeKeywordsDefinitions}. Los dos primeros identifican y referencian al
+chequeo por null que reemplazaremos. El tercero es un objeto que contiene la definición del 
+mensaje polimórfico: los keywords, qué variable a parametrizar irá en qué keyword y los nombres de
+los parámetros.
+
+\lstinline{ReplaceIfNilWithPolymorphismParameters} valida que el \lstinline{messageNode} sea un mensaje
+soportado por el refactoring.
+
+% WRITE Explicar cómo se valida que el mensaje sea soportado y las complicaciones que trae eso.
+Verificar que el \lstinline{MessageNode} represente un envío de mensaje soportado es un poco más 
+complicado que verificar que el selector del nodo pertenezca al conjunto de selectores soportados
+y que el receptor del mensaje sea una variable de instancia de la clase del método. La causa son algunas
+optimizaciones que se realizan al construir el AST, en específico los MessageNode de un conjunto de mensajes,
+dentro de los cuales encontramos a ifNil:ifNotNil: ifNotNil: y ifNotNil:ifNil:.
 
 
+
+
+Además, verifica que la definición del mensaje polimórfico sea consistente con las variables a parametrizar
+en los bloques y que no existan colisiones entre los nombres de los parámetros del mensaje polimórfico
+y las variables temporales de los bloques que recibe el chequeo por null como argumento.
+
+
+
+
+
+
+\subsection{The rest}
 
 % WRITE ¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas se nos ocurrieron
 % en un sistema dinámico como Smalltalk en el que no contamos con el tipo o la clase de una variable?
