@@ -266,34 +266,34 @@ Todos los condicionales soportados serán reemplazados por el envío de un mensa
 
 \begin{code}
 Context>>fuel
-    component ifNil: [0] ifNotNil: [component fuelLeftIn: unit]
+    component ifNil: [unit zero] ifNotNil: [component fuelLeftIn: unit]
 
-"Pasara a ser:"
+"Pasará a ser:"
 Context>>fuel
-    component polymorphicSelector: units
+    component polymorphicSelector: unit
 
 "Agregando:"
 Component>>polymorphicSelector: aUnit
     ^self fuelLeftIn: aUnit
 
 NullComponent>>polymorphicSelector: aUnit
-    ^0
+    ^aUnit zero
 \end{code}
 
 El usuario deberá elegir el selector polimórfico y los nombres de los parámetros para las variables
 a parametrizar. En el ejemplo anterior el selector polimórfico es \lstinline{polymorphicSelector} y
 el nombre del parámetro \lstinline{aUnit}.
 
-% DIAGRAM un diagrama de objetos mostrando cómo intereactúan INO con RINWPP
+% DIAGRAM un diagrama de objetos mostrando cómo intereactúan INO y RINWPP
 
 \section{Funcionalidad de ReplaceIfNilWithPolymorphismParameters}
 
 \lstinline{ReplaceIfNilWithPolymorphismParameters} es una clase que representa los argumentos necesarios
-para reemplazar un chequeo por null con polimorfirsmo. Los colaboradores internos de la clase son el
-\lstinline{methodNode} del método, la raíz del AST, en el cual se encuentra el chequeo por null,
-el \lstinline{messageNode} correspondiente al chequeo por null y una instancia de
+para reemplazar un chequeo por nil con polimorfirsmo. Los colaboradores internos de la clase son el
+\lstinline{methodNode} del método, la raíz del AST, en el cual se encuentra el chequeo por nil,
+el \lstinline{messageNode} correspondiente al chequeo por nil y una instancia de
 \lstinline{VariablesToParametrizeKeywordsDefinitions}. Los dos primeros identifican y referencian al
-chequeo por null que reemplazaremos. El tercero es un objeto que contiene la definición del 
+chequeo por nil que reemplazaremos. El tercero es un objeto que contiene la definición del 
 mensaje polimórfico: los keywords, qué variable a parametrizar irá en qué keyword y los nombres de
 los parámetros.
 
@@ -309,15 +309,14 @@ optimizaciones que se realizan al construir el AST, en específico los MessageNo
 dentro de los cuales encontramos a ifNil:ifNotNil: ifNotNil: y ifNotNil:ifNil:.
 
 
-Además, verifica que la definición del mensaje polimórfico sea consistente con las variables a parametrizar
-en los bloques y que no existan colisiones entre los nombres de los parámetros del mensaje polimórfico
-y las variables temporales de los bloques que recibe el chequeo por null como argumento.
+Además, verifica que la definición del mensaje polimórfico sea consistente con
+las variables a parametrizar en los bloques y que no existan colisiones entre
+los nombres de los parámetros del mensaje polimórfico y las variables temporales
+de los bloques que recibe el chequeo por nil como argumento.
 
 
 \subsection{Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters}
 
-% WRITE esto debería cambiar cuando demos la posibilidad de seleccionar un mensaje que ya existe
-% para crearlo solo de un lado
 \lstinline{IntroduceNullObject} valida que los selectores seleccionados para los mensajes polimórficos
 no colisionen con otro mensaje de la jerarquía del Null Object. 
 

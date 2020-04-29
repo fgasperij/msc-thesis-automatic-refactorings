@@ -3,91 +3,115 @@
 % De dónde salieron los refactorings
 \subsection{Desarrollo de software evolutivo}
 % Los proyectos de software evolucionan
-Los refactorings nacen de una característica esencial del software productivo: el cambio.
-Lehman, en 1969, fue uno de los primeros en estudiar la evolución y el mantenimiento del software. Sus 
-investigaciones resultaron en un cambio de perspectiva sobre el mantenimiento de software que pasó 
-a verse como una forma de desarrollo evolutivo. 
+Los refactorings surgen de una característica esencial del software productivo:
+el cambio.  Lehman, en 1969, fue uno de los primeros en estudiar la evolución y
+el mantenimiento del software. Sus investigaciones resultaron en un cambio de
+perspectiva sobre el mantenimiento de software, que pasó a verse como una forma
+de desarrollo evolutivo.
 % REF cita a la survey de Lientz y Swanson a la que hacen referencia acá
 % https://en.wikipedia.org/wiki/Software_maintenance#cite_note-csse.monash.edu.au-4 Lientz, B.P. and
 % Swanson, E.B., Software Maintenance Management, A Study Of The Maintenance Of Computer Application
 % Software In 487 Data Processing Organizations. Addison-Wesley, Reading MA, 1980.
-[Lientz y Swanson] analizó la proporción de costos que representaban los distintos tipos de mantenimientos:
+[Lientz y Swanson] analizó la proporción de costos que representaban los
+distintos tipos de mantenimiento:
 
-% FORMAT pasarlo a description?
 \begin{itemize}
-    \item Adaptaciones: modificationes para adaptarse cambios en su entorno (DBMS, OS).
-    \item Mejoras: implementación de requerimientos que cambiaron o son nuevos sobre la funcionalidad.
+    \item Adaptaciones: modificaciones para adaptarse a cambios en su entorno
+      (DBMS, OS).
+    \item Mejoras: implementación de requerimientos que cambiaron o son nuevos
+      sobre la funcionalidad.
     \item Correcciones: diagnóstico y corrección de errores.
-    \item Preventivos: cambios para incrementar la mantenibilidad del software para prevenir problemas.
+    \item Preventivos: cambios para incrementar la mantenibilidad del software
+      para prevenir problemas.
 \end{itemize}
 
-Los primeros dos tipos de actividades de mantenimiento representaban el 75\% de los costos de mantenimiento,
-lo cual deja en claro la visión del mantenimiento como un desarrollo evolutivo. Lehman además propuso
-que esa evolución incrementa la complejidad de los sistemas. Al incrementarse el número de entidades
-que componen un sistema las interacciones que se producen entre ellos puede aumentar exponencialmente
-hasta llegar un punto en el cual no es posible entenderlas. En el contexto de un proyecto de software
-esto implicaría que el riesgo de romperlo al modificarlo o extenderlo sería demasiado alto. Casos así
+Los primeros dos tipos de actividades de mantenimiento representaban el 75\% de
+los costos de mantenimiento, pero como no son de naturaleza correctiva es más
+apropiado incluirlos como parte de un desarrollo progresivo o evolutivolo y no
+como mantenimiento. Lehman además propuso que esa evolución incrementa la
+complejidad de los sistemas. Al incrementarse el número de entidades que
+componen un sistema las interacciones que se producen entre ellos pueden
+aumentar exponencialmente hasta llegar a un punto en el cual no es posible
+entenderlos. La consecuencia de esto sería que los costos de modificar o
+extender el comportamiento de un sistema sin provocar consecuencias inesperadas
+como cambiar el comportamiento de otra parte del sistema contradiciendo los
+requerimientos se vuelven inviables. Casos así
 % REF crisis del software http://homepages.cs.ncl.ac.uk/brian.randell/NATO/NATOReports/index.html
-llevaron a la crisis del software.
-No existe una métrica clara de la complejidad de un sistema de software pero se utilizan algunas aproximaciones
+llevaron a la crisis del software. No existe una métrica clara de la complejidad
+de un sistema de software pero se utilizan algunas aproximaciones
 % REF cyclomatic complexity Mc Cabe
-como la complejidad ciclomática de Mc Cabe. Sin embargo, dado que la complejidad del software está fuertemente
-asociada a su mantenibildad, se suele tratar la primera mejorando a la segunda. Es decir, se intenta
-limitar el incremento de la complejidad utilizando técnicas que apuntan a preservar la mantenibilidad
-del sistema.
+como la complejidad ciclomática de Mc Cabe. Sin embargo, dado que la complejidad
+del software está fuertemente asociada a su mantenibildad, se suele tratar la
+primera mejorando a la segunda. Es decir, se intenta limitar el incremento de la
+complejidad utilizando técnicas que apuntan a preservar la mantenibilidad del
+sistema.
 
 
 \subsection{Calidad y mantenibilidad del software}
-La calidad del software en este contexto se refiere a la calidad estructural, los atributos de calidad
-no funcionales sobre los que se apoyan los requerimientos funcionales. No existe una métrica aceptada
+La calidad del software en este contexto se refiere a la calidad estructural,
+los atributos de calidad no funcionales sobre los que se apoyan los
+requerimientos funcionales. No existe una métrica aceptada
 % REF a cisq
-de la calidad ya que puede ser entendida de distintas formas. Sin embargo, CISQ definió un conjunto de
-características con las cuales todo software debería contar para aportar valor de negocio:
+de la calidad ya que puede ser entendida de distintas formas. Sin embargo, CISQ
+definió un conjunto de características con las cuales todo software debería
+contar para aportar valor de negocio:
 
 \begin{itemize}
-    \item fiabilidad: la probabilidad de que el sistema falle, su estabilidad. El principal objetivo
-    es evitar downtime del sistema.
-    \item eficiencia: mide el grado con el cual cumple los requerimientos de los usuarios en
-    terminos de tiempo de respuesta.
-    \item seguridad: cuantifica el riesgo de que se encuentren vulnerabilidades que dañen al
-    negocio.
-    \item mantenibilidad: la capacidad del software de cambiar y adaptarse a las necesidades de los
-    usuarios y el mercado.
+    \item fiabilidad: la probabilidad de que el sistema falle, su
+      estabilidad. El principal objetivo es evitar downtime del sistema.
+    \item eficiencia: mide el grado con el cual cumple los requerimientos de los
+      usuarios en terminos de tiempo de respuesta.
+    \item seguridad: cuantifica el riesgo de que se encuentren vulnerabilidades
+      que dañen al negocio.
+    \item mantenibilidad: la capacidad del software de cambiar y adaptarse a las
+      necesidades de los usuarios y el mercado.
 \end{itemize}
 
-La mantenibilidad vemos que es uno de los cuatros componentes de la calidad y, por lo que vimos
-antes, presenta una gran oportunidad para reducir los costos de un proyecto de software. 
-La mantenibilidad del software suele describirse en función de varios otros atributos de calidad como:
+La mantenibilidad vemos que es uno de los cuatros componentes de la calidad y,
+por lo que vimos antes, presenta una gran oportunidad para reducir los costos de
+un proyecto de software.  La mantenibilidad del software suele describirse en
+función de varios otros atributos de calidad como:
 
 \begin{itemize}
-    \item entendibilidad: cuán costoso es entender el sistema. El desarrollador debe entenderlo para
-    poder manipularlo de cualquier manera sin romperlo. El tiempo que le toma y el riesgo que tiene
-    de romperlo por falta de comprensión son costos afectados por este factor.
-    \item cambiabilidad: cuán costoso es cambiar el sistema. En particular, cuán costoso es realizarle
-    los cambios que el negocio y los usuarios demandan de él.
-    \item reusabilidad: cuán costoso es reusar los componentes del software para proveer una nueva
-    funcionalidad.
-    \item testabilidad: cuán costoso es crear tests para verificar una funcionalidad.
-    \item extensibilidad: cuán costoso es extender el sistema con nuevas funcionalidades. La diferencia
-    con cambiabilidad es que en este caso la funcionalidad es nueva y en el otro ya existe pero es
-    modificado su comportamiento.
-    \item transferibilidad: cuán costoso es transferir el proyecto o parte de él a otro equipo de
-    desarrollo.
+    \item entendibilidad: cuán costoso es entender el sistema. El desarrollador
+      necesita entenderlo para poder modificarlo o extenderlo sin cambiar su
+      comportamiento de maneras inesperadas. El tiempo que le toma y el riesgo
+      que tiene de que el resultado viole los requerimientos funcionales por
+      falta de comprensión dependen directamente de este atributo.
+    \item cambiabilidad: cuán costoso es cambiar el sistema. En particular, cuán
+      costoso es realizarle los cambios que el negocio y los usuarios demandan
+      de él.
+    \item reusabilidad: cuán costoso es reusar los componentes del software para
+      proveer una nueva funcionalidad.
+    \item testabilidad: cuán costoso es crear tests para verificar una
+      funcionalidad.
+    \item extensibilidad: cuán costoso es extender el sistema con nuevas
+      funcionalidades. La diferencia con cambiabilidad es que en este caso la
+      funcionalidad es nueva y en el otro ya existe pero es modificado su
+      comportamiento.
+    \item transferibilidad: cuán costoso es transferir el proyecto o parte de él
+      a otro equipo de desarrollo.
 \end{itemize}
 
-El incremento de la complejidad se produce en gran parte debido a la erosión del diseño, lo cual
-decrementa su mantenibilidad. La degradación del diseño se puede ver más claramente a través del
-incremento de los costos de cada uno de los componentes de la mantenibilidad de un sistema. Por ejemplo,
-un diseño que no previó necesaria la flexibilidad que se requiere para implementar una nueva funcionalidad
-incrementará los costos de extensibilidad, el tiempo de desarrollo se verá afectado.
+Éstos atributos no son independientes, están relacionados y se afectan los unos
+a los otros. El incremento de la complejidad se produce en gran parte debido a
+% REF Design Erosion: Problems and causes - https://dl.acm.org/doi/10.1016/S0164-1212(01)00152-2
+la erosión del diseño, lo cual decrementa su mantenibilidad. La degradación del
+diseño se puede ver más claramente a través del incremento de los costos de cada
+uno de los componentes de la mantenibilidad de un sistema. Por ejemplo, un
+diseño que no previó necesaria la flexibilidad que se requiere para implementar
+una nueva funcionalidad incrementará los costos de extensibilidad y por lo tanto
+el tiempo de desarrollo se verá afectado.
 
 
 \subsection{Técnicas para preservar la mantenibilidad}
-Las decisiones de mantenimiento pueden ser más eficientes aceptando esta realidad del proceso de
-desarrollo, su esencia evolutiva. Existen varias metodologías de desarrollo de software con enfoques
-distintos y prioridades diferentes. Las metodologías ágiles engloban a varios frameworks de desarrollo
-que se contraponen a los procesos pesados más tradicionales y proponen procesos más livianos en los
-cuales prima la aceptación del cambio como guía del desarrollo. Algunos ejemplos son:
+Las decisiones de mantenimiento pueden ser más eficientes aceptando esta
+realidad del proceso de desarrollo, su esencia evolutiva. Existen varias
+metodologías de desarrollo de software con enfoques distintos y prioridades
+diferentes. Las metodologías ágiles engloban a varios frameworks de desarrollo
+que se contraponen a los procesos pesados más tradicionales y proponen
+alternativas más livianas en los cuales prima la aceptación del cambio como guía
+del desarrollo. Algunos ejemplos son:
 
 % REF a los frameworks
 \begin{itemize}
@@ -96,42 +120,47 @@ cuales prima la aceptación del cambio como guía del desarrollo. Algunos ejempl
     \item Scrum
 \end{itemize}
 
-Los proyectos de sotware industriales tienen restricciones de tiempo ajustadas entonces los
-desarrolladores introducen modificaciones de la forma más veloz posible sin tener en cuenta la
-pérdida de calidad. El desarrollador no modifica el diseño antes de extender o modificar el modelo,
-entonces las modificaciones que le realiza lo vuelven más complejo. La erosión del diseño se produce
-porque no es posible anticipar los cambios que se le realizarán al software en el futuro entonces el
-diseño original no es apropiado para incorporar todos los cambios que se le realizan luego al
-sistema. 
+Los proyectos de sotware industriales tienen restricciones de tiempo ajustadas
+entonces los desarrolladores introducen modificaciones de la forma más veloz
+posible sin tener en cuenta la pérdida de calidad. El desarrollador no modifica
+el diseño antes de extender o modificar el modelo, entonces las modificaciones
+que le realiza lo vuelven más complejo. La erosión del diseño se produce porque
+no es posible anticipar los cambios que se le realizarán al software en el
+futuro entonces el diseño original no es apropiado para incorporar todos los
+cambios que se le realizan luego al sistema.
 
 
 \subsection{Los refactorings}
-Una de las prácticas del proceso continuo que propone XP para evitar la erosión es la de refactoring.
-Se utiliza en varios frameworks de desarrollo iterativo incremental pero no se ha visto integradas en
-sistemas tradicionales con modelos de desarrollo de cascada lineales. El refactoring es una parte
-integral del desarrollo en el contexto de las metodologías ágiles.
+Una de las prácticas del proceso continuo que propone XP para evitar la erosión
+es la de refactoring.  Se utiliza en varios frameworks de desarrollo iterativo
+incremental pero no se ha visto integradas en sistemas tradicionales con modelos
+de desarrollo de cascada lineales. El refactoring es una parte integral del
+desarrollo en el contexto de las metodologías ágiles.
 
 % ¿Qué son los refactorings?
 % REF agregar referencia a la tesis de Opdyke
-El término fue acuñado por Opdyke en su tesis de doctorado y luego popularizado por Fowler, uno de
+El término fue acuñado por Opdyke en su tesis de doctorado y luego popularizado
+por Fowler, uno de
 % REF agregar referencia a el libro de Fowler
-los mayores evangelistas de la metodología extreme programming, en su libro \textit{Refactoring:
-Improving the design of existing code}. Un refactoring o reestructuración es una modificación al
+los mayores evangelistas de la metodología extreme programming, en su libro
+\textit{Refactoring: Improving the design of existing code}. Un refactoring o
+reestructuración es una modificación al
 % Cuál es el objetivo de los refactorings
-software que no cambia su funcionalidad. El objetivo de la misma es mejorar la calidad del sistema
-modificando su estructura interna para volverlo más mantenible, entendible o que se adapte mejor a
-futuros cambios o funcionalidades que haya que agregarle. Por ejemplo, si se desea agregar una
-funcionalidad y el diseño no la contempló originalmente se puede agregar al diseño actual o cambiar
-el diseño primero para que agregar la funcionalidad sea más simple y se pueda seguir extendiendo el
-software en esa dirección más fácilmente.
+software que no cambia su funcionalidad. El objetivo de la misma es mejorar la
+calidad del sistema modificando su estructura interna para volverlo más
+mantenible, entendible o que se adapte mejor a futuros cambios o funcionalidades
+que haya que agregarle. Por ejemplo, si se desea agregar una funcionalidad y el
+diseño no la contempló originalmente se puede agregar al diseño actual o cambiar
+el diseño primero para que agregar la funcionalidad sea más simple y se pueda
+seguir extendiendo el software en esa dirección más fácilmente.
 
 
 
 \section{La investigación sobre refactorings}
 
 \subsection{¿Son útiles los refactorings?}
-Los refactorings son útiles porque permiten preservar la calidad del software, principalmente su 
-mantenibildad a través de mejoras en:
+Los refactorings son útiles porque permiten preservar la calidad del software,
+principalmente su mantenibildad a través de mejoras en:
 
 \begin{itemize}
     \item extensibilidad
@@ -141,35 +170,38 @@ mantenibildad a través de mejoras en:
 \end{itemize}
 
 % REF agregar al estudio empírico (Empirical study on the impact...)
-Estudios empíricos muestran que los refactorings aumentan la mantenibilidad del software. Esto se
-debe a que previene la erosión del diseño ralentizando el incremento de la complejidad del sistema.
-Los cambios que se introducen en el software no fueron previstos por el diseñador original del
-sistema, por lo tanto si no se modifica el diseño su calidad se verá perjudicada. Los refactorings
-modifican el diseño antes de agregar las nuevas funcionalidades para que el diseño pueda adoptar los
-nuevos cambios sin perder calidad. Esto permite mantener la mantenibilidad del sistema resultando
-en una reducción de costos significativa para el proyecto.
+Estudios empíricos muestran que los refactorings aumentan la mantenibilidad del
+software. Esto se debe a que previene la erosión del diseño ralentizando el
+incremento de la complejidad del sistema.  Los cambios que se introducen en el
+software no fueron previstos por el diseñador original del sistema, por lo tanto
+si no se modifica el diseño su calidad se verá perjudicada. Los refactorings
+modifican el diseño antes de agregar las nuevas funcionalidades para que el
+diseño pueda adoptar los nuevos cambios sin perder calidad. Esto permite
+preservar la mantenibilidad del sistema resultando en una reducción de costos
+significativa para el proyecto.
 
 
 \subsection{Áreas principales}
-Los software refactorings son investigados desde numerosas perspectivas. Alguno de los temas más
-investigados son:
+Los software refactorings son investigados desde numerosas perspectivas. Alguno
+de los temas más investigados son:
 
 % REF a Trends, opportunities...
 \begin{itemize}
-    \item refactoring tools: ¿Qué factores afectan el uso de refactorings automáticos? ¿Qué
-refactorings automáticos usan los programadores? ¿Cuáles no y por qué? ¿Cómo mejorar las
-herramientas actuales?
-    \item bad smells: la relación entre los bad smells y los refactorings que podrían ayudar a
-lidiar con ellos. No hay estudios empíricos que lleguen a conclusiones claras sobre si los code
-smells son útiles o no para lo programadores; si ayudan a determinar el lugar en el que un
-refactoring es necesario o qué refactoring es necesario.
-    \item refactorings en artifacts que no son código: especificación de requerimientos, diseño de
-    más alto nivel, documentación, etc.
-    \item patrones de diseño: su utilidad, cuánto ayudarían, cuán de alto nivel se pueden hacer es
-    una interrogante.
+    \item refactoring tools: ¿Qué factores afectan el uso de refactorings
+      automáticos? ¿Qué refactorings automáticos usan los programadores? ¿Cuáles
+      no y por qué? ¿Cómo mejorar las herramientas actuales?
+    \item bad smells: la relación entre los bad smells y los refactorings que
+      podrían ayudar a lidiar con ellos. No hay estudios empíricos que lleguen a
+      conclusiones claras sobre si los code smells son útiles o no para lo
+      programadores; si ayudan a determinar el lugar en el que un refactoring es
+      necesario o qué refactoring es necesario.
+    \item refactorings en artifacts que no son código: especificación de
+      requerimientos, diseño de más alto nivel, documentación, etc.
+    \item patrones de diseño: su utilidad, cuánto ayudarían, cuán de alto nivel
+      se pueden hacer es una interrogante.
     \item TDD: refactoring es una importante etapa de esta técnica.
-    \item métricas del software sobre los atributos de calidad para medir el impacto de los
-refactorings  
+    \item métricas del software sobre los atributos de calidad para medir el
+      impacto de los refactorings
 \end{itemize}
 
 
