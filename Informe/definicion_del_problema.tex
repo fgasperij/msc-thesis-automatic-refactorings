@@ -1,77 +1,90 @@
 \section{Justificación}
-
 \subsection{¿Por qué refactorings automáticos de alto nivel?}
 % Preguntas guía
 %   - Cuál es el potencial de los refactorings automáticos de alto nivel
 %   - Por qué creemos que son una buena herramienta
-Los refactorings son una herramienta esencial del arsenal de los ingenieros de software para
-minimzar el incremento de la complejidad que conlleva la evolución del software. Su uso les permite
-conservar la mantenibilidad de los sistemas. La mantenibilidad, como ya vimos, es un atributo
-esencial para que las aplicaciones puedan seguir aportando valor de negocio a lo largo del tiempo ya
-que consiguen mantener los costos y los tiempos de desarrollo suficientemente bajos para mantenerse
-competitivos dentro del mercado. Sin embargo, los beneficios de los refactorings traen consigo
-riesgos y costos:
 
-\begin{itemize}
-    \item introducir bugs
-    \item tiempo de desarrollo
-    \item reducir la calidad del sistema
+% re redactar este párrafo, las ideas están bien pero no fluye. Cada oración
+% empieza repitiendo el sujeto anterior, parece que lo escribió un robot.
+Los refactorings son una herramienta esencial del arsenal de los ingenieros de
+software para minimzar el incremento de la complejidad que implica la evolución
+del software y así preservar su mantenibilidad. Sin embargo, los
+beneficios de los refactorings conllevan riesgos y costos:
+
+\begin{description}
+    \item[Introducir bugs] Los refactorings automáticos permiten reducir el
+      riesgo de introducir bugs porque las herramientas que los aplican
+      recibieron más tiempo de desarrollo, testeo y consideración que la que
+      cualquier desarrollador puede dedicar a la hora de realizar un refactoring
+      manual. Además, cuentan con varias ventajas sobre la aplicación manual:
+        \begin{itemize}
+            \item cuanto más se usan mejores se vuelven: los errores que encuentren los
+            usuarios se pueden arreglar para converger a través del tiempo a una
+            preservación de comportamiento con una probabilidad altísima. Los
+            programadores pueden cometer el mismo error repetidas veces; algo que
+            contribuye a esto es que la experiencia de los programadores trabajando en
+            el proyecto puede variar y el tiempo que hayan pasado trabajando en ese
+            proyecto en particular también.
+            \item no son afectadas por el contexto: los refactorings manuales son
+            realizados por desarrolladores a los cuales los puede afectar el
+            cansancio, el estrés, el apuro, etc. factores que aumentan la probabilidad
+            de equivocación u olvido en un tarea tediosa y demandante de atención al
+            detalle como esta.
+        \end{itemize}
+    \item[Tiempo de desarrollo] El tiempo de desarrollo se vería disminuido
+      porque una herramienta automática es más veloz que un humano, si esto no
+      fuera así la herramienta es inútil. Esto representa una gran ganancia ya
+      que el mantenimiento de un sistema es su mayor costo, si este costo se
+      disminuye se abarataría la producción de software, y, considerando la
+      omnipresencia actual del mismo, la herramienta tendría un impacto enorme
+      en la sociedad.
+    \item[Reducir la calidad del sistema] Al no contar con métricas definitivas
+      para evaluar la calidad de un sistema no es simple ver si efectivamente
+      los refactorings automáticos mitigarían el riesgo de bajar la calidad del
+      sistema. Sin embargo, existen consideraciones que nos llevan a intuir que
+      este puede ser el caso.
+      % REF al que decía que con refactorings de patrones iban a poder probar más diseños
+      UNA REF postula que si los desarrolladores contaran con buenas herramientas
+      automáticas para realizar refactorings de alto nivel probarían más opciones de
+      diseño, lo cual les permitiría llegar a mejores diseños. No es concluyente pero
+      si ciertas herramientas aportan a que los desarrolladores lleguen a mejores
+      diseños tienen una buena chance de aumentar la calidad de los sistemas.
 \end{itemize}
 
-Los refactorings automáticos permiten reducir el riesgo de introducir bugs. Las herramientas que los
-aplican recibieron más tiempo de desarrollo, testeo y consideración que la que cualquier
-desarrollador puede dedicar a la hora de realizar un refactoring manual. Además, cuentan con varias
-ventajas sobre la aplicación manual:
 
-\begin{itemize}
-    \item cuanto más se usan mejores se vuelven: los errores que encuentren los usuarios se pueden
-    arreglar para converger a través del tiempo a una preservación de comportamiento con una
-    probabilidad altísima. Los programadores pueden cometer el mismo error siempre.
-    \item no son afectadas por el contexto: los refactorings manuales son realizados por
-    desarrolladores a los cuales los puede afectar el cansancio, el estrés, el apuro, etc. factores
-    que aumentan la probabilidad de equivocación u olvido en un tarea tediosa y demandante de
-    atención al detalle como esta.
-\end{itemize}
-
-El tiempo de desarrollo se vería disminuido porque una herramienta automática es más veloz que un
-humano, si esto no fuera así la herramienta es inútil. Esto representa una gran ganancia ya que el
-mantenimiento de un sistema es su costo más grande, si este costo se disminuye se abarataría el
-costo de producir software, y considerando la omnipresencia actual del software tendría un impacto
-enorme. Al no contar con métricas definitivas para evaluar la calidad de un sistema no es simple ver
-si efectivamente los refactorings automáticos mitigarían el riesgo de bajar la calidad del sistema.
-% REF al que deçía que con refactorings de patrones iban a poder probar más diseños
-UNA REF postula que si los desarrolladores contaran con buenas herramientas automáticas para
-realizar refactorings de alto nivel probarían más opciones de diseño, lo cual les permitiría llegar
-a mejores diseños. No es concluyente pero si ciertas herramientas aportan a que los desarrolladores
-lleguen a mejores diseños tienen una buena chance de aumentar la calidad de los sistemas.
-
-Los refactorings automáticos de alto nivel cuentan con el potencial de maximizar estos beneficios
-porque el scope de automatización sería mayor, lo cual implica más ahorro de tiempo de desarrollo y
-menos posibilidad de introducir bugs porque existe más area del refactorings cubierta, y porque al
-operar a un nivel de abstracción mayor, más cercano al nivel de la semántica del pensamiento del
-programador, aumentaría la velocidad a la que él probar diseños alternativos y así llegar a uno
-mejor.
+Los refactorings automáticos de alto nivel cuentan con el potencial de maximizar
+estos beneficios porque el scope de automatización sería mayor, lo cual implica
+más ahorro de tiempo de desarrollo y menos posibilidad de introducir bugs porque
+existe más area del refactorings cubierta, y porque al operar a un nivel de
+abstracción mayor, más cercano al nivel de la semántica del pensamiento del
+programador, aumentaría la velocidad a la que él probar diseños alternativos y
+así llegar a uno mejor.
 
 % Por qué refactorings automáticos de alto nivel
 % REF hay un empirical study de esto
-[La referencia] concluye que los refactorings automátricos de alto nivel son más escalables y performantes.
-También que los refactorings automáticos aumentan la velocidad de desarrollo, resultando en una reducción de
-costos y un aumento de la calidad del software porque los desarrolladores tienen la posibilidad de
+[La referencia] concluye que los refactorings automátricos de alto nivel son más
+escalables y performantes.  También que los refactorings automáticos aumentan la
+velocidad de desarrollo, resultando en una reducción de costos y un aumento de
+la calidad del software porque los desarrolladores tienen la posibilidad de
 probar más cambios con menos esfuerzo.
 
-Al explorar refactorings de alto nivel surge la pregunta de cuán alto es convienente subir.
+Al explorar refactorings de alto nivel surge la pregunta de cuán alto es
+convienente subir.
 % Los dos objetivos contrapuestos de los refactorings
 % REF (Refactoring Object-Oriented Frameworks)
-(Refactoring Object-Oriented Frameworks) expone dos objetivos de los refactorings automáticos que se
-contraponen. Un objetivo es que el refactoring sea expresivo, que su nivel sea lo más alto posible
-para mantener al usuario lo más lejos posible de toda la complejidad que implica realizar el cambio,
-y el otro es que preserve el comportamiento. Cuanto más alto es su nivel más difícil es justificar que
-preservan el comportamiento del programa, por lo tanto queremos que los refactorings sean
-suficientemente pequeños para poder tener una buena confianza de que preservan el comportamiento y
-suficientemente abstractos para que sean útiles.  
+(Refactoring Object-Oriented Frameworks) expone dos objetivos de los
+refactorings automáticos que se contraponen. Un objetivo es que el refactoring
+sea expresivo, que su nivel sea lo más alto posible para mantener al usuario lo
+más lejos posible de toda la complejidad que implica realizar el cambio, y el
+otro es que preserve el comportamiento. Cuanto más alto es su nivel más difícil
+es justificar que preservan el comportamiento del programa, por lo tanto
+queremos que los refactorings sean suficientemente pequeños para poder tener una
+buena confianza de que preservan el comportamiento y suficientemente abstractos
+para que sean útiles.
 
 % Preguntas que se hace este trabajo, por qué es exploratorio
-Este trabajo busca sentar las bases para poder analizar este tipo de refactorings.
+Este trabajo busca sentar las bases para poder analizar este tipo de
+refactorings.
 
 
 
@@ -79,26 +92,30 @@ Este trabajo busca sentar las bases para poder analizar este tipo de refactoring
 % Preguntas guía
 %   - cuáles son los trabajos más parecidos? los de patrones
 % REF A Methodology for the Automated Introduction of Design Pattern
-Este paper es similar porque busca implementar un refactoring que introduce un patrón de diseño. El
-foco está puesto en la identificación de transformaciones parciales que permitan reestructurar el
-programa desde un estado precursor elegido hasta uno con el patrón aplicado. En parte porque su
-principal objetivo es en el futuro poder automatizar la generación de las transformaciones
-necesarias. Este objetivo es atractivo pero no necesariamente valioso. Todavía no contamos la
-información necesaria para saber si ese nivel de abstracción es apropiado para los desarrolladores
-y si esas transformaciones son generalizables.
+Este paper es similar porque busca implementar un refactoring que introduce un
+patrón de diseño. El foco está puesto en la identificación de transformaciones
+parciales que permitan reestructurar el programa desde un estado precursor
+elegido hasta uno con el patrón aplicado. En parte porque su principal objetivo
+es en el futuro poder automatizar la generación de las transformaciones
+necesarias. Este objetivo es atractivo pero no necesariamente valioso. Todavía
+no contamos la información necesaria para saber si ese nivel de abstracción es
+apropiado para los desarrolladores y si esas transformaciones son
+generalizables.
 
 % REF
 %   - Automated refactoring to the Strategy design pattern
 %   - Automated refactoring of super-class method invocations to the Template Method design pattern
 %   - Automated refactoring to the Null Object design pattern
-Estos 3 papers implementan la introducción de patrones de diseño en Java. Además, automatizan la
-identificación de oportunidades para aplicar el refactoring. La herramienta evalua toda el código,
-identifica partes del mismo que se beneficiarían con la aplicación del refactoring y ofrecen
-aplicarlo. Los dos problemas principales
+Estos 3 papers implementan la introducción de patrones de diseño en
+Java. Además, automatizan la identificación de oportunidades para aplicar el
+refactoring. La herramienta evalua toda el código, identifica partes del mismo
+que se beneficiarían con la aplicación del refactoring y ofrecen aplicarlo. Los
+dos problemas principales
 % REF a programmer-friendly refactoring tools
-que se pueden encontrar son que el nivel de automatización no se ajusta a las prácticas actuales de
-desarrollo y que las restricciones impuestas al código precursor para poder aplicar el refactoring
-son demasiado estrictas, perdiéndose así un gran número de casos.
+que se pueden encontrar son que el nivel de automatización no se ajusta a las
+prácticas actuales de desarrollo y que las restricciones impuestas al código
+precursor para poder aplicar el refactoring son demasiado estrictas, perdiéndose
+así un gran número de casos.
 
 %   - qué no cubren esos trabajos?
 %   - cuáles son las diferencias con este trabajo?
@@ -107,41 +124,47 @@ son demasiado estrictas, perdiéndose así un gran número de casos.
 \section{Valor de realizar este trabajo}
 
 % Cuáles son los objetivos de este trabajo?
-El objetivo de este trabajo es implementar refactorings automáticos de alto nivel para:
+El objetivo de este trabajo es implementar refactorings automáticos de alto
+nivel para:
 
 \begin{itemize}
-    \item entender mejor sus limitaciones en relación al tradeoff expresividad vs precisión.
+    \item entender mejor sus limitaciones en relación al tradeoff expresividad
+      vs precisión.
     \item analizar los desafíos que encontremos para guiar desarrollos futuros.
-    \item contar con una herramienta de base que nos permita medir, analizar y evaluar cómo se relaciona el programador
-    con la misma y cómo podría mejorarse para maximizar su productividad.
+    \item contar con una herramienta de base que nos permita medir, analizar y
+      evaluar cómo se relaciona el programador con la misma y cómo podría
+      mejorarse para maximizar su productividad.
 \end{itemize}
 
 % Por qué es necesario realizar una exploración de refactorings automáticos de alto nivel?
-Se necesitan implementaciones de refactorings de este tipo para poder evaluar sus potenciales
-beneficios y así poder mejorar las herramientas que los aplican. Las IDEs más utilizadas y poderosas
-no proveen actualmente refactorings automáticos de este tipo, los disponibles son más simples. Vemos
-en esto una oportunidad de mejora y una necesidad de crecimiento grande.
+Se necesitan implementaciones de refactorings de este tipo para poder evaluar
+sus potenciales beneficios y así poder mejorar las herramientas que los
+aplican. Las IDEs más utilizadas y poderosas no proveen actualmente refactorings
+automáticos de este tipo, los disponibles son más simples. Vemos en esto una
+oportunidad de mejora y una necesidad de crecimiento grande.
 
-Orientamos esta herramienta a la automatización de la aplicación del refactoring porque el principal
-problema que vemos con las herramientas que automatizan más etapas es que no requieren intervención
-del programador y por lo tanto no se ajustan a su forma de trabajo es que corren dos riesgos
-grandes:
+Orientamos esta herramienta a la automatización de la aplicación del refactoring
+porque el principal problema que vemos con las herramientas que automatizan más
+etapas es que no requieren intervención del programador y por lo tanto no se
+ajustan a su forma de trabajo es que corren dos riesgos grandes:
 
 \begin{itemize}
-    \item baja frecuencia de uso: nadie los usaría ya que asumen que son parte de una etapa del
-    desarrollo que no existe.
-    \item incrementar los costos de un proyecto: en primer lugar, en términos de tiempo de
-    desarrollo. El problema es que si el refactoring toma decisiones buenas pero que perjudican la
-    mantenibilidad del código por hacerlo más complejo o menos entendible, como luego el proyecto lo
-    tienen que seguir interviniendo programadores humanos cada vez les tomará más tiempo realizarle
-    modificaciones.
+    \item baja frecuencia de uso: nadie los usaría ya que asumen que son parte
+      de una etapa del desarrollo que no existe.
+    \item incrementar los costos de un proyecto: en primer lugar, en términos de
+      tiempo de desarrollo. El problema es que si el refactoring toma decisiones
+      buenas pero que perjudican la mantenibilidad del código por hacerlo más
+      complejo o menos entendible, como luego el proyecto lo tienen que seguir
+      interviniendo programadores humanos cada vez les tomará más tiempo
+      realizarle modificaciones.
 \end{itemize}
 
-Mientras no haya una manera precisa de expresar comprensibilidad y diseño del dominio la
-intervención humana será necesaria y proveerá una reducción de costos mayor que la utilización de
+Mientras no haya una manera precisa de expresar comprensibilidad y diseño del
+dominio la intervención humana será necesaria y proveerá una reducción de costos
+mayor que la utilización de
 % REF la survey que decía que el 80% del costo del software es mantenimiento
-refactorings completamente automáticos. Aportar en esta dirección aporta valor porque el
-mantenimiento del software es su mayor costo.
+refactorings completamente automáticos. Aportar en esta dirección aporta valor
+porque el mantenimiento del software es su mayor costo.
 
 
 
