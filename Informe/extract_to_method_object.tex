@@ -102,8 +102,12 @@ Object son:
 % refactoring
 Veamos los pasos en un caso concreto:
 
+% REPHRASE usar un modelo común para los ejemplos, creo que es más fácil seguirlos.
+% Algo tan despegado de la realidad no creo que ayude.
+% TODO Buscar un ejemplo en cuis donde amerite la utilización del refactoring
 \begin{code}
-ExampleClass>>methodToExtract: aParam1 with: aParam2 | temp1 |
+  ExampleClass>>methodToExtract: aParam1 with: aParam2
+    | temp1 |
 
     temp1 := self doSomething: ivar1.
 
@@ -115,9 +119,12 @@ crear la clase del Method Object le agregaremos el mensaje de creación de
 instancia:
 
 \begin{code}
-MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
-ivarParam1 := aParam1.  ivarParam2 := aParam2.  ivarIvar1 := anIvar1.  client :=
-aSelf.
+  MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
+
+  ivarParam1 := aParam1.
+  ivarParam2 := aParam2.
+  ivarIvar1 := anIvar1.
+  client := aSelf.
 \end{code}
 
 Luego agregamos el mensaje \lstinline{value} al Method Object con el contenido
