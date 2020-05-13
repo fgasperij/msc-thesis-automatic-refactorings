@@ -1,19 +1,21 @@
-\section{Motivación y smells}
+* Motivación y smells
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
 métodos, los cuales a medida que pasa el tiempo van ganando funcionalidad y cada
 vez se vuelven más complejos. Los atributos más tangibles que hacen crecer esa
 complejidad son:
 
-\begin{itemize}
-    \item el largo medido en líneas de código o statements
-    \item la cantidad de parámetros que recibe
-    \item la cantidad de variables temporales que define
-\end{itemize}
+- el largo medido en líneas de código o statements
+- la cantidad de parámetros que recibe
+- la cantidad de variables temporales que define
 
-% REF Fowler y Beck
+:REF:
+Fowler y Beck
+:END:
 Este crecimiento hace que el método sea más grande y reduce su
-% REPHRASE esta situación representa un buen candidato para aplicar un
-% refactoring porque si no se realiza uno se corrent los X riesgos
+:REPHRASE:
+situación representa un buen candidato para aplicar un refactoring porque si no
+se realiza uno se corrent los X riesgos
+:END:
 entendibilidad. Al encontrarse con un método con estas características el
 programador aplicará un refactoring para poder reducir su complejidad y
 entenderlo más fácilmente. Sin volverlo más entendible corre el riesgo de
@@ -22,17 +24,21 @@ introduciría un bug en el programa. Además, aplicar un refactoring le permite
 correr menos riesgos a él y aumenta la mantenibilidad del código lo cual implica
 un gran ahorro de costos.
 
-% WTF REPHRASE y este salto? Arranqué la sección explicando una situación que suele
-% ameritar la utilización de un refactoring y paso a esto:
+:REPHRASE:
+y este salto? Arranqué la sección explicando una situación que suele ameritar la
+utilización de un refactoring y paso a esto:
+:END:
 Existen dos principales razones que reducen la comprensibilidad de un método:
 
-% WRITE puedo poner un ejemplo de cada una de éstas.
-\begin{itemize}
-    \item tiene más de una responsabilidad
-    \item trabaja en más de un nivel de abstracción
-\end{itemize}
+:WRITE:
+puedo poner un ejemplo de cada una de éstas.
+:END:
+- tiene más de una responsabilidad
+- trabaja en más de un nivel de abstracción
 
-% WRITE ejemplo de extract method
+:WRITE:
+ejemplo de extract method
+:END:
 La principal herramienta para reducir la complejidad producida por esas razones
 es el refactoring Extract Method. En el primer caso se delega la responsabilidad
 a otro método y en el segundo se realizan las tareas de un nivel de abstracción
@@ -47,25 +53,36 @@ puede realizar no consiguen un aumento de la entendibilidad del método o una
 reducción de su complejidad. En estos casos Extract Method no puede aplicarse
 porque:
 
-% WRITE mostrar ejemplos
-% WRITE acá me podría extender con secciones de código que expliquen los dos casos, el pasar varios
-% parámetros y el asignar a más de una variable.
-\begin{itemize}
-    \item las variables temporales y los parámetros están tan entrelazados en el
-      código que al extraer un método hay que pasarle demasiados parámetros
-    \item cualquier sección significativa que se intenta extraer modifica más de
-      una variable que luego se sigue utilizando
-\end{itemize}
+:WRITE:
+mostrar ejemplos
+:END:
+:WRITE:
+acá me podría extender con secciones de código que expliquen los dos casos, el
+pasar varios parámetros y el asignar a más de una variable.
+:END:
+- las variables temporales y los parámetros están tan entrelazados en el
+  código que al extraer un método hay que pasarle demasiados parámetros
+- cualquier sección significativa que se intenta extraer modifica más de
+  una variable que luego se sigue utilizando
 
-% REF Fowler + Beck
+:REF:
+Fowler + Beck
+:END:
 En estos casos la sugerencia es utilizar Extract Method to Method Object.
 
-% WRITE por qué es sugerido? No hay explicación de cómo el ETMO supera los límites del EM
-% WRITE El objetivo del MO es proveer un lugar donde se pueda aplicar EM cómodamente,
-% estaría bueno explicar eso, el rationale de por qué supera los límites y cómo se
-% manifiesta
+:WRITE:
+por qué es sugerido? No hay explicación de cómo el ETMO supera los límites del
+EM
+:END:
+:WRITE:
+El objetivo del MO es proveer un lugar donde se pueda aplicar EM cómodamente,
+estaría bueno explicar eso, el rationale de por qué supera los límites y cómo se
+manifiesta
+:END:
 
-\section{¿En qué consiste?}
+
+
+* ¿En qué consiste?
 
 % WRITE antes de describir en concreto en qué consiste paso a paso dar una breve
 % descripción de alto nivel. Dónde se empieza, dónde se termina y qué entidades
@@ -151,8 +168,7 @@ finalmente reemplazamos el cuerpo del \lstinline{methodToExtract}:
 \end{code}
 
 
-
-\section{Descripción completa de la funcionalidad del refactoring implementado}
+* Descripción completa de la funcionalidad del refactoring implementado
 % Voy a contar cómo funciona el refactoring de manera top down hasta llegar al
 % detalle del código e incluso mostrar partes de código específicas.
 El refactoring implementado tiene como objeto central al encargado de
@@ -210,7 +226,8 @@ el refactoring no puede ser aplicado la responsabilidad de detectarlo es de la
 clase, no creará instancias que no puedan ser aplicadas ya que las
 consideraremos inválidas.
 
-\section{Validaciones}
+
+* Validaciones
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
 El mensaje de creación de instancia tiene como primer parámetro al método a
 extraer con el keyword \lstinline{from:}. Este método a extraer es una instancia
@@ -452,7 +469,7 @@ parámetros no estén duplicados y que cada variable a parametrizar tenga su
 correspondiente definición.
 
 
-\section{Aplicación del refactoring}
+* Aplicación del refactoring
 
 Ya vimos en qué consiste el refactoring a grandes rasgos, ahora veremos los
 detalles de la implementación, las decisiones que se tomaron y los mayores
@@ -578,7 +595,7 @@ distinto de self.
 
 
 
-\section{¿Cómo se utiliza?}
+* ¿Cómo se utiliza?
 
 El modelo \lstinline{ExtractToMethodObject} colabora con un
 \lstinline{RefactoringApplier} y un \lstinline{ExtractToMethodObjectForm} para
@@ -610,7 +627,8 @@ que probablemente deba ser modificado pero no es realizado automáticamente se l
 informa al usuario para que sepa las limitaciones del refactoring que aplicó.
 
 
-\section{Preservación del comportamiento}
+* Preservación del comportamiento
 % WRITE resumir cómo ganamos confianza y los tests más importantes
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr
 los tests.
+
