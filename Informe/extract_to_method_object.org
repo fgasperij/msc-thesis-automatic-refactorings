@@ -99,21 +99,21 @@ Acá estaría bárbaro tener un diagrama con números que vayan guiando
 en qué orden se van haciendo las cosas y para que haya una referencia global
 de lo que se está describiendo.
 :END:
-- Se crea una clase para el Method Object.
-- Se le agrega un mensaje de creación de instancia que recibe todos los
-  parámetros y variables de instancia utilizadas en M y los asigna a
-  variables de instancia del Method Object.
-- Se le agrega el mensaje \#value al Method Object.
-- Se copia el código de M dentro del método \#value del Method Object.
-- Se reemplazan en \#value los nombres de las variables que fueron
-  pasadas por parámetro por el nombre de su variable de instancia
-  correspondiente.
-- Se reemplaza el cuerpo M por la instanciación del Method Object
-  pasándole todos los parámetros y variables de instancia previamente
-  utilizadas.
-- Se corren los tests para verificar la preservación de comportamiento.
-- Se aplican los refactorings que antes no se podían sobre el método
-  \#value del Method Object.
+1. Se crea una clase para el Method Object.
+2. Se le agrega un mensaje de creación de instancia que recibe todos los
+   parámetros y variables de instancia utilizadas en M y los asigna a
+   variables de instancia del Method Object.
+3. Se le agrega el mensaje \#value al Method Object.
+4. Se copia el código de M dentro del método \#value del Method Object.
+5. Se reemplazan en \#value los nombres de las variables que fueron
+   pasadas por parámetro por el nombre de su variable de instancia
+   correspondiente.
+6. Se reemplaza el cuerpo M por la instanciación del Method Object
+   pasándole todos los parámetros y variables de instancia previamente
+   utilizadas.
+7. Se corren los tests para verificar la preservación de comportamiento.
+8. Se aplican los refactorings que antes no se podían sobre el método
+   \#value del Method Object.
 
 :REORDER:
 Quizás es mejor primero mostrar un caso concreto y después como resumen
@@ -198,37 +198,39 @@ objeto que aplica el refactoring especificando en cada caso si hablamos de la
 clase o una instancia del mismo. ~ExtractToMethodObject~ es subclase
 de ~Refactoring~ que tiene al mensaje ~apply~ como único
 mensaje polimórfico.
-% DIAGRAM mostrar un diagrama de clases con refactoring, etmo y el apply
+
+:DIAGRAM:
+Mostrar un diagrama de clases con refactoring, etmo y el apply.
+:END:
+
 Veamos un ejemplo de utilización del refactoring:
 
-\begin{code}
-refactoring := ExtractToMethodObject from: methodToExtract
-toMehtodObjectClassNamed: #MethodObject subclassing: Object onCategory:
-'ThesisExamples' withExtractedVariablesToInstanceVariables: variablesNameMapping
-withInstanceCreationMessageFrom: keywordsDefinitions evaluatedWith: #value.
+#+BEGIN_SRC 
+refactoring := ExtractToMethodObject
+  from: methodToExtract
+  toMehtodObjectClassNamed: #MethodObject
+  subclassing: Object
+  onCategory:'ThesisExamples'
+  withExtractedVariablesToInstanceVariables: variablesNameMapping
+  withInstanceCreationMessageFrom: keywordsDefinitions
+  evaluatedWith: #value.
 
-refactoring apply.
-\end{code}
+  refactoring apply.
+#+END_SRC
 
 Los colaboradores recibidos son:
 
-\begin{itemize}
-    \item el método sobre el cual aplicar el refactoring
-    \item los valores necesarios para declarar el Method Object
-    \begin{itemize}
-        \item el nombre que recibirá la clase del Method Object
-        \item la superclase del Method Object
-        \item la categoría en la cual declarar el Method Object
-    \end{itemize}
-    \item los nombres de las variables de instancia para las variables
-      parametrizadas
-    \item la definición del mensaje de creación de instancia
-    \begin{itemize}
-        \item las keywords
-        \item los nombres de los parámetros
-    \end{itemize}
-    \item el nombre para el mensaje de evaluación
-\end{itemize}
+- el método sobre el cual aplicar el refactoring
+- los valores necesarios para declarar el Method Object
+  - el nombre que recibirá la clase del Method Object
+  - la superclase del Method Object
+  - la categoría en la cual declarar el Method Object
+- los nombres de las variables de instancia para las variables
+  parametrizadas
+- la definición del mensaje de creación de instancia
+  - las keywords
+  - los nombres de los parámetros
+- el nombre para el mensaje de evaluación
 
 El mensaje de creación de instancia se encargará de validar todos los
 colaboradores recibidos para asegurarse de que la instancia creada será válida y
@@ -243,26 +245,27 @@ consideraremos inválidas.
 
 
 * Validaciones
-% WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
+:WRITE:
+Explicar a nivel código que se recibe, qué es parametrizable y qué no.
+:END:
+
 El mensaje de creación de instancia tiene como primer parámetro al método a
 extraer con el keyword ~from:~. Este método a extraer es una instancia
 de ~CompiledMethod~, objeto que representa un método compilado que la
 máquina virtual puede interpretar. Este objeto encapsula dos elementos
 necesarios del refactoring:
 
-\begin{itemize}
-    \item el código del método a extraer y su representación en un AST de
-      objetos a través del mensaje ~methodNode~ que nos devuelve una
-      instancia de ~MethodNode~ correspondiente al método a extraer.
-    \item la clase que es el contexto y para la cual está compilado el método
-      accesible a través del mensaje ~methodClass~, que devuelve una
-      instancia de ~MethodClass class~ que es una sublcase de
-      ~Metaclass~.
-\end{itemize}
+- el código del método a extraer y su representación en un AST de
+  objetos a través del mensaje ~methodNode~ que nos devuelve una
+  instancia de ~MethodNode~ correspondiente al método a extraer.
+- la clase que es el contexto y para la cual está compilado el método
+  accesible a través del mensaje ~methodClass~, que devuelve una
+  instancia de ~MethodClass class~ que es una sublcase de
+  ~Metaclass~.
 
-\subsection*{Validaciones sobre el método a extraer}
+** Validaciones sobre el método a extraer
 
-\subsubsection*{No puede contener referencias a la pseudovariable ~super~}
+*** No puede contener referencias a la pseudovariable ~super~
 
 No se permite realizar el refactoring sobre métodos que contienen referencias a
 ~super~ porque no se puede replicar el comportamiento de enviar un
@@ -283,54 +286,52 @@ una versión más simple, sin esta funcionalidad, fuera aceptada y entendida con
 facilidad por los usuarios. Veremos un pequeño ejemplo para ilustrar el
 caso. Supongamos que el método a extraer es:
 
-\begin{code}
-ExampleClass>>methodToExtract | temp1 |
+#+BEGIN_SRC 
+ExampleClass>>methodToExtract
+  | temp1 |
 
-    temp1 := ivar1 + super value
+  temp1 := ivar1 + super value
 
-    ^temp 1
-\end{code}
+  ^temp 1
+#+END_SRC
 
 la forma de replicar el comportamiento sería agregar un mensaje a la clase que
-realice la llamada a super:
+realice la llamada a ~super~:
 
-\begin{code}
+#+BEGIN_SRC 
 ExampleClass>>sendToSuper
 
-    ^super value
-\end{code}
+  ^super value
+#+END_SRC
 
 y utilizar este mensaje desde el método de evaluación del Method Object:
 
-\begin{code}
+#+BEGIN_SRC 
 MehtodObjectClass>>value | temp1 |
 
-    temp1 := correspondingIvar + client sendToSuper
+  temp1 := correspondingIvar + client sendToSuper
 
-    ^temp 1
-\end{code}
+  ^temp 1
+#+END_SRC
 
-
-\subsubsection*{No contiene asignaciones a variables que no sean temporales}
+*** No contiene asignaciones a variables que no sean temporales
 
 Las variables no temporales son las variables del contexto de la clase:
 
-\begin{itemize}
-    \item variables de instancia
-    \item variables de clase
-    \item variables de pool
-\end{itemize}
+- variables de instancia
+- variables de clase
+- variables de pool
 
 Estas variables solo son accesibles desde el contexto de la clase, concretamente
 desde dentro de un método de la clase. La única forma de asignarles un valor
 desde fuera de la clase es enviándole a la clase un mensaje con el valor que
 queremos asignarles y el método lo asigna, por ejemplo:
 
-\begin{code}
+#+BEGIN_SRC 
 ExampleClass>>>setInstanceVariableTo: aValue
 
-    instanceVariable := aValue.
-\end{code}
+  instanceVariable := aValue.
+#+END_SRC
 
 Estos métodos pueden ser creados automáticamente para replicar el comportamiento
 de la asignación desde el Method Object. Sin embargo, como en el caso con las
@@ -345,8 +346,7 @@ restaría agregar la parte de configuración para la creación automática de lo
 métodos.
 
 
-
-\subsection*{Validaciones sobre los parámetros de la creación de la Method Object Class}
+** Validaciones sobre los parámetros de la creación de la Method Object Class
 
 Los siguientes parámetros son los de los keywords
 ~toMehtodObjectClassNamed:~ que recibe el nombre de la Method Object
@@ -360,40 +360,42 @@ granular el feedback que se le da al usuario y los flujos que se siguen. Tambié
 entra en esta categoría el selector de evaluación que se recibe en el keyword
 ~evaluatedWith:~ ya que es un selector unario que es validado de la
 misma manera que Cuis.
-% WRITE cuando Wilki me responda agregar por qué no puede ser una metaclase
+
+:WRITE:
+Cuando Wilki me responda agregar por qué no puede ser una metaclase.
+:END:
+
 La única validación extra es realizada sobre la superclase, consiste en
 verificar que no sea una Meta Clase.
 
 
-
-\subsection*{Validaciones sobre las variables de instancia de la clase del Method Object}
+** Validaciones sobre las variables de instancia de la clase del Method Object
 
 El keyword ~withExtractedVariablesToInstanceVariables:~ recibe un
 parámetro que define cómo debe llamarse la variable de instancia correspondiente
 a cada variable a parametrizar.
 
-\subsubsection*{¿Qué son las variables a parametrizar?}
+*** ¿Qué son las variables a parametrizar?
+
 Las variables a parametrizar son todas aquellas variables referenciadas en el
 método a extraer que no son temporales:
 
-\begin{code}
+#+BEGIN_SRC 
 ExampleClass>>methodToExtract: aParam | aTemp |
 
-    aTemp := self doSomethingWith: ivar1.
+  aTemp := self doSomethingWith: ivar1.
     
-    ^aTemp
-\end{code}
+  ^aTemp
+#+END_SRC
 
 Este método referencia 4 variables que usaremos como ejemplo de las 4 categorías
 de variables que podemos encontrar en un método:
 
-\begin{itemize}
-    \item aParam: parámetros del método.
-    \item aTemp: las variables temporales del método.
-    \item self: las pseudovariables (self y super).
-    \item ivar1: las variables del contexto de la clase (variables de instancia,
-      variables de clase y variables de pool)
-\end{itemize}
+- aParam: parámetros del método.
+- aTemp: las variables temporales del método.
+- self: las pseudovariables (self y super).
+- ivar1: las variables del contexto de la clase (variables de instancia,
+  variables de clase y variables de pool)
 
 Todas las categorías de variables deben ser parametrizadas excepto las
 temporales, ya que pertencen al contexto del método. En el ejemplo anterior el
@@ -401,7 +403,7 @@ conjunto de variables a parametrizar, es decir que tenemos que pasarle al Method
 Object al instanciarlo para que pueda referenciarlas, son: ~aParam~,
 ~self~ y ~ivar1~.
 
-\subsubsection{Continuo hablando sobre las validaciones}
+*** Continuo hablando sobre las validaciones
 
 Las variables a parametrizar serán variables de instancia del Method Object, lo
 cual las hará disponibles desde cualquier contexto dentro del Method Object y
@@ -420,9 +422,9 @@ El objeto recibido es un diccionario que tiene como clave el nombre de la
 variable a parametrizar y como valor de destino el nombre que se le debe dar a
 la variable de instancia correspondiente:
 
-\begin{code}
-    { 'self' -> 'client' } asDictionary.
-\end{code}
+#+BEGIN_SRC 
+  { 'self' -> 'client' } asDictionary.
+#+END_SRC
 
 Ese objeto representaría que la única variable a parametrizar es
 ~self~ y la variable de instancia correspondiente en el Method Object
@@ -431,27 +433,21 @@ debe llamarse ~client~.
 Si se repestan las siguientes restricciones que son verificadas los nombres
 pueden ser elegidos libremente:
 
-\begin{itemize}
-    \item debe tener una consistencia interna: los nombres de las variables de
-      instancia no deben repetirse y los nombres de los parámetros tampoco.
-    \item los nombres de las variables de instancia deben ser válidos y no deben
-      existir colisiones entre los nombres elegidos y:
-    \begin{itemize}
-        \item las variables de instancia de su jerarquía
-        \item las variables de clase de su jerarquía
-        \item las variables de pool
-        \item las variables temporales del método a extraer
-        \item las variables temporales y los argumentos de los bloques definidos
-          en el método a extraer
-    \end{itemize}
-    \item todas las variables a parametrizar tienen definido un nombre
-      correspondiente
-\end{itemize}
+- debe tener una consistencia interna: los nombres de las variables de
+  instancia no deben repetirse y los nombres de los parámetros tampoco.
+- los nombres de las variables de instancia deben ser válidos y no deben
+  existir colisiones entre los nombres elegidos y:
+  - las variables de instancia de su jerarquía
+  - las variables de clase de su jerarquía
+  - las variables de pool
+  - las variables temporales del método a extraer
+  - las variables temporales y los argumentos de los bloques definidos
+    en el método a extraer
+- todas las variables a parametrizar tienen definido un nombre
+  correspondiente
 
 
-
-
-\subsection*{Validaciones sobre las definiciones del mensaje de creación de instancia}
+** Validaciones sobre las definiciones del mensaje de creación de instancia
 
 El mensaje de creación de instancia tiene tantos parámetros como variables a
 parametrizar, por lo tanto el usuario debe definir cómo se llamará cada keyword
@@ -463,20 +459,27 @@ variables a parametrizar son ~iVar1~ y ~classVar1~, entonces
 el mensaje de creación de instancia deberá tener 2 keywords y sus
 correspondientes parámetros. El method header puede ser:
 
-\begin{code}
+#+BEGIN_SRC 
 MethodObject>>withIvar: anIvar withClassVar: aClassVar
-\end{code}
+#+END_SRC
 
 Asumiendo que se busca que ~iVar1~ se bindee a ~anIvar~ y
 ~classVar1~ a ~aClassVar~ la colección para definirlo es:
 
-\begin{code}
-    { { #keyword -> 'withIvar'.  #variableName -> 'iVar1'.  #parameterName ->
-        'anIvar'.  } asDictionary.
-
-        { #keyword -> 'withClassVar'.  #variableName -> 'classVar1'.
-          #parameterName -> 'aClassVar'.  } asDictionary.  }
-\end{code}
+#+BEGIN_SRC 
+{
+  {
+    #keyword -> 'withIvar'.
+    #variableName -> 'iVar1'.
+    #parameterName -> 'anIvar'.
+  } asDictionary.
+  {
+    #keyword -> 'withClassVar'.
+    #variableName -> 'classVar1'.
+    #parameterName -> 'aClassVar'.
+  } asDictionary.
+}
+#+END_SRC
 
 Las validaciones sobre este objeto son simples. Además de verificar que los
 nombres y los keywords son válidos solo es necesario ver que los nombres de los
@@ -490,12 +493,10 @@ Ya vimos en qué consiste el refactoring a grandes rasgos, ahora veremos los
 detalles de la implementación, las decisiones que se tomaron y los mayores
 desafíos que encontramos. Los 4 grandes pasos de la aplicación son:
 
-\begin{itemize}
-    \item Creación de la Method Object class
-    \item Generación del método de creación de instancias
-    \item Generación del método de evaluación
-    \item Reemplazo del método a extraer por la evaluación del Method Object
-\end{itemize}
+- Creación de la Method Object class
+- Generación del método de creación de instancias
+- Generación del método de evaluación
+- Reemplazo del método a extraer por la evaluación del Method Object
 
 La creación de la clase del Method Object es simple en Smalltalk, las clases son
 objetos por lo tanto se puede crear una nueva clase simplemente enviando un
@@ -509,9 +510,9 @@ decidir cómo llamarlo 2) utilizar el mensaje ~new~ de
 configuraciones que se le piden al usuario. Entonces, si no existen variables a
 parametrizar el método a extraer quedaría así:
 
-\begin{code}
+#+BEGIN_SRC 
 ExampleClass>>methodToExtract MethodObject new value
-\end{code}
+#+END_SRC
 
 La generación del método de creación de instancias implica compilar el código
 fuente del método en la clase del Methdo Object. Todas las clases responden al
@@ -532,32 +533,32 @@ siempre directamente con el código fuente y su representación como
 ~String~. Veamos un ejemplo para poder señalar algunos detalles ya que
 el funcionamiento de la generación es simple:
 
-\begin{code}
+#+BEGIN_SRC 
     { { #keyword -> 'from'.  #parameterName -> 'aSource'.  #variableName ->
         'factory'.  } asDictionary.
 
         { #keyword -> 'to'.  #parameterName -> 'aTarget'.  #variableName ->
           'store'.  } asDictionary.  }
-\end{code}
+#+END_SRC
 
 La generación de la instancia tiene dos partes agrega un mensaje en la Method
 Object class y un mensaje en la instancia que inicializa el objeto. Continuando
 el ejemplo los mensajes quedarían como:
 
-\begin{code}
+#+BEGIN_SRC 
 MethodObject class>>from: aSource to: aTarget ^MethodObject new initializeFrom:
 aSource to: aTarget
-\end{code}
+#+END_SRC
 
 y en la instancia:
 
-\begin{code}
-"Asumiendo que se eligieron estos nombres para las variables de instancia."  {
+#+BEGIN_SRC 
+"Asumiendo que se eligieron estos nombres para las variables de instancia."
+{
     'factory' -> 'source'.  'store' -> 'target'.  }
-
 MethdoObject>>initializeFrom: aSource to: aTarget source := aSource.  target :=
 aTarget.
-\end{code}
+#+END_SRC
 
 El mensaje en la Method Object class es un factory method que crea la nueva
 instancia y la inicializa enviándole un mensaje que se llama igual que el
@@ -567,9 +568,13 @@ instancia su correspondiente variable parametrizada.
 
 La generación del método de evaluación es más compleja porque incluye el
 reemplazo de todas las variables
-% REF agregar en el apéndice el código de
-% ExtractToMethodObject>>compileExtractedMethodAsEvaluationMethodOn: y agregar una referencia de esa
-% parte del apéndice acá.
+
+:REFERENCE:
+Agregar en el apéndice el código de
+ExtractToMethodObject>>compileExtractedMethodAsEvaluationMethodOn: y agregar una referencia de esa
+parte del apéndice acá.
+:END:
+
 que se parametrizaron por el nombre de la variable de instancia
 correspondiente. El código específico se encuentra en el apéndice. El reemplazo
 utiliza el AST del método a extraer y al ~Encoder~. Utilizaremos la
@@ -578,20 +583,19 @@ clase ~Encoder~, de la misma manera que lo hace el
 corresponden con un nodo del AST. La generación del código fuente con los
 reemplazos se divide en los siguientes pasos:
 
-\begin{enumerate}
-    \item Se genera una colección ordenada de pares (rango, nombre). El rango es
-      un intervalo en el código fuente que indica el rango de caracteres en el
-      código fuente que debe ser reemplazado por la segunda coordenada, el
-      nombre de la variable de instancia correspondiente. La generación de esta
-      colección se realiza consultando al ~Encoder~ por los rangos de
-      la variables a parametrizar y colocando cada rango con el nombre de su
-      correspondiente variable de instancia.
-    \item Se realiza el reemplazo de los rangos por los nombres
-      correspondientes.
-    \item Se reemplaza el encabezado del método original por el selector de
-      evaluación elegido.
-    \item Se compila el código fuente generado en el Method Object.
-\end{enumerate}
+
+1. Se genera una colección ordenada de pares (rango, nombre). El rango es
+   un intervalo en el código fuente que indica el rango de caracteres en el
+   código fuente que debe ser reemplazado por la segunda coordenada, el
+   nombre de la variable de instancia correspondiente. La generación de esta
+   colección se realiza consultando al ~Encoder~ por los rangos de
+   la variables a parametrizar y colocando cada rango con el nombre de su
+   correspondiente variable de instancia.
+2. Se realiza el reemplazo de los rangos por los nombres
+   correspondientes.
+3. Se reemplaza el encabezado del método original por el selector de
+   evaluación elegido.
+4. Se compila el código fuente generado en el Method Object.
 
 Finalmente, el último paso es reemplazar el método a extraer por la evaluación
 del Method Object.  Esta parte es parecida a la de la generación del código para
@@ -609,28 +613,39 @@ los casos en los que hay algún return explícito y el valor a devolver es
 distinto de self.
 
 
-
 * ¿Cómo se utiliza?
 
 El modelo ~ExtractToMethodObject~ colabora con un
 ~RefactoringApplier~ y un ~ExtractToMethodObjectForm~ para
 ofrecerle la funcionalidad al usuario y que pueda configurar el refactoring. Una
 secuencia exitosa:
-% DIAGRAM un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
-% cómo es una secuencia exitosa
-% DIAGRAM un diagrama de objetos de las tres clases relacionadas. Lo hice en el cuaderno.
+
+:DIAGRAM:
+Un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
+:END:
+
+:DIAGRAM:
+cómo es una secuencia exitosa
+un diagrama de objetos de las tres clases relacionadas. Lo hice en el cuaderno.
+:END:
 
 en Cuis se puede ver de esta forma:
 
-% DIAGRAM secuencia de screenshots que muestran cómo se aplica.
+:DIAGRAM:
+secuencia de screenshots que muestran cómo se aplica.
+:END:
 
 Unan secuencia con un error sigue estos pasos:
 
-% DIAGRAM un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
+:DIAGRAM:
+un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
+:END:
 
 y en Cuis el usuario lo ve así:
 
-% DIAGRAM secuencia de screenshots que muestran cómo se aplica.
+:DIAGRAM:
+secuencia de screenshots que muestran cómo se aplica.
+:END:
 
 Vemos que en este caso si alguna validación falla el usuario puede seguir
 modificando los parámetros hasta pasarla. Además, las validaciones que no
@@ -643,7 +658,11 @@ informa al usuario para que sepa las limitaciones del refactoring que aplicó.
 
 
 * Preservación del comportamiento
-% WRITE resumir cómo ganamos confianza y los tests más importantes
+
+:WRITE:
+resumir cómo ganamos confianza y los tests más importantes
+:END:
+
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr
 los tests.
 
