@@ -1,12 +1,12 @@
 * Motivación y smells
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
-métodos, los cuales a medida que pasa el tiempo van ganando funcionalidad y cada
-vez se vuelven más complejos. Los atributos más tangibles que hacen crecer esa
-complejidad son:
+métodos, los cuales a medida que evolucionan ganan funcionalidad y se vuelven
+más complejos. Los atributos más tangibles que reflejan esa complejidad son:
 
-- el largo medido en líneas de código o statements
-- la cantidad de parámetros que recibe
-- la cantidad de variables temporales que define
+- el largo del mismo medido en líneas de código o statements del lenguaje de
+  programación
+- la cantidad de parámetros que recibe o colaboradores externos
+- la cantidad de variables temporales que define y utiliza
 
 :REF:
 Fowler y Beck
@@ -81,99 +81,114 @@ manifiesta
 :END:
 
 
-
 * ¿En qué consiste?
 
-% WRITE antes de describir en concreto en qué consiste paso a paso dar una breve
-% descripción de alto nivel. Dónde se empieza, dónde se termina y qué entidades
-% nuevas se crean en el medio. Un diagramita o un ejemplo en código puede
-% que ayuden.
+:WRITE:
+Antes de describir en concreto en qué consiste paso a paso dar una breve
+descripción de alto nivel. Dónde se empieza, dónde se termina y qué entidades
+nuevas se crean en el medio. Un diagramita o un ejemplo en código puede que
+ayuden.
+:END:
 Algunos detalles dependen específicamente del lenguaje de programación
 utilizado, esta descripción de alto nivel asumirá un caso estándar en
 Smalltalk. Los pasos a seguir para extraer el código del método M a un Method
 Object son:
 
-% WRITE Acá estaría bárbaro tener un diagrama con números que vayan guiando
-% en qué orden se van haciendo las cosas y para que haya una referencia global
-% de lo que se está describiendo.
-\begin{enumerate}
-    \item Se crea una clase para el Method Object.
-    \item Se le agrega un mensaje de creación de instancia que recibe todos los
-      parámetros y variables de instancia utilizadas en M y los asigna a
-      variables de instancia del Method Object.
-    \item Se le agrega el mensaje \#value al Method Object.
-    \item Se copia el código de M dentro del método \#value del Method Object.
-    \item Se reemplazan en \#value los nombres de las variables que fueron
-      pasadas por parámetro por el nombre de su variable de instancia
-      correspondiente.
-    \item Se reemplaza el cuerpo M por la instanciación del Method Object
-      pasándole todos los parámetros y variables de instancia previamente
-      utilizadas.
-    \item Se corren los tests para verificar la preservación de comportamiento.
-    \item Se aplican los refactorings que antes no se podían sobre el método
-      \#value del Method Object.
-\end{enumerate}
+:WRITE:
+Acá estaría bárbaro tener un diagrama con números que vayan guiando
+en qué orden se van haciendo las cosas y para que haya una referencia global
+de lo que se está describiendo.
+:END:
+- Se crea una clase para el Method Object.
+- Se le agrega un mensaje de creación de instancia que recibe todos los
+  parámetros y variables de instancia utilizadas en M y los asigna a
+  variables de instancia del Method Object.
+- Se le agrega el mensaje \#value al Method Object.
+- Se copia el código de M dentro del método \#value del Method Object.
+- Se reemplazan en \#value los nombres de las variables que fueron
+  pasadas por parámetro por el nombre de su variable de instancia
+  correspondiente.
+- Se reemplaza el cuerpo M por la instanciación del Method Object
+  pasándole todos los parámetros y variables de instancia previamente
+  utilizadas.
+- Se corren los tests para verificar la preservación de comportamiento.
+- Se aplican los refactorings que antes no se podían sobre el método
+  \#value del Method Object.
 
-% REORDER quizás es mejor primero mostrar un caso concreto y después como resumen
-% mostrar los pasos abstractos que representan todas las aplicaciones del
-% refactoring
+:REORDER:
+Quizás es mejor primero mostrar un caso concreto y después como resumen
+mostrar los pasos abstractos que representan todas las aplicaciones del
+refactoring.
+:END:
 Veamos los pasos en un caso concreto:
 
-% REPHRASE usar un modelo común para los ejemplos, creo que es más fácil seguirlos.
-% Algo tan despegado de la realidad no creo que ayude.
-% TODO Buscar un ejemplo en cuis donde amerite la utilización del refactoring
-\begin{code}
-  ExampleClass>>methodToExtract: aParam1 with: aParam2
-    | temp1 |
+:REPHRASE:
+Usar un modelo común para los ejemplos, creo que es más fácil seguirlos.
+Algo tan despegado de la realidad no creo que ayude.
+:END:
 
-    temp1 := self doSomething: ivar1.
+:REPHRASE:
+Buscar un ejemplo en cuis donde amerite la utilización del refactoring.
+:END:
 
-    ^(param1 + param2) > 3 and: [temp1 > 5]
-\end{code}
+#+BEGIN_SRC 
+ExampleClass>>methodToExtract: aParam1 with: aParam2
+  | temp1 |
 
-\lstinline{methodToExtract} es el método objeto de nuestro refactoring. Luego de
-crear la clase del Method Object le agregaremos el mensaje de creación de
-instancia:
+  temp1 := self doSomething: ivar1.
 
-\begin{code}
-  MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
+  ^(param1 + param2) > 3 and: [temp1 > 5]
+#+END_SRC
+
+
+~methodToExtract~ es el método objeto de nuestro refactoring. Luego de crear la
+clase del Method Object le agregaremos el mensaje de creación de instancia:
+
+#+BEGIN_SRC
+MethodObject>>initializeWith: aParam1 with: aParam2 with: anIvar1 with: aSelf
 
   ivarParam1 := aParam1.
   ivarParam2 := aParam2.
-  ivarIvar1 := anIvar1.
+  ivarIvar1 := anInvar1.
   client := aSelf.
-\end{code}
+#+END_SRC
 
-Luego agregamos el mensaje \lstinline{value} al Method Object con el contenido
-de \lstinline{methodToExtract} y reemplazamos las variables recibidas como
-parámetro:
+Luego agregamos el mensaje ~value~ al Method Object con el contenido de
+~methodToExtract~ y reemplazamos las variables recibidas como parámetro:
 
-% WRITE Estaría bueno hacer una tablita o algo mostrando los cambios y quizás
-% aclaraciones o detalles de cada uno como cuáles son las variables a reemplazar
-% y por qué valor se reemplazaron.
+:WRITE:
+Estaría bueno hacer una tablita o algo mostrando los cambios y quizás
+aclaraciones o detalles de cada uno como cuáles son las variables a reemplazar y
+por qué valor se reemplazaron.
+:END:
 
-\begin{code}
-MethodObject>>value | temp1 |
+#+BEGIN_SRC 
+MethodObject>>value
+  | temp1 |
 
-    temp1 := client doSomething: ivarIvar1.
+  temp1 := client doSomething: ivarIvar1.
 
-    ^(ivarParam1 + ivarParam2) > 3 and: [temp1 > 5]
-\end{code}
+  ^(ivarParam1 + ivarParam2) > 3 and: [temp1 > 5]
+#+END_SRC
 
-finalmente reemplazamos el cuerpo del \lstinline{methodToExtract}:
+finalmente reemplazamos el cuerpo del ~methodToExtract~:
 
-\begin{code}
-  ExampleClass>>methodToExtract: aParam1 with: aParam2
-    ^(MethodObject with: aParam1 with: aParam2 with: ivar1 with: self) value
-\end{code}
+#+BEGIN_SRC 
+ExampleClass>>methodToExtract: aParam1 with: aParam2
+  ^(MethodObject with: aParam1 with: aParam2 with: ivar1 with: self) value
+#+END_SRC
 
 
 * Descripción completa de la funcionalidad del refactoring implementado
-% Voy a contar cómo funciona el refactoring de manera top down hasta llegar al
-% detalle del código e incluso mostrar partes de código específicas.
+
+:SECTION_INTENT:
+Voy a contar cómo funciona el refactoring de manera top down hasta llegar al
+detalle del código e incluso mostrar partes de código específicas.
+:END:
+
 El refactoring implementado tiene como objeto central al encargado de
 efectivamente aplicar el refactoring, un objeto llamado
-\lstinline{ExtractToMethodObject}. Comenzaremos explicando en detalle el
+~ExtractToMethodObject~. Comenzaremos explicando en detalle el
 comportamiento, las limitaciones y el funcionamiento de este objeto. Luego
 pasaremos a ver cómo colabora con el resto del modelo para ofrecer al usuarion
 una funcionalidad completa.
