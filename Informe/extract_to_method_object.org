@@ -193,10 +193,10 @@ comportamiento, las limitaciones y el funcionamiento de este objeto. Luego
 pasaremos a ver cómo colabora con el resto del modelo para ofrecer al usuarion
 una funcionalidad completa.
 
-A partir de ahora nos referiremos como \lstinline{ExtractToMethodObject} al
+A partir de ahora nos referiremos como ~ExtractToMethodObject~ al
 objeto que aplica el refactoring especificando en cada caso si hablamos de la
-clase o una instancia del mismo. \lstinline{ExtractToMethodObject} es subclase
-de \lstinline{Refactoring} que tiene al mensaje \lstinline{apply} como único
+clase o una instancia del mismo. ~ExtractToMethodObject~ es subclase
+de ~Refactoring~ que tiene al mensaje ~apply~ como único
 mensaje polimórfico.
 % DIAGRAM mostrar un diagrama de clases con refactoring, etmo y el apply
 Veamos un ejemplo de utilización del refactoring:
@@ -245,38 +245,38 @@ consideraremos inválidas.
 * Validaciones
 % WRITE explicar a nivel código que se recibe, qué es parametrizable y qué no
 El mensaje de creación de instancia tiene como primer parámetro al método a
-extraer con el keyword \lstinline{from:}. Este método a extraer es una instancia
-de \lstinline{CompiledMethod}, objeto que representa un método compilado que la
+extraer con el keyword ~from:~. Este método a extraer es una instancia
+de ~CompiledMethod~, objeto que representa un método compilado que la
 máquina virtual puede interpretar. Este objeto encapsula dos elementos
 necesarios del refactoring:
 
 \begin{itemize}
     \item el código del método a extraer y su representación en un AST de
-      objetos a través del mensaje \lstinline{methodNode} que nos devuelve una
-      instancia de \lstinline{MethodNode} correspondiente al método a extraer.
+      objetos a través del mensaje ~methodNode~ que nos devuelve una
+      instancia de ~MethodNode~ correspondiente al método a extraer.
     \item la clase que es el contexto y para la cual está compilado el método
-      accesible a través del mensaje \lstinline{methodClass}, que devuelve una
-      instancia de \lstinline{MethodClass class} que es una sublcase de
-      \lstinline{Metaclass}.
+      accesible a través del mensaje ~methodClass~, que devuelve una
+      instancia de ~MethodClass class~ que es una sublcase de
+      ~Metaclass~.
 \end{itemize}
 
 \subsection*{Validaciones sobre el método a extraer}
 
-\subsubsection*{No puede contener referencias a la pseudovariable \lstinline{super}}
+\subsubsection*{No puede contener referencias a la pseudovariable ~super~}
 
 No se permite realizar el refactoring sobre métodos que contienen referencias a
-\lstinline{super} porque no se puede replicar el comportamiento de enviar un
-mensaje a \lstinline{super} en el Method Object sin modificar considerablemente
+~super~ porque no se puede replicar el comportamiento de enviar un
+mensaje a ~super~ en el Method Object sin modificar considerablemente
 la clase que contiene el método a extraer, complejizándo el refactoring
 demasiado para la utilización que envisionamos por ahora. El receptor de un
-envío de mensaje a \lstinline{super} es el mismo que el receptor de un envío de
-mensaje a la pseudovariable \lstinline{self}, es decir, la instancia que es el
+envío de mensaje a ~super~ es el mismo que el receptor de un envío de
+mensaje a la pseudovariable ~self~, es decir, la instancia que es el
 contexto del método que se está ejecutando. La diferencia reside en que el
 method lookup inicia en la superclase del receptor, en lugar de iniciarse en su
 clase. Por lo tanto, para poder replicar el mismo comportamiento los envíos a
-\lstinline{super} deberían seguir realizándose desde la clase del método. Esto
+~super~ deberían seguir realizándose desde la clase del método. Esto
 se podría conseguir agregando mensajes a la clase del método que realicen los
-envíos a \lstinline{super} pero configurar la creación de estos mensajes para
+envíos a ~super~ pero configurar la creación de estos mensajes para
 que se realice automáticamente hubiera agregado más pasos a la aplicación del
 refactoring y no nos pareció prudente agregarlo sin contar con evidencia de que
 una versión más simple, sin esta funcionalidad, fuera aceptada y entendida con
@@ -334,7 +334,7 @@ ExampleClass>>>setInstanceVariableTo: aValue
 
 Estos métodos pueden ser creados automáticamente para replicar el comportamiento
 de la asignación desde el Method Object. Sin embargo, como en el caso con las
-referencias a \lstinline{super} no lo implementamos porque priorizamos mantener
+referencias a ~super~ no lo implementamos porque priorizamos mantener
 la primer versión del refactoring simple ya que su principal objetivo es
 exploratorio. Implementarlo hubiera requerido detectar todas las asignaciones a
 este tipo de variables, ofrecerle la posibilidad al usuario de configurar cómo
@@ -349,16 +349,16 @@ métodos.
 \subsection*{Validaciones sobre los parámetros de la creación de la Method Object Class}
 
 Los siguientes parámetros son los de los keywords
-\lstinline{toMehtodObjectClassNamed:} que recibe el nombre de la Method Object
-class, \lstinline{subclassing:} que recibe la superclase de la Method Object
-class y, por último, \lstinline{onCategory:} que recibe la categoría en la cual
+~toMehtodObjectClassNamed:~ que recibe el nombre de la Method Object
+class, ~subclassing:~ que recibe la superclase de la Method Object
+class y, por último, ~onCategory:~ que recibe la categoría en la cual
 se ubicará la Method Object class. Las validaciones sobre estos elementos son
 las mínimas necesarias para la definición de una nueva clase, son validaciones
 que también realiza Cuis cuando intentamos definir una nueva clase
 manualmente. Las agregamos aquí también para poder controlar de forma más
 granular el feedback que se le da al usuario y los flujos que se siguen. También
 entra en esta categoría el selector de evaluación que se recibe en el keyword
-\lstinline{evaluatedWith:} ya que es un selector unario que es validado de la
+~evaluatedWith:~ ya que es un selector unario que es validado de la
 misma manera que Cuis.
 % WRITE cuando Wilki me responda agregar por qué no puede ser una metaclase
 La única validación extra es realizada sobre la superclase, consiste en
@@ -368,7 +368,7 @@ verificar que no sea una Meta Clase.
 
 \subsection*{Validaciones sobre las variables de instancia de la clase del Method Object}
 
-El keyword \lstinline{withExtractedVariablesToInstanceVariables:} recibe un
+El keyword ~withExtractedVariablesToInstanceVariables:~ recibe un
 parámetro que define cómo debe llamarse la variable de instancia correspondiente
 a cada variable a parametrizar.
 
@@ -398,8 +398,8 @@ de variables que podemos encontrar en un método:
 Todas las categorías de variables deben ser parametrizadas excepto las
 temporales, ya que pertencen al contexto del método. En el ejemplo anterior el
 conjunto de variables a parametrizar, es decir que tenemos que pasarle al Method
-Object al instanciarlo para que pueda referenciarlas, son: \lstinline{aParam},
-\lstinline{self} y \lstinline{ivar1}.
+Object al instanciarlo para que pueda referenciarlas, son: ~aParam~,
+~self~ y ~ivar1~.
 
 \subsubsection{Continuo hablando sobre las validaciones}
 
@@ -412,7 +412,7 @@ referencian a un objeto por su rol en ese contexto específico. Al cambiar el
 contexto, como en este caso que pasan de un método a la clase del Method Object,
 algunos nombres deben cambiar. En algunos casos necesitan cambiar por el cambio
 de contexto pero en otros también por limitaciones sintácticas como en el caso
-de las pseudovariables. Si \lstinline{self} es una variable a parametrizar la
+de las pseudovariables. Si ~self~ es una variable a parametrizar la
 variable de instancia correspondiente no puede llamarse también self porque es
 un nombre reservado.
 
@@ -425,8 +425,8 @@ la variable de instancia correspondiente:
 \end{code}
 
 Ese objeto representaría que la única variable a parametrizar es
-\lstinline{self} y la variable de instancia correspondiente en el Method Object
-debe llamarse \lstinline{client}.
+~self~ y la variable de instancia correspondiente en el Method Object
+debe llamarse ~client~.
 
 Si se repestan las siguientes restricciones que son verificadas los nombres
 pueden ser elegidos libremente:
@@ -456,10 +456,10 @@ pueden ser elegidos libremente:
 El mensaje de creación de instancia tiene tantos parámetros como variables a
 parametrizar, por lo tanto el usuario debe definir cómo se llamará cada keyword
 y el nombre del parámetro correspondiente. El objeto que se recibe en el keyword
-\lstinline{withInstanceCreationMessageFrom:} es una colección ordenada de
+~withInstanceCreationMessageFrom:~ es una colección ordenada de
 objetos que contienen el keyword elegido, el nombre del parámetro que irá en ese
 keyword y a qué variable corresponde. Veamos un ejemplo, supongamos que las
-variables a parametrizar son \lstinline{iVar1} y \lstinline{classVar1}, entonces
+variables a parametrizar son ~iVar1~ y ~classVar1~, entonces
 el mensaje de creación de instancia deberá tener 2 keywords y sus
 correspondientes parámetros. El method header puede ser:
 
@@ -467,8 +467,8 @@ correspondientes parámetros. El method header puede ser:
 MethodObject>>withIvar: anIvar withClassVar: aClassVar
 \end{code}
 
-Asumiendo que se busca que \lstinline{iVar1} se bindee a \lstinline{anIvar} y
-\lstinline{classVar1} a \lstinline{aClassVar} la colección para definirlo es:
+Asumiendo que se busca que ~iVar1~ se bindee a ~anIvar~ y
+~classVar1~ a ~aClassVar~ la colección para definirlo es:
 
 \begin{code}
     { { #keyword -> 'withIvar'.  #variableName -> 'iVar1'.  #parameterName ->
@@ -504,8 +504,8 @@ mensaje a la superclase elegida para el Method Object.
 El mensaje de creación de instancias tiene un caso en particular en el cual el
 método a extraer no cuenta con variables a parametrizar. En ese caso existen dos
 opciones: 1) parametrizar el selector de ese mensaje para que el usuario pueda
-decidir cómo llamarlo 2) utilizar el mensaje \lstinline{new} de
-\lstinline{Object}. Decidimos usar \lstinline{new} para reducir la cantidad
+decidir cómo llamarlo 2) utilizar el mensaje ~new~ de
+~Object~. Decidimos usar ~new~ para reducir la cantidad
 configuraciones que se le piden al usuario. Entonces, si no existen variables a
 parametrizar el método a extraer quedaría así:
 
@@ -515,21 +515,21 @@ ExampleClass>>methodToExtract MethodObject new value
 
 La generación del método de creación de instancias implica compilar el código
 fuente del método en la clase del Methdo Object. Todas las clases responden al
-mensaje \lstinline{compile}. Por lo cual para poder agregar el método a la clase
+mensaje ~compile~. Por lo cual para poder agregar el método a la clase
 del Method Object solo necesitamos generar el código fuente correspondiente. Las
 dos formas que consideramos para realizar esto es construir el texto, el
-\lstinline{String}, del código fuente o construir una abstracción del mismo,
+~String~, del código fuente o construir una abstracción del mismo,
 representada por objetos, que luego pueda ser traducida a código fuente. La
 abstracción más utilizada para representar código fuente es el AST del
 mismo. Cuis tiene una jerarquía de objetos que representan los posibles nodos de
-un AST pero la construcción del árbol es realizada por el \lstinline{Parser} a
+un AST pero la construcción del árbol es realizada por el ~Parser~ a
 partir de un código fuente ya existente. Ese modelo del AST no incluye la
 posibilidad de relizarle modificaciones al mismo para luego generar un nuevo
 código fuente. Se decidió utilizar el modelo del AST para casos específicos en
 los cuales se podía reutilizar alguna funcionalidad incluida en él pero para la
 generación de nuevos métodos y modificaciones a códigos ya existentes se trabajó
 siempre directamente con el código fuente y su representación como
-\lstinline{String}. Veamos un ejemplo para poder señalar algunos detalles ya que
+~String~. Veamos un ejemplo para poder señalar algunos detalles ya que
 el funcionamiento de la generación es simple:
 
 \begin{code}
@@ -561,7 +561,7 @@ aTarget.
 
 El mensaje en la Method Object class es un factory method que crea la nueva
 instancia y la inicializa enviándole un mensaje que se llama igual que el
-factory method pero prefijado con \lstinline{initialize}. El mensaje de
+factory method pero prefijado con ~initialize~. El mensaje de
 inicialización en la instancia le asigna a cada una de las variables de
 instancia su correspondiente variable parametrizada.
 
@@ -572,9 +572,9 @@ reemplazo de todas las variables
 % parte del apéndice acá.
 que se parametrizaron por el nombre de la variable de instancia
 correspondiente. El código específico se encuentra en el apéndice. El reemplazo
-utiliza el AST del método a extraer y al \lstinline{Encoder}. Utilizaremos la
-clase \lstinline{Encoder}, de la misma manera que lo hace el
-\lstinline{Debugger}, para obtener los rangos en el código fuente que se
+utiliza el AST del método a extraer y al ~Encoder~. Utilizaremos la
+clase ~Encoder~, de la misma manera que lo hace el
+~Debugger~, para obtener los rangos en el código fuente que se
 corresponden con un nodo del AST. La generación del código fuente con los
 reemplazos se divide en los siguientes pasos:
 
@@ -583,7 +583,7 @@ reemplazos se divide en los siguientes pasos:
       un intervalo en el código fuente que indica el rango de caracteres en el
       código fuente que debe ser reemplazado por la segunda coordenada, el
       nombre de la variable de instancia correspondiente. La generación de esta
-      colección se realiza consultando al \lstinline{Encoder} por los rangos de
+      colección se realiza consultando al ~Encoder~ por los rangos de
       la variables a parametrizar y colocando cada rango con el nombre de su
       correspondiente variable de instancia.
     \item Se realiza el reemplazo de los rangos por los nombres
@@ -612,8 +612,8 @@ distinto de self.
 
 * ¿Cómo se utiliza?
 
-El modelo \lstinline{ExtractToMethodObject} colabora con un
-\lstinline{RefactoringApplier} y un \lstinline{ExtractToMethodObjectForm} para
+El modelo ~ExtractToMethodObject~ colabora con un
+~RefactoringApplier~ y un ~ExtractToMethodObjectForm~ para
 ofrecerle la funcionalidad al usuario y que pueda configurar el refactoring. Una
 secuencia exitosa:
 % DIAGRAM un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
@@ -636,7 +636,7 @@ Vemos que en este caso si alguna validación falla el usuario puede seguir
 modificando los parámetros hasta pasarla. Además, las validaciones que no
 dependen del input del usuario son realizadas también antes de presentarle el
 formulario al usuario, de esta forma si el método contiene una referencia a
-\lstinline{super} el usuario se entera inmediatamente y no después de llenar
+~super~ el usuario se entera inmediatamente y no después de llenar
 todos los parámetros necesarios. Al finalizar el refactoring si detectamos algo
 que probablemente deba ser modificado pero no es realizado automáticamente se le
 informa al usuario para que sepa las limitaciones del refactoring que aplicó.
