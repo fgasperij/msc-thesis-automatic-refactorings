@@ -190,7 +190,7 @@ El refactoring implementado tiene como objeto central al encargado de
 efectivamente aplicar el refactoring, un objeto llamado
 ~ExtractToMethodObject~. Comenzaremos explicando en detalle el
 comportamiento, las limitaciones y el funcionamiento de este objeto. Luego
-pasaremos a ver cómo colabora con el resto del modelo para ofrecer al usuarion
+pasaremos a ver cómo colabora con el resto del modelo para ofrecer al usuario
 una funcionalidad completa.
 
 A partir de ahora nos referiremos como ~ExtractToMethodObject~ al
@@ -199,9 +199,15 @@ clase o una instancia del mismo. ~ExtractToMethodObject~ es subclase
 de ~Refactoring~ que tiene al mensaje ~apply~ como único
 mensaje polimórfico.
 
-:DIAGRAM:
-Mostrar un diagrama de clases con refactoring, etmo y el apply.
-:END:
+#+BEGIN_SRC plantuml :file extract_to_method_object_and_refactoring_class_diagram.png
+Refactoring <|-- ExtractToMethodObject
+
+Refactoring : apply
+ExtractToMethodObject : apply
+#+END_SRC
+
+#+RESULTS:
+[[file:extract_to_method_object_and_refactoring_class_diagram.png]]
 
 Veamos un ejemplo de utilización del refactoring:
 
@@ -220,20 +226,20 @@ refactoring := ExtractToMethodObject
 
 Los colaboradores recibidos son:
 
-- el método sobre el cual aplicar el refactoring
+- ~from~: el método sobre el cual aplicar el refactoring
 - los valores necesarios para declarar el Method Object
-  - el nombre que recibirá la clase del Method Object
-  - la superclase del Method Object
-  - la categoría en la cual declarar el Method Object
-- los nombres de las variables de instancia para las variables
+  - ~toMethodObjectClassNamed~: el nombre que recibirá la clase del Method Object
+  - ~subclassing~: la superclase del Method Object
+  - ~onCategory~: la categoría en la cual declarar el Method Object
+- ~withExtractedVariablesToInstanceVariables~: los nombres de las variables de instancia para las variables
   parametrizadas
-- la definición del mensaje de creación de instancia
+- la definición del mensaje de creación de instancia ~withInstanceCreationMessageFrom~:
   - las keywords
   - los nombres de los parámetros
-- el nombre para el mensaje de evaluación
+- ~evaluatedWith~: el nombre para el mensaje de evaluación
 
 El mensaje de creación de instancia se encargará de validar todos los
-colaboradores recibidos para asegurarse de que la instancia creada será válida y
+colaboradores recibidos para asegurarse que la instancia creada será válida y
 el refactoring podrá ser aplicado. Una vez instanciado el refactoring, a menos
 que alguna de las condiciones validadas sea modificada en el espacio de tiempo
 entre la creación de la instancia y la aplicación del refactoring, posibilidad
@@ -245,23 +251,27 @@ consideraremos inválidas.
 
 
 * Validaciones
+
 :WRITE:
-Explicar a nivel código que se recibe, qué es parametrizable y qué no.
+Explicar a nivel código qué se recibe, qué es parametrizable y qué no.
+
+A qué me refería? En la sección anterior hay una invocación, además de eso
+quiero mostrar qué forma tiene cada parámetro? Creo que está más adelante.
+Lo confirmo después.
 :END:
 
-El mensaje de creación de instancia tiene como primer parámetro al método a
-extraer con el keyword ~from:~. Este método a extraer es una instancia
+El mensaje de creación de instancia tiene como primer parámetro al método cuyo
+cuerpo se extraerá con el keyword ~from:~. Este método a extraer es una instancia
 de ~CompiledMethod~, objeto que representa un método compilado que la
 máquina virtual puede interpretar. Este objeto encapsula dos elementos
 necesarios del refactoring:
 
-- el código del método a extraer y su representación en un AST de
-  objetos a través del mensaje ~methodNode~ que nos devuelve una
-  instancia de ~MethodNode~ correspondiente al método a extraer.
-- la clase que es el contexto y para la cual está compilado el método
-  accesible a través del mensaje ~methodClass~, que devuelve una
-  instancia de ~MethodClass class~ que es una sublcase de
-  ~Metaclass~.
+- El código del método a extraer y su representación en un AST de objetos a
+  través del mensaje ~methodNode~ que nos devuelve una instancia de ~MethodNode~
+  correspondiente al método a extraer.
+- La clase que es el contexto y para la cual está compilado el método. La misma
+  se obtiene a través del mensaje ~methodClass~, que devuelve una instancia de
+  ~MethodClass class~, sublcase de ~Metaclass~.
 
 ** Validaciones sobre el método a extraer
 
@@ -273,13 +283,13 @@ mensaje a ~super~ en el Method Object sin modificar considerablemente
 la clase que contiene el método a extraer, complejizándo el refactoring
 demasiado para la utilización que envisionamos por ahora. El receptor de un
 envío de mensaje a ~super~ es el mismo que el receptor de un envío de
-mensaje a la pseudovariable ~self~, es decir, la instancia que es el
+mensaje a la pseudovariable ~self~, es decir, la instancia 
 contexto del método que se está ejecutando. La diferencia reside en que el
 method lookup inicia en la superclase del receptor, en lugar de iniciarse en su
 clase. Por lo tanto, para poder replicar el mismo comportamiento los envíos a
 ~super~ deberían seguir realizándose desde la clase del método. Esto
 se podría conseguir agregando mensajes a la clase del método que realicen los
-envíos a ~super~ pero configurar la creación de estos mensajes para
+envíos a ~super~, pero configurar la creación de estos mensajes para
 que se realice automáticamente hubiera agregado más pasos a la aplicación del
 refactoring y no nos pareció prudente agregarlo sin contar con evidencia de que
 una versión más simple, sin esta funcionalidad, fuera aceptada y entendida con
@@ -290,7 +300,7 @@ caso. Supongamos que el método a extraer es:
 ExampleClass>>methodToExtract
   | temp1 |
 
-  temp1 := ivar1 + super value
+  temp1 := ivar1 + super doSomething
 
   ^temp 1
 #+END_SRC
@@ -299,23 +309,24 @@ la forma de replicar el comportamiento sería agregar un mensaje a la clase que
 realice la llamada a ~super~:
 
 #+BEGIN_SRC 
-ExampleClass>>sendToSuper
+ExampleClass>>sendDoSomethingToSuper
 
-  ^super value
+  ^super doSomething
 #+END_SRC
 
 y utilizar este mensaje desde el método de evaluación del Method Object:
 
 #+BEGIN_SRC 
-MehtodObjectClass>>value | temp1 |
+MehtodObjectClass>>value
+  | temp1 |
 
-  temp1 := correspondingIvar + client sendToSuper
+  temp1 := correspondingIvar + client sendDoSomethingToSuper
 
   ^temp 1
 #+END_SRC
 
-*** No contiene asignaciones a variables que no sean temporales
 
+*** No contiene asignaciones a variables que no sean temporales
 Las variables no temporales son las variables del contexto de la clase:
 
 - variables de instancia
@@ -325,7 +336,7 @@ Las variables no temporales son las variables del contexto de la clase:
 Estas variables solo son accesibles desde el contexto de la clase, concretamente
 desde dentro de un método de la clase. La única forma de asignarles un valor
 desde fuera de la clase es enviándole a la clase un mensaje con el valor que
-queremos asignarles y el método lo asigna, por ejemplo:
+queremos asignarles y que el método lo asigne, por ejemplo:
 
 #+BEGIN_SRC 
 ExampleClass>>>setInstanceVariableTo: aValue
@@ -339,7 +350,7 @@ referencias a ~super~ no lo implementamos porque priorizamos mantener
 la primer versión del refactoring simple ya que su principal objetivo es
 exploratorio. Implementarlo hubiera requerido detectar todas las asignaciones a
 este tipo de variables, ofrecerle la posibilidad al usuario de configurar cómo
-serán los mensajes para asignarlas desde el Method Object y luego crearlos
+serían los mensajes para asignarlas desde el Method Object y luego crearlos
 automáticamente. El código para detectar las asignaciones es parte de la
 validación, si en el futuro quisiera implementarse el flujo completo solo
 restaría agregar la parte de configuración para la creación automática de los
@@ -348,40 +359,44 @@ métodos.
 
 ** Validaciones sobre los parámetros de la creación de la Method Object Class
 
-Los siguientes parámetros son los de los keywords
-~toMehtodObjectClassNamed:~ que recibe el nombre de la Method Object
-class, ~subclassing:~ que recibe la superclase de la Method Object
-class y, por último, ~onCategory:~ que recibe la categoría en la cual
-se ubicará la Method Object class. Las validaciones sobre estos elementos son
-las mínimas necesarias para la definición de una nueva clase, son validaciones
-que también realiza Cuis cuando intentamos definir una nueva clase
-manualmente. Las agregamos aquí también para poder controlar de forma más
-granular el feedback que se le da al usuario y los flujos que se siguen. También
-entra en esta categoría el selector de evaluación que se recibe en el keyword
-~evaluatedWith:~ ya que es un selector unario que es validado de la
-misma manera que Cuis.
+Los parámetros que siguen son los de los keywords ~toMehtodObjectClassNamed:~,
+que recibe el nombre de la Method Object class, ~subclassing:~, que recibe la
+superclase de la Method Object class y, por último, ~onCategory:~ que recibe la
+categoría en la cual se ubicará la Method Object class. Las validaciones sobre
+estos elementos son las mínimas necesarias para la definición de una nueva
+clase, son validaciones que también realiza Cuis cuando intentamos definir una
+nueva clase manualmente. Las realizamos aquí también para poder controlar de
+forma más granular el feedback que se le da al usuario y los flujos que se
+siguen. También entra en esta categoría el selector de evaluación que se recibe
+en el keyword ~evaluatedWith:~ ya que es un selector unario que es validado de
+la misma manera que Cuis.
 
-:WRITE:
-Cuando Wilki me responda agregar por qué no puede ser una metaclase.
+:REFERENCE:
+Smalltalk-80 blue book - Capítulo 5
 :END:
 
-La única validación extra es realizada sobre la superclase, consiste en
-verificar que no sea una Meta Clase.
+La única validación extra es realizada sobre la superclase y consiste en
+verificar que no sea una metaclase, es decir, una instancia de
+~Metaclass~. Sería inusual que un usuario elija una metaclase como superclase de
+la Method Object class porque entonces las instancias serían clases, lo cual es
+incoherente con el metamodelo de Smalltalk.  Además, las metaclases no contienen
+en su protocolo el mensaje ~subclass:~ por lo cual no se puede heredar de ellas.
 
 
 ** Validaciones sobre las variables de instancia de la clase del Method Object
 
-El keyword ~withExtractedVariablesToInstanceVariables:~ recibe un
-parámetro que define cómo debe llamarse la variable de instancia correspondiente
-a cada variable a parametrizar.
+El keyword ~withExtractedVariablesToInstanceVariables:~ recibe un parámetro que
+define cómo debe llamarse la variable de instancia correspondiente a cada
+variable a parametrizar.
 
 *** ¿Qué son las variables a parametrizar?
 
-Las variables a parametrizar son todas aquellas variables referenciadas en el
+Las variables a parametrizar son todas las variables referenciadas en el
 método a extraer que no son temporales:
 
 #+BEGIN_SRC 
-ExampleClass>>methodToExtract: aParam | aTemp |
+ExampleClass>>methodToExtract: aParam
+  | aTemp |
 
   aTemp := self doSomethingWith: ivar1.
     
@@ -391,36 +406,38 @@ ExampleClass>>methodToExtract: aParam | aTemp |
 Este método referencia 4 variables que usaremos como ejemplo de las 4 categorías
 de variables que podemos encontrar en un método:
 
-- aParam: parámetros del método.
-- aTemp: las variables temporales del método.
-- self: las pseudovariables (self y super).
-- ivar1: las variables del contexto de la clase (variables de instancia,
+- ~aParam~ :: parámetros del método.
+- ~aTemp~ :: las variables temporales del método.
+- ~self~ :: las pseudovariables (self y super).
+- ~ivar1~ :: las variables del contexto de la clase (variables de instancia,
   variables de clase y variables de pool)
 
 Todas las categorías de variables deben ser parametrizadas excepto las
-temporales, ya que pertencen al contexto del método. En el ejemplo anterior el
-conjunto de variables a parametrizar, es decir que tenemos que pasarle al Method
-Object al instanciarlo para que pueda referenciarlas, son: ~aParam~,
-~self~ y ~ivar1~.
+temporales, ya que pertencen al contexto del método por lo tanto basta con
+redefinirlas. En el ejemplo anterior el conjunto de variables a parametrizar, es
+decir que tenemos que pasarle al Method Object al instanciarlo para que pueda
+referenciarlas, son: ~aParam~, ~self~ y ~ivar1~.
+ 
 
-*** Continuo hablando sobre las validaciones
+*** Las validaciones
 
-Las variables a parametrizar serán variables de instancia del Method Object, lo
-cual las hará disponibles desde cualquier contexto dentro del Method Object y
-así se podrá descomponer de manera simple el método extraido. Los nombres son
-uno de los atributos que más influyen en la entendibilidad del código y por lo
-tanto no deben tomarse a la ligera. Los nombres se eligen de manera contextual,
-referencian a un objeto por su rol en ese contexto específico. Al cambiar el
-contexto, como en este caso que pasan de un método a la clase del Method Object,
-algunos nombres deben cambiar. En algunos casos necesitan cambiar por el cambio
-de contexto pero en otros también por limitaciones sintácticas como en el caso
-de las pseudovariables. Si ~self~ es una variable a parametrizar la
-variable de instancia correspondiente no puede llamarse también self porque es
-un nombre reservado.
+Las variables a parametrizar se utilizarán para la creación del Method Object y
+en él serán variables de instancia, lo cual las hará disponibles desde cualquier
+contexto dentro del Method Object y así se podrán aplicar refactorings más
+sencillos sobre el método extraido. Los nombres son uno de los atributos que más
+influyen en la entendibilidad del código y por lo tanto no deben tomarse a la
+ligera. Los nombres se eligen de manera contextual, referencian a un objeto por
+su rol en ese contexto específico. Al cambiar el contexto, como en este caso que
+pasan de un método a la clase del Method Object, algunos nombres probablemente
+deban cambiar. En algunos casos necesitan cambiar por el cambio de contexto pero
+en otros también por limitaciones sintácticas como en el caso de las
+pseudovariables. Si ~self~ es una variable a parametrizar la variable de
+instancia correspondiente no puede llamarse también self porque es un nombre
+reservado.
 
 El objeto recibido es un diccionario que tiene como clave el nombre de la
-variable a parametrizar y como valor de destino el nombre que se le debe dar a
-la variable de instancia correspondiente:
+variable a parametrizar y como valor el nombre que se le debe dar a la variable
+de instancia correspondiente:
 
 #+BEGIN_SRC 
   { 'self' -> 'client' } asDictionary.
@@ -430,10 +447,19 @@ Ese objeto representaría que la única variable a parametrizar es
 ~self~ y la variable de instancia correspondiente en el Method Object
 debe llamarse ~client~.
 
-Si se repestan las siguientes restricciones que son verificadas los nombres
-pueden ser elegidos libremente:
+Si se respetan las siguientes restricciones, que son verificadas por el mensaje
+de creación de instancia del ~ExtractToMethodObject~, los nombres pueden ser
+elegidos libremente:
 
-- debe tener una consistencia interna: los nombres de las variables de
+:DIAGRAM:
+Creo que acá se aclararía mucho el panorama con un buen diagrama.
+Algo que muestre de manera clara los conjuntos, qué definen y las restricciones
+necesarias de cada uno.
+Creo que con un ejemplo guía sería más fácil aún. Algo que muestre el contenido
+de cada conjunto y quizás en rojo los posibles errores de duplicado, etc.
+:END:
+
+- deben tener una consistencia interna: los nombres de las variables de
   instancia no deben repetirse y los nombres de los parámetros tampoco.
 - los nombres de las variables de instancia deben ser válidos y no deben
   existir colisiones entre los nombres elegidos y:
