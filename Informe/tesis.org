@@ -1,0 +1,34 @@
+#+AUTHOR: Fernando Gasperi Jabalera
+#+EMAIL: fgasperijabalera@gmail.com
+#+TITLE: Refactorings automáticos de alto nivel
+
+#+OPTIONS: d:nil
+
+* Introducción
+
+Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta y respuestas.
+
+
+* Estado del arte
+
+#+INCLUDE: estado_del_arte.org
+
+
+* Objetivos y justificación
+
+
+* Descripción de la herramienta
+
+#+INCLUDE: la_solucion.org
+
+
+* Extract Method to Method Object
+
+#+INCLUDE: extract_to_method_object.org
+
+
+* Introduce Null Object
+
+
+
+
