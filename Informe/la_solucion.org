@@ -1,0 +1,64 @@
+* Decisiones sobre la implementación
+
+** ¿Por qué Smalltalk?
+
+Necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar
+introduciendo refactorings que son propios de el diseño orientado a objetos. Un
+lenguaje dinámico y puro permitirá iterar más rápidamente sobre la herramienta,
+por lo tanto es ideal para la realización de un prototipo y nos permite explorar
+con más soltura. Al ser un trabajo exploratorio no queríamos vernos limitados
+por las particularidades de un lenguaje de programación o que las mayores
+dificultades provengan de la navegación de una sintaxis compleja y
+sobrecargada. Smalltalk cuenta con una sintaxis simple y al ser un lenguaje de
+objetos puro y reflexivo provee la posibilidad de manipular los programas a
+través de metaprogramación de una manera simple y poderosa. La reflexividad de
+Smalltalk además (A Refactoring Tool for Smalltalk) permite utilizar el mismo
+lenguaje que se está modificando para modificarlo, no es necesario un
+metalenguaje intermedio.
+% REF (A Refactoring Tool for Smalltalk)
+Smalltalk ya ha probado ser una buen campo de experimentación para refactorings
+(A Refactoring Tool for Smalltalk)
+% REF (A Refactoring Tool for Smalltalk)
+
+
+** ¿Por qué CuisUniversity?
+
+% REF a cuis y a OpenSmalltalk VM
+Cuis es un entorno enfocado en Smalltalk-80 libre y Open Source. Está basado en
+la OpenSmalltalk
+% REF a cuisUniversity
+VM, como Squeak, y su principal objetivo es mantener su base pequeña y
+simple. CuisUniversity es un ambiente basado en Cuis creado con el objetivo de
+enseñar programación orientada a objetos.  Actualmente, es utilizado en la
+Universidad de Buenos Aires, en la Universidad de Quilmes y en la Universidad
+Católica Argentina. Uno de los objetivos de este trabajo es permitir a los
+alumnos experimentar con este tipo de refactorings.
+
+
+** ¿Por qué Introduce Null Object y Extract Method To Method Object?
+
+Luego de analizar varios refactorings de alto nivel, la mayoría variaciones de
+patrones de diseño, nos enfocamos en estos dos porque creemos que presentan un
+buen balance de abstracción y simplicidad. Son lo suficientemente abstractos
+para ser considerados de alto nivel, no son refactorings simples que ya estén
+presentes en otras IDEs ni manipulan elementos diminutos como un nombre ya que
+operan al nivel de diseño del código. Sin embargo, son más simples que otros, lo
+cual nos permitirá explorar y aprender para poder sentar la bases hacia
+refactorings futuros. El Introduce Null Object es un caso particular de
+Introduce Special Case y de Replace If With Polymorphism, por lo tanto
+consideramos que es un buen precursor de ellos. De la misma forma, Extract
+Method To Method Object es un precursor de todos los refactorings que requieren
+extraer código y hacer reemplazos contextuales.
+
+
+* Los refactorings
+
+% Límites del scope
+% WRITE explicación de lo que describe este párrafo
+Varios cambios que formarían parte del refactoring si se realizara manualmente
+quedaron fuera del scope porque no vimos fácilmente cómo automatizarlo o por que
+dadas las limitaciones de tiempo no entraron dentro de la priorización. Dejamos
+asentadas acá qué cosas quedaron fuera y en qué categorías se
+encuentran. Además, explicamos cómo creemos que podrían resolverse en el futuro
+o cómo hacemos nosotros para guiar al usuario en las tareas manuales que debería
+realizar luego de aplicar el refactoring.
