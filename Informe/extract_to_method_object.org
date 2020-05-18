@@ -529,10 +529,23 @@ Ya vimos en qué consiste el refactoring a grandes rasgos, ahora veremos los
 detalles de la implementación, las decisiones que se tomaron y los mayores
 desafíos que encontramos. Ahora vamos a ver los 4 grandes pasos de la aplicación.
 
-:DIAGRAM:
-De vuelta, un diagrama con referencias de a qué se corresponde cada
-paso creo que ayudaría un montón a entender más fácilmente.
-:END:
+#+BEGIN_SRC plantuml :file extract_to_method_object_application_steps.png
+ClassWithMethodToExtract -down- MethodObject : uses >
+
+ClassWithMethodToExtract : methodToExtract
+class MethodObject {
+  instanceCreationSelector
+  evaluationSelector
+}
+
+note left of MethodObject : 1) Creacion de la Method Object Class
+note bottom of MethodObject : 2) Generacion del metodo de creacion de instancia
+note right of MethodObject : 3) Generacion del metodo de evaluacion
+note right of ClassWithMethodToExtract : 4) Reemplazo del metodo a extraer por la evaluacion del Method Object
+#+END_SRC
+
+#+RESULTS:
+[[file:extract_to_method_object_application_steps.png]]
 
 ** 1. Creación de la Method Object class
 
