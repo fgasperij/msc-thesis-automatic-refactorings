@@ -1,4 +1,5 @@
 * Motivación y smells
+
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
 métodos, los cuales a medida que evolucionan ganan funcionalidad y se vuelven
 más complejos. Los atributos más tangibles que reflejan esa complejidad son:
@@ -8,7 +9,7 @@ más complejos. Los atributos más tangibles que reflejan esa complejidad son:
 - la cantidad de parámetros que recibe o colaboradores externos
 - la cantidad de variables temporales que define y utiliza
 
-:REF:
+:REFERENCE:
 Fowler y Beck
 :END:
 Este crecimiento hace que el método sea más grande y reduce su
@@ -65,7 +66,7 @@ pasar varios parámetros y el asignar a más de una variable.
 - cualquier sección significativa que se intenta extraer modifica más de
   una variable que luego se sigue utilizando
 
-:REF:
+:REFERENCE:
 Fowler + Beck
 :END:
 En estos casos la sugerencia es utilizar Extract Method to Method Object.
@@ -258,6 +259,10 @@ Explicar a nivel código qué se recibe, qué es parametrizable y qué no.
 A qué me refería? En la sección anterior hay una invocación, además de eso
 quiero mostrar qué forma tiene cada parámetro? Creo que está más adelante.
 Lo confirmo después.
+:END:
+:DIAGRAM:
+Estaría bueno tener un resumen en forma de diagrama de qué se valida
+y qué objetos se utilizan para hacerlo.
 :END:
 
 El mensaje de creación de instancia tiene como primer parámetro al método cuyo
@@ -512,40 +517,65 @@ nombres y los keywords son válidos solo es necesario ver que los nombres de los
 parámetros no estén duplicados y que cada variable a parametrizar tenga su
 correspondiente definición.
 
+:WRITE:
+Acá también se podría mostrar cada validación con un ejemplito para mostrar
+algo que lo viole como en el otro diccionario grande.
+:END:
+
 
 * Aplicación del refactoring
 
 Ya vimos en qué consiste el refactoring a grandes rasgos, ahora veremos los
 detalles de la implementación, las decisiones que se tomaron y los mayores
-desafíos que encontramos. Los 4 grandes pasos de la aplicación son:
+desafíos que encontramos. Ahora vamos a ver los 4 grandes pasos de la aplicación.
 
-- Creación de la Method Object class
-- Generación del método de creación de instancias
-- Generación del método de evaluación
-- Reemplazo del método a extraer por la evaluación del Method Object
+:DIAGRAM:
+De vuelta, un diagrama con referencias de a qué se corresponde cada
+paso creo que ayudaría un montón a entender más fácilmente.
+:END:
+
+** 1. Creación de la Method Object class
 
 La creación de la clase del Method Object es simple en Smalltalk, las clases son
 objetos por lo tanto se puede crear una nueva clase simplemente enviando un
 mensaje a la superclase elegida para el Method Object.
 
-El mensaje de creación de instancias tiene un caso en particular en el cual el
-método a extraer no cuenta con variables a parametrizar. En ese caso existen dos
-opciones: 1) parametrizar el selector de ese mensaje para que el usuario pueda
-decidir cómo llamarlo 2) utilizar el mensaje ~new~ de
-~Object~. Decidimos usar ~new~ para reducir la cantidad
-configuraciones que se le piden al usuario. Entonces, si no existen variables a
-parametrizar el método a extraer quedaría así:
+
+** 2. Generación del método de creación de instancias
+
+Existe un caso particular en el cual el método a extraer no cuenta con variables
+a parametrizar. Decidimos simplificarlo utilizando el mensaje de ~new~ de
+~Object~, en lugar de darle al usuario la posibilidad de elegir el selector del
+mensaje de creación de instancia. Tomamos esta opción porque es más simple de
+implementar y reduce la cantidad de configuraciones que el usuario tienen que
+completar para realizar el refactoring. En este caso esas razones nos resultaron
+suficientes porque una de las motivaciones para aplicar Extract Method to Method
+Object es la cantidad de variables que tiene un método, sería inusual que se
+quiera aplicar este refactoring sobre un método cuyo conjunto de variables a
+parametrizar es vacío, es decir, que esperamos que no sea un caso de uso
+frecuente.
+
+Si no existen variables a parametrizar el método a extraer quedaría así:
 
 #+BEGIN_SRC 
-ExampleClass>>methodToExtract MethodObject new value
+ExampleClass>>methodToExtract
+  
+  MethodObject new value
 #+END_SRC
 
 La generación del método de creación de instancias implica compilar el código
-fuente del método en la clase del Methdo Object. Todas las clases responden al
-mensaje ~compile~. Por lo cual para poder agregar el método a la clase
-del Method Object solo necesitamos generar el código fuente correspondiente. Las
-dos formas que consideramos para realizar esto es construir el texto, el
-~String~, del código fuente o construir una abstracción del mismo,
+fuente del método en la clase del Methdo Object. Todas las clases responden el
+mensaje ~compile:~, por lo cual para poder agregar el método a la clase del
+Method Object solo necesitamos generar el código fuente correspondiente, que es
+lo que ~compile:~ espera. Las dos formas que consideramos para construirlo
+fueron:
+
+- Modificar el código fuente original, lo cual parecía más simple pero con un
+  modelo nulo. En lugar de representar las transformaciones con objetos
+  deberíamos realizarlas como transformaciones de texto.
+- Obtener el AST del código fuente original, modificarlo y luego traducir el AST
+  transformado al código correspondiente.
+
 representada por objetos, que luego pueda ser traducida a código fuente. La
 abstracción más utilizada para representar código fuente es el AST del
 mismo. Cuis tiene una jerarquía de objetos que representan los posibles nodos de
@@ -560,11 +590,18 @@ siempre directamente con el código fuente y su representación como
 el funcionamiento de la generación es simple:
 
 #+BEGIN_SRC 
-    { { #keyword -> 'from'.  #parameterName -> 'aSource'.  #variableName ->
-        'factory'.  } asDictionary.
-
-        { #keyword -> 'to'.  #parameterName -> 'aTarget'.  #variableName ->
-          'store'.  } asDictionary.  }
+  {
+    {
+      #keyword -> 'from'.
+      #parameterName -> 'aSource'.
+      #variableName -> 'factory'.
+    } asDictionary.
+    {
+      #keyword -> 'to'.
+      #parameterName -> 'aTarget'. 
+      #variableName -> 'store'.
+    } asDictionary.
+}
 #+END_SRC
 
 La generación de la instancia tiene dos partes agrega un mensaje en la Method
@@ -591,6 +628,9 @@ instancia y la inicializa enviándole un mensaje que se llama igual que el
 factory method pero prefijado con ~initialize~. El mensaje de
 inicialización en la instancia le asigna a cada una de las variables de
 instancia su correspondiente variable parametrizada.
+
+
+** 3. Generación del método de evaluación
 
 La generación del método de evaluación es más compleja porque incluye el
 reemplazo de todas las variables
@@ -622,6 +662,9 @@ reemplazos se divide en los siguientes pasos:
 3. Se reemplaza el encabezado del método original por el selector de
    evaluación elegido.
 4. Se compila el código fuente generado en el Method Object.
+
+
+** 4. Reemplazo del método a extraer por la evaluación del Method Object
 
 Finalmente, el último paso es reemplazar el método a extraer por la evaluación
 del Method Object.  Esta parte es parecida a la de la generación del código para

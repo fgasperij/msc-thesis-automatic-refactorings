@@ -30,5 +30,6 @@ Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta
 * Introduce Null Object
 
 
+bibliography:tesis.bib
 
 
