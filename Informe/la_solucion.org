@@ -73,3 +73,32 @@ fuera y en qué categorías se encuentran. Además, explicamos cómo creemos
 que podrían resolverse en el futuro o cómo hacemos nosotros para guiar
 al usuario en las tareas manuales que debería realizar luego de aplicar
 el refactoring.
+
+** Manipulación de código
+
+:WRITE:
+Esta sección tiene que explicar cómo se modifica el código y se genera
+nuevo. Por qué elegimos ~String~ por sobre el AST.
+:END:
+
+Las dos formas que consideramos para construirlo
+fueron:
+
+- Modificar el código fuente original, lo cual parecía más simple pero con un
+  modelo nulo. En lugar de representar las transformaciones con objetos
+  deberíamos realizarlas como transformaciones de texto.
+
+- Obtener el AST del código fuente original, modificarlo y luego traducir el AST
+  transformado al código correspondiente.
+
+representada por objetos, que luego pueda ser traducida a código fuente. La
+abstracción más utilizada para representar código fuente es el AST del
+mismo. Cuis tiene una jerarquía de objetos que representan los posibles nodos de
+un AST pero la construcción del árbol es realizada por el ~Parser~ a
+partir de un código fuente ya existente. Ese modelo del AST no incluye la
+posibilidad de relizarle modificaciones al mismo para luego generar un nuevo
+código fuente. Se decidió utilizar el modelo del AST para casos específicos en
+los cuales se podía reutilizar alguna funcionalidad incluida en él pero para la
+generación de nuevos métodos y modificaciones a códigos ya existentes se trabajó
+siempre directamente con el código fuente y su representación como
+~String~.

@@ -1,88 +1,85 @@
-* Motivación y smells
+* Qué problema resuelve el Extract Method to Method Object?
+  :PROPERTIES:
+  :END:
 
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
 métodos, los cuales a medida que evolucionan ganan funcionalidad y se vuelven
 más complejos. Los atributos más tangibles que reflejan esa complejidad son:
 
-- el largo del mismo medido en líneas de código o statements del lenguaje de
+- El largo del mismo medido en líneas de código o statements del lenguaje de
   programación
-- la cantidad de parámetros que recibe o colaboradores externos
-- la cantidad de variables temporales que define y utiliza
 
-:REFERENCE:
-Fowler y Beck
-:END:
-Este crecimiento hace que el método sea más grande y reduce su
-:REPHRASE:
-situación representa un buen candidato para aplicar un refactoring porque si no
-se realiza uno se corrent los X riesgos
-:END:
-entendibilidad. Al encontrarse con un método con estas características el
-programador aplicará un refactoring para poder reducir su complejidad y
-entenderlo más fácilmente. Sin volverlo más entendible corre el riesgo de
-malinterpretarlo y modificarlo erróneamente o utilizarlo erróneamente, lo cual
-introduciría un bug en el programa. Además, aplicar un refactoring le permite
-correr menos riesgos a él y aumenta la mantenibilidad del código lo cual implica
-un gran ahorro de costos.
+- La cantidad de parámetros que recibe (colaboradores externos)
 
-:REPHRASE:
-y este salto? Arranqué la sección explicando una situación que suele ameritar la
-utilización de un refactoring y paso a esto:
-:END:
-Existen dos principales razones que reducen la comprensibilidad de un método:
+- La cantidad de variables temporales que define y utiliza (colaboradores internos)
+
+cite:fowler99_refac Estos atributos reducen la entendibilidad del método, por lo
+tanto, su presencia indica la necesidad de aplicar un refactoring que reduzca su
+complejidad y permita entenderlo más fácilmente. Si la complejidad del método
+sigue aumentando se corre el riesgo de que el programador lo malinterprete, lo
+modifique o utilice erróneamente, y así introduzca un bug en el programa.
+
+Los atributos mencionados son un ejemplo de lo que se conoce comúnmente como
+smells.  Los smells son síntomas o atributos que se pueden identificar de forma
+fácil en el código y suelen ser el reflejo de a la erorsión del diseño, de un
+problema en el modelo más profundo. En este caso, las dos principales razones
+que reducen la comprensibilidad de un método son:
+
+- Tiene múltiples responsabilidades
+- Opera en múltiples niveles de abstracción
+
+Un simple ejemplo que muestra un poco ambas es:
+
+#+BEGIN_SRC 
+Baker>>breadWith: someExtraIngredients
+  dangerousIngredientsPresent := someExtraIngredients anySatisfy: [:anIngredient |
+    anIngredient isSpicy or: [anIngredient isRadioactive]].
+  dangerousIngredientsPresent ifTrue: [BakingError signal: 'Dangerous ingredient present.'].
+
+  dough := self mix: water and: flour.
+  self rest: dough.
+  
+  ^self bake: dough.
+#+END_SRC
+
+Tiene varias responsabilidades porque realiza la validación de los ingredientes
+extra y además realiza todo los pasos para cocinar el pan. Al menos la
+validación podría delegarse a otro objeto. Además, la validación llega hasta a
+el detalle de qué atributos valida de los ingredientes, lo cual parece
+corresponder a una capa de abstracción más baja.
 
 :WRITE:
-puedo poner un ejemplo de cada una de éstas.
-:END:
-- tiene más de una responsabilidad
-- trabaja en más de un nivel de abstracción
+Si sobra el tiempo
 
-:WRITE:
-ejemplo de extract method
+Agregar un ejemplo de Extract Method
 :END:
-La principal herramienta para reducir la complejidad producida por esas razones
-es el refactoring Extract Method. En el primer caso se delega la responsabilidad
-a otro método y en el segundo se realizan las tareas de un nivel de abstracción
-menor al del método en otro método al que también se delega. De esta forma el
+La primera herramienta para reducir la complejidad producida por esas razones es
+el refactoring Extract Method. Si el método cuenta con múltiples
+responsabilidades se pueden extraer y delegar a otros méotodos y si contiene
+tareas en que pertencen a otro nivel de abstracción también. De esta forma el
 método contará con una sola responsabilidad y la cumplirá realizando acciones en
-un solo nivel de abstracción. Así consigue revelar la intención del método y
-solo mostrar como se consigue su objetivo delegando a otros métodos. Se agrega
-un nivel de indirección por la llamada al método, la delegación, pero se gana en
-claridad lo cual deja un saldo positivo para el sistema. Sin embargo, existen
-casos en los que Extract Method no se puede realizar o las formas en las que se
-puede realizar no consiguen un aumento de la entendibilidad del método o una
-reducción de su complejidad. En estos casos Extract Method no puede aplicarse
-porque:
-
+un solo nivel de abstracción. Se agrega un nivel de indirección por la llamada
+al método, la delegación, pero se gana en claridad lo cual deja un saldo
+positivo para el sistema. Sin embargo, existen casos en los que Extract Method
+no se puede realizar o las formas en las que se puede realizar no consiguen un
+aumento de la entendibilidad del método o una reducción de su complejidad. Estos
+casos se caracterizan por cómo se utilizan las variables temporales
+cite:fowler99_refac, lo cual produce que cualquier sección significativa que se
+intenta extraer modifica más de una variable que luego se sigue utilizando.
 :WRITE:
-mostrar ejemplos
-:END:
-:WRITE:
-acá me podría extender con secciones de código que expliquen los dos casos, el
-pasar varios parámetros y el asignar a más de una variable.
-:END:
-- las variables temporales y los parámetros están tan entrelazados en el
-  código que al extraer un método hay que pasarle demasiados parámetros
-- cualquier sección significativa que se intenta extraer modifica más de
-  una variable que luego se sigue utilizando
+Si sobra el tiempo
 
-:REFERENCE:
-Fowler + Beck
-:END:
-En estos casos la sugerencia es utilizar Extract Method to Method Object.
-
-:WRITE:
-por qué es sugerido? No hay explicación de cómo el ETMO supera los límites del
-EM
-:END:
-:WRITE:
-El objetivo del MO es proveer un lugar donde se pueda aplicar EM cómodamente,
-estaría bueno explicar eso, el rationale de por qué supera los límites y cómo se
-manifiesta
+Mostrar un ejemplos
 :END:
 
+En estos casos la sugerencia cite:fowler99_refac es utilizar el refactoring
+Extract Method to Method Object ya que al convertir todas las variables
+temporales en variables de instancia se puede descomponer el comportamiento sin
+la limitación del acceso a las variables ya que todas comparten el contexto del
+objeto.
 
-* ¿En qué consiste?
+
+* ¿Cuáles son los pasos para aplicarlo?
 
 :WRITE:
 Antes de describir en concreto en qué consiste paso a paso dar una breve
@@ -278,6 +275,7 @@ necesarios del refactoring:
   se obtiene a través del mensaje ~methodClass~, que devuelve una instancia de
   ~MethodClass class~, sublcase de ~Metaclass~.
 
+
 ** Validaciones sobre el método a extraer
 
 *** No puede contener referencias a la pseudovariable ~super~
@@ -329,7 +327,6 @@ MehtodObjectClass>>value
 
   ^temp 1
 #+END_SRC
-
 
 *** No contiene asignaciones a variables que no sean temporales
 Las variables no temporales son las variables del contexto de la clase:
@@ -423,7 +420,6 @@ redefinirlas. En el ejemplo anterior el conjunto de variables a parametrizar, es
 decir que tenemos que pasarle al Method Object al instanciarlo para que pueda
 referenciarlas, son: ~aParam~, ~self~ y ~ivar1~.
  
-
 *** Las validaciones
 
 Las variables a parametrizar se utilizarán para la creación del Method Object y
@@ -560,7 +556,7 @@ Existe un caso particular en el cual el método a extraer no cuenta con variable
 a parametrizar. Decidimos simplificarlo utilizando el mensaje de ~new~ de
 ~Object~, en lugar de darle al usuario la posibilidad de elegir el selector del
 mensaje de creación de instancia. Tomamos esta opción porque es más simple de
-implementar y reduce la cantidad de configuraciones que el usuario tienen que
+implementar y reduce la cantidad de configuraciones que el usuario tiene que
 completar para realizar el refactoring. En este caso esas razones nos resultaron
 suficientes porque una de las motivaciones para aplicar Extract Method to Method
 Object es la cantidad de variables que tiene un método, sería inusual que se
@@ -576,31 +572,28 @@ ExampleClass>>methodToExtract
   MethodObject new value
 #+END_SRC
 
-La generación del método de creación de instancias implica compilar el código
-fuente del método en la clase del Methdo Object. Todas las clases responden el
-mensaje ~compile:~, por lo cual para poder agregar el método a la clase del
-Method Object solo necesitamos generar el código fuente correspondiente, que es
-lo que ~compile:~ espera. Las dos formas que consideramos para construirlo
-fueron:
+Asumiendo que el usuario eligió ~MethodObject~ como nombre para la Method Object
+class y ~value~ para el selector de evaluación.
 
-- Modificar el código fuente original, lo cual parecía más simple pero con un
-  modelo nulo. En lugar de representar las transformaciones con objetos
-  deberíamos realizarlas como transformaciones de texto.
-- Obtener el AST del código fuente original, modificarlo y luego traducir el AST
-  transformado al código correspondiente.
+La generación del método de creación de instancias requiere:
 
-representada por objetos, que luego pueda ser traducida a código fuente. La
-abstracción más utilizada para representar código fuente es el AST del
-mismo. Cuis tiene una jerarquía de objetos que representan los posibles nodos de
-un AST pero la construcción del árbol es realizada por el ~Parser~ a
-partir de un código fuente ya existente. Ese modelo del AST no incluye la
-posibilidad de relizarle modificaciones al mismo para luego generar un nuevo
-código fuente. Se decidió utilizar el modelo del AST para casos específicos en
-los cuales se podía reutilizar alguna funcionalidad incluida en él pero para la
-generación de nuevos métodos y modificaciones a códigos ya existentes se trabajó
-siempre directamente con el código fuente y su representación como
-~String~. Veamos un ejemplo para poder señalar algunos detalles ya que
-el funcionamiento de la generación es simple:
+1. Compilar, en la clase del Method Object, el código del mensaje que crea la
+   instancia y le envía el mensaje de inicialización.
+
+2. Compilar, en el Method Object, el código que inicializa las variables de instancia.
+
+Todas las clases responden el mensaje ~compile:~, por lo cual para poder agregar
+el método a la clase del Method Object solo necesitamos generar el código fuente
+correspondiente, que es lo que ~compile:~ espera. Veamos un ejemplo:
+
+#+BEGIN_SRC
+ExampleClass>>k1: aP1 k2: aP2
+  ^self delegateWith: p1 and: p2.
+#+END_SRC
+
+este método tiene las variables a parametrizar ~aP1~, ~aP2~ y ~self~. Para cada una de ellas
+se deben especificar 
+
 
 #+BEGIN_SRC 
   {
@@ -622,8 +615,9 @@ Object class y un mensaje en la instancia que inicializa el objeto. Continuando
 el ejemplo los mensajes quedarían como:
 
 #+BEGIN_SRC 
-MethodObject class>>from: aSource to: aTarget ^MethodObject new initializeFrom:
-aSource to: aTarget
+MethodObject class>>from: aSource to: aTarget
+
+  ^MethodObject new initializeFrom: aSource to: aTarget
 #+END_SRC
 
 y en la instancia:
@@ -631,9 +625,14 @@ y en la instancia:
 #+BEGIN_SRC 
 "Asumiendo que se eligieron estos nombres para las variables de instancia."
 {
-    'factory' -> 'source'.  'store' -> 'target'.  }
-MethdoObject>>initializeFrom: aSource to: aTarget source := aSource.  target :=
-aTarget.
+  'factory' -> 'source'.
+  'store' -> 'target'.
+}
+
+MethdoObject>>initializeFrom: aSource to: aTarget
+
+  source := aSource.
+  target := aTarget.
 #+END_SRC
 
 El mensaje en la Method Object class es un factory method que crea la nueva
