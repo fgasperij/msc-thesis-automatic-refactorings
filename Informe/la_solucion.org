@@ -19,6 +19,7 @@ un metalenguaje intermedio.
 :REFERENCE:
 A Refactoring Tool for Smalltalk
 :END:
+
 Smalltalk ya ha probado ser una buen campo de experimentación para refactorings.
 :REFERENCE:
 A Refactoring Tool for Smalltalk
