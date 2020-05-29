@@ -1,3 +1,6 @@
+org_export_results/
+diagrams/
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
