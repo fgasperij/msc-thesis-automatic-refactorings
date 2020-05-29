@@ -38,11 +38,12 @@ contradiga los requerimientos funcionales se vuelvan inviables. Son este tipo de
 casos los que cite:randell68_nato_softw_engin_repor llevaron a la crisis del software.
 
 Si bien no existe una métrica clara que mida la complejidad de un sistema de
-software, se utilizan algunas aproximaciones cite:mccabe76_compl_measur como la complejidad ciclomática de
-Mc Cabe. Sin embargo, dado que la complejidad del software está fuertemente
-asociada a su mantenibildad, se suele tratar la primera mejorando a la
-segunda. Es decir, se intenta limitar el incremento de la complejidad utilizando
-técnicas que apuntan a preservar la mantenibilidad del sistema.
+software, se utilizan algunas aproximaciones cite:mccabe76_compl_measur como la
+complejidad ciclomática de Mc Cabe. Sin embargo, dado que la complejidad del
+software está fuertemente asociada a su mantenibildad, se suele tratar la
+primera mejorando a la segunda. Es decir, se intenta limitar el incremento de la
+complejidad utilizando técnicas que apuntan a preservar la mantenibilidad del
+sistema.
 
 
 ** Calidad y mantenibilidad del software
@@ -97,15 +98,14 @@ varios otros atributos de calidad como:
 - transferibilidad: cuán costoso es transferir el proyecto o parte de él
   a otro equipo de desarrollo.
 
-Éstos atributos no son independientes, están relacionados y se afectan
-los unos a los otros. El incremento de la complejidad se produce en gran
-parte debido a la erosión del diseño cite:gurp02_desig_erosion, lo cual decrementa su
-mantenibilidad. La degradación del diseño se puede ver más claramente a
-través del incremento de los costos de cada uno de los componentes de la
-mantenibilidad de un sistema. Por ejemplo, un diseño que no previó
-necesaria la flexibilidad que se requiere para implementar una nueva
-funcionalidad incrementará los costos de extensibilidad y por lo tanto
-el tiempo de desarrollo se verá afectado.
+Éstos atributos no son independientes, están relacionados y se afectan los unos
+a los otros. El incremento de la complejidad se produce en gran parte debido a
+la erosión del diseño cite:gurp02_desig_erosion, lo cual decrementa su
+mantenibilidad. La degradación del diseño se puede ver más claramente a través
+del incremento de los costos de cada uno de los componentes de la mantenibilidad
+de un sistema. Por ejemplo, un diseño que no previó necesaria la flexibilidad
+que se requiere para implementar una nueva funcionalidad incrementará los costos
+de extensibilidad y por lo tanto el tiempo de desarrollo se verá afectado.
 
 
 ** Técnicas para preservar la mantenibilidad
@@ -169,9 +169,6 @@ design of existing code/.
 * La investigación sobre refactorings
 
 ** ¿Son útiles los refactorings?
-   :PROPERTIES:
-   :CUSTOM_ID: son-útiles-los-refactorings
-   :END:
 
 Los refactorings son útiles porque permiten preservar la calidad del
 software, principalmente su mantenibildad a través de mejoras en:
@@ -184,6 +181,9 @@ software, principalmente su mantenibildad a través de mejoras en:
 
 - reusabilidad
 
+:REFERENCE:
+agregar al estudio empírico (Empirical study on the impact...)
+:END:
 Esto ha sido mostrado repetidas veces en estudios empíricos. Esto se
 debe a que previene la erosión del diseño ralentizando el incremento de
 la complejidad del sistema. Los cambios que se introducen en el software
@@ -195,13 +195,13 @@ perder calidad. Esto permite preservar la mantenibilidad del sistema
 resultando en una reducción de costos significativa para el proyecto.
 
 ** Áreas principales
-   :PROPERTIES:
-   :CUSTOM_ID: áreas-principales
-   :END:
 
 Los software refactorings son investigados desde numerosas perspectivas.
 Algunos de los temas más investigados son:
 
+:REFERENCE:
+% REF a Trends, opportunities...
+:END:
 - refactoring tools: ¿Qué factores afectan el uso de refactorings
   automáticos? ¿Qué refactorings automáticos usan los programadores?
   ¿Cuáles no y por qué? ¿Cómo mejorar las herramientas actuales?
@@ -224,13 +224,13 @@ Algunos de los temas más investigados son:
   impacto de los refactorings
 
 ** Complejidades de estudiar refactorings
-   :PROPERTIES:
-   :CUSTOM_ID: complejidades-de-estudiar-refactorings
-   :END:
 
 Los principales desafíos que presenta la investigación de refactorings
 son:
 
+:REFERENCE:
+agregar al paper de las taxonomías
+:END:
 - Comparar y evaluar las herramientas y los refactorings: existen varias
   propuestas de taxonomías cuyo objetivo es proveer un marco para
   comparar y evaluar las herramientas para realizar refactorings y los
@@ -240,6 +240,9 @@ son:
 - Determinar la preservación del comportamiento: la mayoría de los
   estudios utilizan técnicas semi formales.
 
+:REFERENCE:
+agregar como referencia el estudio que analizaba a los programadores mientras programaban
+:END:
 - Entender cómo realizan refactorings los desarrolladores: los estudios
   más precisos son poco representativos y los más generales son poco
   precisos. Sin una clara comprensión de este fenómeno la mayor parte de
@@ -254,9 +257,6 @@ son:
 
 
 * Refactorings automáticos
-  :PROPERTIES:
-  :CUSTOM_ID: refactorings-automáticos
-  :END:
 
 Extreme Programming acepta que el software evoluciona y el diseño cambia
 constantemente. La adaptación del software requiere una inversión
@@ -264,18 +264,23 @@ constante de energía de parte del desarrollador y es necesaria para que
 la complejidad no crezca demasiado. Cambiar el diseño aplicando
 refactorings para que la complejidad crezca lo menos posible solo será
 posible minimizando la energía que tiene que invertir el desarrollador y
+:REFERENCE:
+(Practical Analysis for Refactoring)
+:END:
 esto se puede conseguir automatizando los refactorings.
 
-La automatización de los refactorings nos enfrenta a varios
-interrogantes como cuándo realizar un refactoring, dónde realizarlo y
-qué cambiar; estos problemas se encuentran íntimamente relacionados. A
-priori, se puede pensar que todas esas decisiones, al ser etapas de la
-actividad de refactoring, son buenas candidatas para la automatización.
-De hecho, existen investigaciones que intentan procesar el código y
-realizarle cambios sin intervención del desarrollador. Los principales
-caminos que se están investigando actualmente para la automatización de
-la identificación de diseños pobres y sus correspondientes refactorings
-sin intervención del desarrolladors son:
+La automatización de los refactorings nos enfrenta a varios interrogantes como
+cuándo realizar un refactoring, dónde realizarlo y qué cambiar; estos problemas
+se encuentran íntimamente relacionados. A priori, se puede pensar que todas esas
+decisiones, al ser etapas de la actividad de refactoring, son buenas candidatas
+para la automatización.  De hecho, existen investigaciones que intentan procesar
+el código y realizarle cambios sin intervención del desarrollador.
+:REFERENCE:
+(Automated refactoring of super-class method invocations to the Template Method design pattern)
+:END:
+Los principales caminos que se están investigando actualmente para la
+automatización de la identificación de diseños pobres y sus correspondientes
+refactorings sin intervención del desarrolladors son:
 
 - métodos basados en métricas: áreas del código con baja calidad son
   identificadas detectando los mínimos de alguna métrica de calidad.
@@ -285,6 +290,9 @@ sin intervención del desarrolladors son:
   relaciones para identificar defectos.
 
 - métodos basado en búsqueda: la mejora del diseño se traduce a un
+:REFERENCE:
+función de fitness
+:END:
   problema de optimización de una función de fitness cuyo espacio de
   búsqueda son los diseños alternativos.
 
@@ -294,6 +302,9 @@ sin intervención del desarrolladors son:
 
 Sin embargo, la mayoría de las herramientas utilizadas en la industria
 automatizan la ejecución del cambio, el desarrollador elige cuándo,
+:REFERENCE:
+(Trends...)
+:END:
 dónde y qué cambio se realizará. Un área de investigación que se ha
 visto relegada es la de code smells. Los code smells son ciertas
 características del código que suelen ser síntomas de problemas más
@@ -303,6 +314,9 @@ de manera significativa a la mantenibildad del sistema. La detección de
 los mismos y la elección de un refactoring para remediarlo ha recibido
 poca atención.
 
+:REFERENCE:
+(A Refactoring Tool for Smalltalk)
+:END:
 Las modificaciones que se le realizan a un programa pueden ser divididas
 en dos etapas:
 
@@ -316,6 +330,9 @@ comportamiento para realizar las modificaciones que no cambian el
 comportamiento entonces, la única fuente de errores al introducir
 cambios en un programa son las modificaciones que sí alteran el
 comportamiento o lo extienden. Esto reduce la posible cantidad de
+:REFERENCE:
+(Programmer-Friendly...)
+:END:
 errores agilizando el mantenimiento del software. Realizar refactorings
 manuales conlleva sus propios riesgos, los más frecuentes son:
 
@@ -343,9 +360,6 @@ dimensiones:
 
 
 * Refactorings automáticos de alto nivel
-  :PROPERTIES:
-  :CUSTOM_ID: refactorings-automáticos-de-alto-nivel
-  :END:
 
 Los refactorings de alto nivel reciben su nombre por el nivel de
 abstracción al cual operan. Éstos suelen ser combinaciones comunes de
@@ -383,10 +397,16 @@ espacio para el error. Sin embargo, estudios acerca de la utilización de
 estas herramientas no arrojan resultados claros que indiquen que los
 desarrolladores las utilicen con la frecuencia esperada. Incluso la
 correlación entre la complejidad del refactoring (cuán alto es su nivel)
+:REFERENCE:
+programmer friendly y fitness for purpose
+:END:
 y la frecuencia de su utilización se ha mostrado inversa. Hay estudios
 que intentan entender a qué se debe esto y cómo construir herramientas
 que automaticen los cambios y que los desarrolladores utilicen.
 
+:REFERENCE:
+A discussion of software..) 
+:END:
 (A discussion of software...) sostiene que los refactorings deben ser
 más complejos para poder ayudar al desarrollo de proyectos grandes, es
 decir que los refactorings simple no escalan para ser realmente útiles
@@ -405,6 +425,9 @@ se dividen dos vertientes:
 - compactos: proveer refactorings cuya unidad sea un cambio que tengan
   semántica a nivel diseño.
 
+:REFERENCE:
+a refactoring tool... a compositional paradigm
+:END:
 (A Refactoring Tool... A Compositional Paradigm) sostiene que los
 refactorings complejos deberían realizarse componiendo refactorings más
 simples. Sin embargo, algunos refactorings se realizan comúnmente y es
@@ -412,6 +435,9 @@ tedioso realizarlos incluso con refactorings automáticos más simples
 porque no es fácil encontrar refactorings intermedios que simplifiquen
 la tarea.
 
+:REFERENCE:
+ A Methodology for the Automated Introduction of Design Patterns
+:END:
 (A Methodology for the Automated Introduction of Design Pattern) muestra
 que los refactorings de alto nivel tienen más puntos de partida posibles
 y más destinos posibles ya que, a diferencia de refactorings más
@@ -432,35 +458,38 @@ definición. Los distintos puntos de partida posibles son:
 
 
 * Introducción de patrones de diseño
-  :PROPERTIES:
-  :CUSTOM_ID: introducción-de-patrones-de-diseño
-  :END:
 
 Los patrones de diseño son soluciones a problemas de diseño que surgen
-frecuentemente al construir sistemas con lenguajes orientados a objetos.
-Los patrones de diseño son soluciones definidas de una forma que abstrae
-los detalles de cada situación pero preserva las fuerzas en
-contraposición que la solución pretende balancear. Están definidos al
-nivel del diseño de un sistema y contribuyen a que el mismo pueda
-soportar cierta funcionalidad con más calidad. Su presencia es común y
-es por eso que los refactorings de alto nivel automáticos intentan
-aplicarlos. Al automatizar refactorings se quiere automatizar lo más
-posible para ahorrar la mayor cantidad de energía y tiempo del
-desarrollador. Además, se busca el nivel más expresivo posible para que
-la aplicación del refactoring esté lo más cerca del nivel de abstracción
-al que está pensando el desarrollador el cambio que quiere realizar. Las
-fuerzas que se contraponen son expresividad y precisión. Cuanto más alto
-el nivel de abstracción, más difícil es precisar a nivel de código en
-qué consiste el cambio. Los patrones de diseño presentan un balance
-atractivo porque son cambios semántico suficientemente específicos para
-precisarlos en el código y además están cerca de la forma que tiene el
-desarrollador de pensar su cambio. (Practical Analysis for refactoring)
-sostiene la aplicación automática de patrones de diseño permitiría
-reducir significativamente la energía que necesita el desarrollador para
-aplicarlos, lo cual le permitiría explorar más opciones de diseño con un
-costo menor.
-
+frecuentemente al construir sistemas con lenguajes orientados a objetos.  Los
+patrones de diseño son soluciones definidas de una forma que abstrae los
+detalles de cada situación pero preserva las fuerzas en contraposición que la
+solución pretende balancear. Están definidos al nivel del diseño de un sistema y
+contribuyen a que el mismo pueda soportar cierta funcionalidad con más
+calidad. Su presencia es común y es por eso que los refactorings de alto nivel
+automáticos intentan aplicarlos. Al automatizar refactorings se quiere
+automatizar lo más posible para ahorrar la mayor cantidad de energía y tiempo
+del desarrollador. Además, se busca el nivel más expresivo posible para que la
+aplicación del refactoring esté lo más cerca del nivel de abstracción al que
+está pensando el desarrollador el cambio que quiere realizar. Las fuerzas que se
+contraponen son expresividad y precisión. Cuanto más alto el nivel de
+abstracción, más difícil es precisar a nivel de código en qué consiste el
+cambio. Los patrones de diseño presentan un balance atractivo porque son cambios
+semántico suficientemente específicos para precisarlos en el código y además
+están cerca de la forma que tiene el desarrollador de pensar su cambio.
+:REFERENCE:
+(Practical Analysis for refactoring)
+:END:
+(Practical Analysis for refactoring) sostiene la aplicación automática de
+patrones de diseño permitiría reducir significativamente la energía que necesita
+el desarrollador para aplicarlos, lo cual le permitiría explorar más opciones de
+diseño con un costo menor.
+:REFERENCE:
+null object pattern paper
+:END:
 (null object pattern paper) exploró la introducción automática de
+:REFERENCE:
+root canal refactoring programmer friendly
+:END:
 patrones de diseño orientada a root canal refactoring. Las herramientas
 que crearon analizan todo el código en batch, presentan los candidatos
 identificados y proveen la opción de aplicar el refactoring. Como esas
@@ -480,9 +509,6 @@ trabajos es que no se ajustan a la forma de trabajo del programador.
 
 
 * Preservación del comportamiento
-  :PROPERTIES:
-  :CUSTOM_ID: preservación-del-comportamiento
-  :END:
 
 La preservación del comportamiento está presente en la misma definición
 de un refactoring y es de máxima importancia. En general, el
@@ -506,13 +532,19 @@ funcionalidad, por ejemplo:
 
 Por esta razón un testing sistematizado y ajustado a los requerimientos
 de cada sistema particular es la mejor herramienta con la que se cuenta
-actualmente. (Improving refactoring tools in Smalltalk using static type
-inference) dice que la única forma de asegurar que los refactorings son
-correctos es con pruebas formales pero que las herramientas actuales no
-realizan esto porque la complejidad del software actual vuelve demasiado
-costoso aplicar modelos de verificación formal a los programas que nos
-interesa reestructurar.
+actualmente.
+:REFERENCE:
+% REF (Improving refactoring tools in Smalltalk using static type inference)
+:END:
+(Improving refactoring tools in Smalltalk using static type inference) dice que
+la única forma de asegurar que los refactorings son correctos es con pruebas
+formales pero que las herramientas actuales no realizan esto porque la
+complejidad del software actual vuelve demasiado costoso aplicar modelos de
+verificación formal a los programas que nos interesa reestructurar.
 
+:REFERENCE:
+% REF (A Refactoring Tool for Smalltalk)
+:END:
 (A Refactoring Tool for Smalltalk) muestra que no es posible asegurar
 que se preserva el comportamiento en un lenguaje con tipado dinámico
 como Smalltalk, que la única forma de converger a un programa correcto
@@ -520,6 +552,9 @@ es a través del análisis dinámico. Incluso el análisis dinámico
 realizado por el trabajo anterior se basa en una suite de tests
 representativa.
 
+:REFERENCE:
+% REF (Automated Application of Design Patterns: A Refactoring Approach)
+:END:
 (Automated Application of Design Patterns: A Refactoring Approach)
 clasifica las técnicas que se utilizan para lidiar con la preservación
 de comportamiento en:
@@ -545,14 +580,14 @@ no triviales es intratable.
 
 
 * Herramientas actuales de uso popular
-  :PROPERTIES:
-  :CUSTOM_ID: herramientas-actuales-de-uso-popular
-  :END:
 
 Esta sección busca mostrar brevemente cuáles son las herramientas de
 refactorings automáticos de utilización más generalizada, qué tipos de
 refactorings tienen y con qué alcance. Las herramientas que realizan
 refactorings automáticos se encuentran como parte de una IDE o como un
+:REFERENCE:
+% REF survey de stackoverflow de qué IDEs usa la gente
+:END:
 plugin de la misma. La enumeración no es exhaustiva pero creemos que sí
 es representativa. Todas las IDEs proveen algún tipo de refactoring
 automático simple como extract method o renombre de entidades.
@@ -560,12 +595,18 @@ Detallamos a continuación el soporte presentado para los refactorings
 extract method to method object e introduce null object que trataremos
 en este trabajo:
 
+:REFERENCE:
+% REF a cada uno de los sitios de las IDEs
+:END:
 - Visual Studio Code: no presenta soporte para ninguno.
 
 - Visual Studio: solo realiza extract method y el nuevo método tiene que
   pertenecer a la misma clase. Si necesita devolver más de un resultado
   utiliza los parámetros de salida de C#.
 
+:REFERENCE:
+% REF https://www.jetbrains.com/help/idea/extract-into-class-refactorings.html#extract_method_object
+:END:
 - IntelliJ: provee soporte solo para extract method to method object con
   un scope limitado. No parametriza el contexto de la clase, solo el
   contexto local del método. La extracción se realiza a una clase
@@ -577,6 +618,7 @@ en este trabajo:
 - XCode: extract to method object.
 
 - NetBeans: no presenta soporte para ninguno.
+
 
 * Footnotes
 
