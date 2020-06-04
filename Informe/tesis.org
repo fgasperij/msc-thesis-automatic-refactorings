@@ -9,6 +9,10 @@
 Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta y respuestas.
 
 
+* Background
+
+#+INCLUDE: background.org
+
 * Estado del arte
 
 #+INCLUDE: estado_del_arte.org

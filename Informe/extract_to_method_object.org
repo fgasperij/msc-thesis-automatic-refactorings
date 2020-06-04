@@ -1,6 +1,4 @@
 * Qué problema resuelve el Extract Method to Method Object?
-  :PROPERTIES:
-  :END:
 
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
 métodos, los cuales a medida que evolucionan ganan funcionalidad y se vuelven
@@ -32,9 +30,11 @@ Un simple ejemplo que muestra un poco ambas es:
 
 #+BEGIN_SRC 
 Baker>>breadWith: someExtraIngredients
-  dangerousIngredientsPresent := someExtraIngredients anySatisfy: [:anIngredient |
-    anIngredient isSpicy or: [anIngredient isRadioactive]].
-  dangerousIngredientsPresent ifTrue: [BakingError signal: 'Dangerous ingredient present.'].
+  dangerousIngredientsPresent :=
+    someExtraIngredients anySatisfy: [:anIngredient |
+      anIngredient isSpicy or: [anIngredient isRadioactive]].
+  dangerousIngredientsPresent
+    ifTrue: [ BakingError signal: 'Dangerous ingredient present.'].
 
   dough := self mix: water and: flour.
   self rest: dough.
@@ -86,7 +86,7 @@ utilizado, esta descripción de alto nivel asumirá un caso estándar en
 Smalltalk. Los pasos a seguir para extraer el código del método
 ~methodToExtract~ a un Method Object son:
 
-#+BEGIN_SRC plantuml :file extract_to_method_object_application_steps.png
+#+BEGIN_SRC plantuml :file diagrams/extract_to_method_object_application_steps.png
 ClassWithMethodToExtract -down- MethodObject : uses >
 
 ClassWithMethodToExtract : methodToExtract
@@ -214,7 +214,7 @@ clase o una instancia del mismo. ~ExtractToMethodObject~ es subclase
 de ~Refactoring~ que tiene al mensaje ~apply~ como único
 mensaje polimórfico.
 
-#+BEGIN_SRC plantuml :file extract_to_method_object_and_refactoring_class_diagram.png
+#+BEGIN_SRC plantuml :file diagrams/extract_to_method_object_and_refactoring_class_diagram.png
 Refactoring <|-- ExtractToMethodObject
 
 Refactoring : apply
@@ -756,6 +756,7 @@ válida es:
     #keyword       -> 'actionFor'.
     #parameterName -> 'aSelector'.
   } asDictionary.
+}
 #+END_SRC
 
 La cual produciría este method header:
@@ -778,17 +779,85 @@ Object>>actionForEvent: anEventSelector
 
 Las validaciones que realiza ~ExtractToMethodObject~ sobre este objeto son:
 
-- Todas las variables a parametrizar deben contar con una 
+1. Todas las variables a parametrizar deben tener un keyword y solo uno.
+  #+BEGIN_SRC
+  "INVÁLIDO"
+  "anEventSelector tiene dos keywords."
+  {
+    {
+      #variableName  -> 'self'.
+      #keyword       -> 'withClient'.
+      #parameterName -> 'aClient'.
+    } asDictionary.
+    {
+      #variableName  -> 'anEventSelector'.
+      #keyword       -> 'actionFor'.
+      #parameterName -> 'aSelector'.
+    } asDictionary.
+    {
+      #variableName  -> 'anEventSelector'.
+      #keyword       -> 'anActionFor'.
+      #parameterName -> 'aSelector'.
+    } asDictionary.
+  }
 
+  "INVÁLIDO"
+  "anEventSelector no tiene un keyword."
+  {
+    {
+      #variableName  -> 'self'.
+      #keyword       -> 'withClient'.
+      #parameterName -> 'aClient'.
+    } asDictionary.
+  }
+  #+END_SRC
+
+2. Todos los keywords deben corresponder a una variable a parametrizar.
+  #+BEGIN_SRC 
+  "INVÁLIDO"
+  "El keyword 'with' no se corresponde con una variable a parametrizar,"
+  "'anIvar' no es una variable a parametrizar de 'Object>>actionForEvent:'."
+  {
+    {
+      #variableName  -> 'self'.
+      #keyword       -> 'withClient'.
+      #parameterName -> 'aClient'.
+    } asDictionary.
+    {
+      #variableName  -> 'anEventSelector'.
+      #keyword       -> 'actionFor'.
+      #parameterName -> 'aSelector'.
+    } asDictionary.
+    {
+      #variableName  -> 'anIvar'.
+      #keyword       -> 'with'.
+      #parameterName -> 'aRectangle'.
+    } asDictionary.
+  }
+  #+END_SRC
+
+3. Todos los keywords elegidos deben:
+
+   - Contener solo caracteres válidos: alfanuméricos y ~$_~.
+   - No estar vacíos
+
+   y el primer keyword tiene la restricción adicional de comenzar con uno de los
+   caracter válidos ya mencionados excepto números.
+
+:REFERENCE:
+al background y su explicación del Scanner
+:END:
+4. Todos los nombres de los parámetros deben ser válidos, para verificarlo se
+   utiliza el ~Scanner~, no deben haber duplicados y además no deben
+   superponerse con los nombres elegidos para las ivars del Method Object ya que
+   Smalltalk no permite que un parámetro se llame igual que una ivar.
 
 
 * Aplicación del refactoring
 
-Ya vimos en qué consiste el refactoring a grandes rasgos, ahora veremos los
-detalles de la implementación, las decisiones que se tomaron y los mayores
-desafíos que encontramos. Ahora vamos a ver los 4 grandes pasos de la aplicación.
+Los 4 grandes pasos de la aplicación son:
 
-#+BEGIN_SRC plantuml :file extract_to_method_object_application_steps.png
+#+BEGIN_SRC plantuml :file diagrams/extract_to_method_object_application_overview.png
 ClassWithMethodToExtract -down- MethodObject : uses >
 
 ClassWithMethodToExtract : methodToExtract
@@ -806,14 +875,106 @@ note right of ClassWithMethodToExtract : 4) Reemplazo del metodo a extraer por l
 #+RESULTS:
 [[file:extract_to_method_object_application_steps.png]]
 
+2, 3 y 4 dependen de 1 porque es necesario que exista la clase para poder
+compilarle los métodos y para poder referenciarla desde el método a
+extraer. Respetando esa dependencia, es decir que 1 ocurra primero, el orden de
+los otros 3 pasos es aleatorio.
+
 ** 1. Creación de la Method Object class
 
 La creación de la clase del Method Object es simple en Smalltalk, las clases son
 objetos por lo tanto se puede crear una nueva clase simplemente enviando un
-mensaje a la superclase elegida para el Method Object.
+mensaje a la superclase elegida para el Method Object:
+
+#+BEGIN_SRC 
+methodObjectSuperclass
+  subclass: methodObjectClassName
+  instanceVariableNames: (' ' join: methodObjectInstanceVariables )
+  classVariableNames: ''
+  poolDictionaries: ''
+  category: methodObjectCategory.
+#+END_SRC
 
 
 ** 2. Generación del método de creación de instancias
+
+La generación del método de creación de instancias requiere:
+
+1. Compilar, en la clase del Method Object, el código del mensaje que crea la
+   instancia y le envía el mensaje de inicialización.
+
+2. Compilar, en el Method Object, el código que inicializa las variables de instancia.
+
+Todas las clases responden el mensaje ~Behavior>>compile:~, por lo cual para poder agregar
+el método a la clase del Method Object solo necesitamos generar el código fuente
+correspondiente, que es lo que ~compile:~ espera. Veamos un ejemplo:
+
+#+BEGIN_SRC
+Object>>executeMethod: compiledMethod
+  ^self withArgs: #() executeMethod: compiledMethod.
+#+END_SRC
+
+este método tiene las variables a parametrizar ~self~ y ~compiledMethod~. Para
+cada una de ellas se deben especificar un keyword y un nombre de parámetro
+correspondiente:
+
+#+BEGIN_SRC 
+{
+  {
+    #variableName  -> 'self'.
+    #keyword       -> 'withReceiver'.
+    #parameterName -> 'aReceiver'.
+  } asDictionary.
+  {
+    #variableName  -> 'compiledMethod.
+    #keyword       -> 'execute'.
+    #parameterName -> 'aCompiledMethod'.
+  } asDictionary.
+}
+#+END_SRC
+
+El mensaje en la Method Object class es un factory method que crea la nueva
+instancia y la inicializa enviándole un mensaje que se llama igual que el
+factory method pero prefijado con ~initialize~:
+
+#+BEGIN_SRC
+MethodObject class>>withReceiver: aReceiver execute: aCompiledMethod
+
+  ^self new initializeWithReceiver: aReceiver execute: aCompiledMethod.
+#+END_SRC
+
+El mensaje de inicialización en la instancia le asigna a cada una de las
+variables de instancia su correspondiente variable parametrizada. Los sources de
+estos mensajes se generan a partir de la colección recibida como parámetro. El
+formato de los mismos es siempre el mismo. El mensaje del lado de la instancia
+quedaría así:
+
+#+BEGIN_SRC
+MethodObject>>initializeWithReceiver: aReceiver execute: aCompiledMethod
+
+  receiver := aReceiver.
+  compiledMethod := aCompiledMethod.
+#+END_SRC
+
+Notar que:
+
+- El mensaje de inicialización queda determinado por los keywords especificados
+  con el prefijo ~initialize~. No es posible elegir que sean distintos.
+
+- Los nombres de los parámetros en el mensaje del lado de la clase y de la
+  instancia son iguales. Tampoco se puede elegir distintos nombres de parámetros
+  de cada lado.
+
+Esos nombres no se pueden especificar, si el usuario desea que sean distintos
+deberá realizar los cambios manualmente. Se decidió implementarlo de esta manera
+para reducir la carga de configuraciones sobre el usuario. Se podrían agregar en
+el futuro si se nota que es un deseo frecuente. Finalmente, los mensajes se
+clasifican en las categorías ~instance creation~ y ~initialization~
+respectivamente.
+
+La generación del código se realiza concatenando ~String~ s.
+
+*Caso en el cual no hay variables a parametrizar*
 
 Existe un caso particular en el cual el método a extraer no cuenta con variables
 a parametrizar. Decidimos simplificarlo utilizando el mensaje de ~new~ de
@@ -838,123 +999,141 @@ ExampleClass>>methodToExtract
 Asumiendo que el usuario eligió ~MethodObject~ como nombre para la Method Object
 class y ~value~ para el selector de evaluación.
 
-La generación del método de creación de instancias requiere:
-
-1. Compilar, en la clase del Method Object, el código del mensaje que crea la
-   instancia y le envía el mensaje de inicialización.
-
-2. Compilar, en el Method Object, el código que inicializa las variables de instancia.
-
-Todas las clases responden el mensaje ~compile:~, por lo cual para poder agregar
-el método a la clase del Method Object solo necesitamos generar el código fuente
-correspondiente, que es lo que ~compile:~ espera. Veamos un ejemplo:
-
-#+BEGIN_SRC
-ExampleClass>>k1: aP1 k2: aP2
-  ^self delegateWith: p1 and: p2.
-#+END_SRC
-
-este método tiene las variables a parametrizar ~aP1~, ~aP2~ y ~self~. Para cada una de ellas
-se deben especificar 
-
-
-#+BEGIN_SRC 
-  {
-    {
-      #keyword -> 'from'.
-      #parameterName -> 'aSource'.
-      #variableName -> 'factory'.
-    } asDictionary.
-    {
-      #keyword -> 'to'.
-      #parameterName -> 'aTarget'. 
-      #variableName -> 'store'.
-    } asDictionary.
-}
-#+END_SRC
-
-La generación de la instancia tiene dos partes agrega un mensaje en la Method
-Object class y un mensaje en la instancia que inicializa el objeto. Continuando
-el ejemplo los mensajes quedarían como:
-
-#+BEGIN_SRC 
-MethodObject class>>from: aSource to: aTarget
-
-  ^MethodObject new initializeFrom: aSource to: aTarget
-#+END_SRC
-
-y en la instancia:
-
-#+BEGIN_SRC 
-"Asumiendo que se eligieron estos nombres para las variables de instancia."
-{
-  'factory' -> 'source'.
-  'store' -> 'target'.
-}
-
-MethdoObject>>initializeFrom: aSource to: aTarget
-
-  source := aSource.
-  target := aTarget.
-#+END_SRC
-
-El mensaje en la Method Object class es un factory method que crea la nueva
-instancia y la inicializa enviándole un mensaje que se llama igual que el
-factory method pero prefijado con ~initialize~. El mensaje de
-inicialización en la instancia le asigna a cada una de las variables de
-instancia su correspondiente variable parametrizada.
-
 
 ** 3. Generación del método de evaluación
 
-La generación del método de evaluación es más compleja porque incluye el
-reemplazo de todas las variables
-
+La generación del método de evaluación debe realizar el reemplazo de todas las
+variables que se parametrizaron por el nombre de las ivars correspondientes.
 :REFERENCE:
-Agregar en el apéndice el código de
-ExtractToMethodObject>>compileExtractedMethodAsEvaluationMethodOn: y agregar una referencia de esa
-parte del apéndice acá.
+apuntar al código que está más arriba
 :END:
+Basándonos en ~Object>>executeMethod:~ asumamos que los nombres de las ivars
+elegidas son:
 
-que se parametrizaron por el nombre de la variable de instancia
-correspondiente. El código específico se encuentra en el apéndice. El reemplazo
-utiliza el AST del método a extraer y al ~Encoder~. Utilizaremos la
-clase ~Encoder~, de la misma manera que lo hace el
-~Debugger~, para obtener los rangos en el código fuente que se
+#+BEGIN_SRC
+{
+  'self'           -> 'receiver'.
+  'compiledMethod' -> 'toExecute'.
+} asDictionary.
+#+END_SRC
+
+El reemplazo utiliza el AST del método a extraer y al
+~Encoder~. ~ExtractToMethodObject~ utiliza al ~Encoder~, de la misma manera que
+lo hace el ~Debugger~, para obtener los rangos en el código fuente que se
 corresponden con un nodo del AST. La generación del código fuente con los
 reemplazos se divide en los siguientes pasos:
 
+1. Se genera una ~SortedCollection~ de ~Association~ s con un ~Interval~ que
+   representa el rango como ~key~ y un ~String~ con el nombre de la variable
+   como ~value~. El intervalo es el rango de caracteres en el código fuente de
+   la ocurrencia de la variable a parametrizar que debe ser reemplazada por el
+   ~value~ de la ~Association~, el nombre de la variable de instancia
+   correspondiente. La generación de esta colección se realiza consultando al
+   ~Encoder~ por cada referencia a una variable a parametrizar y colocando cada
+   rango con el nombre de su correspondiente variable de instancia. Siguiendo
+   con el ejemplo la colección ordenada de rangos sería:
+   #+BEGIN_SRC 
+   {
+     (39 to: 42) -> 'receiver'.
+     (73 to: 86) -> 'toExecute'.
+   }
+   #+END_SRC
+   El único detalle a considerar en este paso es que los parámetros de un
+   mensaje siempre pertenecen al conjunto de variables a parametrizar y, por lo
+   tanto, el ~Encoder~ incluye dentro del conjunto de referencias en el código
+   fuente a un parámetro la correspondiente al method header. Sin embargo, ese
+   es el único tipo de ocurrencia o referencia en el código que no
+   reemplazaremos para simplificar las manipulaciones siguientes.
 
-1. Se genera una colección ordenada de pares (rango, nombre). El rango es
-   un intervalo en el código fuente que indica el rango de caracteres en el
-   código fuente que debe ser reemplazado por la segunda coordenada, el
-   nombre de la variable de instancia correspondiente. La generación de esta
-   colección se realiza consultando al ~Encoder~ por los rangos de
-   la variables a parametrizar y colocando cada rango con el nombre de su
-   correspondiente variable de instancia.
-2. Se realiza el reemplazo de los rangos por los nombres
-   correspondientes.
-3. Se reemplaza el encabezado del método original por el selector de
-   evaluación elegido.
-4. Se compila el código fuente generado en el Method Object.
+2. Se realiza el reemplazo de los rangos por los nombres correspondientes
+   enviando ~String>>copyReplacing:~ al código fuente del método a extraer. Es
+   este mensaje el que requiere que la colección de rangos esté ordenada en
+   función de la aparición de los rangos en el código. Luego del reemplazo y
+   asumiendo que el nombre elegido para el Method Object es ~MethodExecuter~
+   quedaría así:
+   #+BEGIN_SRC
+   MethodExecuter>>executeMethod: compiledMethod
+     ^receiver withArgs: #() executeMethod: toExecute.
+   #+END_SRC
+   Luego de este paso el cuerpo del método ya es el final pero el header todavía
+   es el del método original.
+
+3. Se reemplaza el encabezado del método original por el selector de evaluación
+   elegido. ~Parser~ sabe responder el mensaje ~methodHeaderLengthFrom:
+   methodSource~, por lo tanto se utiliza ~String>>copyReplacing: ranges with:
+   aString~ para reemplazar desde el comienzo del código hasta el final del
+   header con el selector de evaluación elegido. Asumiendo que el selector del
+   mensaje de evaluación elegido es ~execute~ quedaría así:
+   #+BEGIN_SRC
+   MethodExecuter>>execute
+     ^receiver withArgs: #() executeMethod: toExecute.
+   #+END_SRC
+
+4. Finalmente, se compila el código fuente generado en el Method Object y se lo
+   agrega a la categoría ~evaluating~.
 
 
 ** 4. Reemplazo del método a extraer por la evaluación del Method Object
 
 Finalmente, el último paso es reemplazar el método a extraer por la evaluación
-del Method Object.  Esta parte es parecida a la de la generación del código para
-el mensaje de creación de instancia. La evaluación del Method Object se realiza
-enviandole el mensaje de creación de instancia a la clase pero, en lugar de
-utilizar los nombres de los parámetros se utilizan las variables a parametrizar
-y se utiliza el selector de evaluación elegido para evaluarlo. Un detalle de
-esta parte es qué hacer si el método a extraer no cuenta con un statement de
-return, es decir el return es implícito. Los métodos que no cuentan con un
-return explícito en Cuis devuelven self, el receptor del mensaje.  Decidimos
-preservar el nuevo método lo más parecido al anterior y no agregar returns, por
-lo tanto si contaba con un return implícito el nuevo código también utiliza un
-return implícito. Solo se agrega un return a la evaluación del Method Object en
-los casos en los que hay algún return explícito y el valor a devolver es
-distinto de self.
+del Method Object. El method header queda intacto:
+
+#+BEGIN_SRC
+executeMethod: compiledMethod
+#+END_SRC
+
+y el cuerpo es reemplazado por completo, incluida la declaración de variables
+temporales, por la creación de la instancia del Method Object y su
+evaluación. Las posibles variaciones son:
+
+#+BEGIN_SRC
+"Return explícito:"
+
+^(MethodObject instanceCreationSelector: variableToParametrize) evaluationSelector
+
+
+"Return implícito:"
+
+(MethodObject instanceCreationSelector: variableToParametrize) evaluationSelector
+
+
+"Sin variables a parametrizar con return explícito:"
+
+^MethodObject new evaluationSelector
+#+END_SRC
+
+Las únicas variaciones están dadas por la existencia o no de variables a
+parametrizar y si el return es implícito o explícito. La evaluación del Method
+Object se realiza enviandole el mensaje de creación de instancia a la clase,
+pasando las variables a parametrizar, y luego enviándole el mensaje de evaluación
+elegido. En el caso de ~Object>>executeMethod: compiledMethod~ quedaría así:
+
+#+BEGIN_SRC
+executeMethod: compiledMethod
+  ^(MethodExecuter withReceiver: self execute: compiledMethod) execute
+#+END_SRC
+
+Todo esto como ya vimos se realiza contruyendo el ~String~ correspondiente al
+código fuente.
+
+*Cuando el método a extraer no tiene un return explícito*
+
+Si el método a extraer no cuenta con un statement de return, ~^statement~, el
+return es implícito. Los métodos que no cuentan con un return explícito
+devuelven ~self~, el receptor del mensaje.  Decidimos preservar el método luego
+del refactoring con una estructura lo más similar posible a la origianl, lo cual
+en este caso resulta en no agregar returns si no es necesario. Por lo tanto si
+el método original contaba con un return implícito, el nuevo código también
+utiliza un return implícito. Solo se agrega un return a la evaluación del Method
+Object en los casos en los que hay algún return explícito y el valor a devolver
+es distinto de ~self~.
+
+
+* La interfaz de usuario
+
+Como creo que le va a ayudar bastante al lector seguir un caso de uso para
+entender la implementación de la interfaz voy a combinarlas. Voy a seguir un
+caso de uso que será la excusa para poder mostrar la implementación.
 
 
 * ¿Cómo se utiliza?

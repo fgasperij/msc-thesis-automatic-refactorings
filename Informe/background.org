@@ -10,3 +10,11 @@ Información necesaria que puedan necesitar los lectores para entender la tesis.
 - qué es un tipo? Es un conjunto de mensajes. Todos los objetos que responden
   ese conjunto de mensajes comparten el tipo determinado por ese conjunto de
   mensajes.
+
+- Qué es el ParseNodeVisitor y para qué se usa?
+- Qué es un return self implicito?
+- Qué es el Encoder? Por qué es subclase de ParseNode?
+- Qué es una shared variable? Por qué los LiteralVariableNode se corresponden
+  con este tipo de variables?
+- Qué es el Scanner y para qué se usa en el package Refactoring?
+- Qué es shadowing?
