@@ -1,0 +1,484 @@
+* Motivación y smells
+
+Existen pocos lenguajes de programación orientados a objetos, y de uso extendido
+ninguno, que no cuenten con una u otra forma de representar el valor especial
+null. La utilización de null conlleva como principal riesgo el enviarle un
+mensaje o derefenciarlo, dependiendo el lenguaje utilizado, lo cual resulta en
+un error en runtime o una terminación abnormal del programa. La forma más simple
+de prevenir estos errores es realizar chequeos sobre las variables que se
+sospecha pueden contener null para evitar enviarles mensajes. Veamos un ejemplo
+en la clase =Behavior= de Cuis:
+
+#+BEGIN_SRC 
+Behavior>>allSuperclasses
+
+  "Answer an OrderedCollection of the receiver's
+   and the receiver's ancestor's superclasses. The first element is the
+   receiver's immediate superclass, followed by its superclass; the last
+   element is Object."
+  | temp |
+  
+  ^ superclass
+    ifNil: [OrderedCollection new]
+    ifNotNil: [
+      temp := superclass allSuperclasses.
+      temp addFirst: superclass.
+      temp]
+#+END_SRC
+
+En este caso se verifica si la variable de instancia =superclass= es nil para
+evitar enviarle el mensaje =allSuperclasses= y además por que la ausencia de
+:REFERENCE:
+Fowler
+:END:
+superclase indica que estamos en la raíz de la jerarquía. Si null conlleva
+tantos riesgos, ¿por qué se utiliza con tanta frecuencia?  La utilización de
+null puede ser la forma más simple y barata de implementar un modelo en
+determinado estado o caso. Sin embargo, si los chequeos por null abundan las
+causas más comunes son:
+
+- que la variable de instancia sea lo que se llama un temporary field,
+  un colaborador que no forma parte de la esencia del objeto y por lo
+  tanto no es necesario siempre; en los casos en los que no es necesario
+  es nil.
+
+- que falte una abstracción en el modelo para representar la ausencia de
+  un tipo de objetos.
+
+:REFERENCE:
+Fowler y Woolf
+:END:
+Fowler y Woolf describen que la motivación para realizar el refactoring son
+repetidos chequeos por nil de un colaborador. Los condicionales reducen la
+entendibilidad del código y al chequear siempre la misma condición producen
+código repetido, lo cual suele aumentar la posibilidad de que el programador
+introduzca bugs olvidándose de chequear por nil antes de enviarle un mensaje al
+colaborador correspondiente. Una de las principales herramientas del paradigma
+de objetos para lidiar con la proliferación de condicionales repetidos en el
+código es la utilización de polimorfismo. En lugar de chequear manualmente en
+qué tipo de situación nos encontramos para decidir qué hacer, se envía un
+mensaje polimórfico a un objeto que realizará la tarea correspondiente para esa
+situación dependiendo de su tipo. La introducción de un Null Object sigue esta
+guía. Se reemplazará la utilización de nil por un Null Object, un objeto que
+representa la ausencia o la nada del tipo correspondiente y encapsula el
+comportamiento necesario en las situaciones en las cuales hay una ausencia de
+ese tipo. Al contar con un Null Object ya no es necesario verificar si el objeto
+es nil, nunca debería ser nil, y se le puede enviar los mismos mensajes que a un
+Concrete Object, ya que son polimórficos, contando con que el Null Object sabrá
+qué hacer. Además de reducir la complejidad del código la introducción del Null
+Object consigue que las extensiones futuras sean más seguras, ya que no hay que
+chequear por nil, y más mantenibles porque si se requiere cierto comportamiento
+adicional en un caso en el que el colaborador está ausente el cambio quedará
+encapsulado en la clase del Null Object.
+
+:WRITE:
+En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
+:END:
+
+* ¿En qué consiste?
+
+La esencia del refactoring es el reemplazo de condicionales que chequean si una
+variable es nil o no por el envío de un mensaje polimórfico.  Conseguir ese
+objetivo requiere de varios pasos que tienen varias alternativas de
+implementación:
+
+1. Crear una jerarquía para el Null Object.
+
+2. Reemplazar las asignaciones de nil por asignaciones del Null Object.
+
+3. Reemplazar los condicionales que chequean nil por envíos polimórficos al
+   objeto.
+
+4. Mover el comportamiento requerido para los casos en los que el objeto es nil
+   al Null Object.
+
+Llamaremos NullComponent a la clase del Null Object y Component a la clase del
+objeto que representa un componente que no es nil. El NullComponent será
+polimórfico con el Component pero no contiene estado porque sus métodos no
+tienen comportamiento, están vacíos, o devuelven alguna constante, en ocasiones
+en forma de un Null Object de otro tipo.  En un lenguaje dinámico como Smalltalk
+no es necesario que exista una relación de herencia entre las clases para que
+puedan utilizarse indistintamente como en el caso de lenguajes estáticamente
+tipados. De todas formas se elige utilizar una relación de herencia y relacionar
+al Component y al NullComponent en una misma jerarquía para dejar la relación
+entre las dos explícita. La jerarquía que los relaciona puede tomar varias
+formas:
+
+:DIAGRAM:
+NullObject hierarchy diagram
+:END:
+
+La primer y más simple alternativa es la propuesta por Fowler. La principal
+ventaja de esta alternativa es que no requiere cambiar la clase Component; su
+principal desventaja es que si se le agregan mensajes a la interfaz de Component
+el NullComponent los heredará y si no se recuerda reescribirlos en el
+NullComponent con el comportamiento correcto para el NullComponent el programa
+tendrá comportamientos inesperados. La segunda alternativa no tiene la
+desventaja que vimos en la primera y es por eso que suele preferirse por sobre
+ella.
+
+Luego de armar la jerarquía se deberán sobrescribir todos los mensajes de la
+interfaz de Component en NullComponent con un comportamiento vacío. Luego de
+realizar esto se reemplazarán las asignaciones de nil a la variable de
+instancia. Por ejemplo:
+
+#+BEGIN_SRC 
+Context>>initialize
+  component := null.
+
+"Pasará a ser"
+
+Context>>initialize
+  component := NullComponent new.
+#+END_SRC
+
+Algunas asignaciones pueden tener como lado derecho el envío de un
+mensaje el cual puede devolver nil. Esos casos deben reemplazarse por
+una delegación que permita asignar el Null Object:
+
+#+BEGIN_SRC 
+Context>>sendTask
+    component := self latestComponent.
+
+"Se reemplazará por:"
+
+Context>>assignComponentWith: aComponentOrNull
+    component := aComponentOrNull ifNil: [NullComponent new] ifNotNil: [aComponentOrNull].
+
+Context>>sendTask
+    self assignComponentWith: (self latestComponent).
+#+END_SRC
+
+Se agrega un mensaje que asignará a la variable de instancia una
+instancia de NullComponent cuando el valor que devuelva la colaboración
+del lado derecho sea nil. Esto debe ser así cuando no tenemos control
+sobre esas colaboraciones o queremos encapsular la utilización del
+NullComponent a cierta parte del código, si se reemplazan todos los
+lugares donde se utiliza un nil, en lugar de un Component, por un
+NullComponent entonces el mensaje de asignación no debería ser
+necesario.
+
+Luego de realizar las operaciones anteriores la variable de instancia
+=component= no debería contener en ningún caso nil, solo instancias de
+Component o NullComponent. El siguiente y último paso es reemplazar los
+condicionales por el envío de mensajes polimórficos y el traslado del
+comportamiento de nil al NullComponent:
+
+#+BEGIN_SRC 
+Context>>launchRocket
+    rocketHeight := component ifNil: [0] ifNotNil: [component ignite].
+
+"Luego de aplicar el refactoring"
+
+NullComponent>>ignite
+    ^0
+
+Context>>launchRocket
+    rocketHeight := component ignite.
+#+END_SRC
+
+* Descripción completa de la funcionalidad del refactoring implementado
+
+El modelo de IntroduceNullObject es más complejo que el de
+:REFERENCE:
+TDD
+:END:
+ExtractToMethodObject. Ambos fueron desarrollados utilizando TDD y la principal
+diferencia que se encontró es que al empezar a desarrollar de manera incremental
+las precondiciones del refactoring eran complejas y requerían que las
+estructuras recibidas por el objeto central del modelo, el encargado de aplicar
+el refactoring, una instancia de la clase =IntroduceNullObject=, fueran también
+complejas (colleciones con varios niveles de profundidad). Resultó conveniente
+repartir las responsabilidades y encapsular las distintas estructuras que
+necesita el refactoring en otros objetos que luego éste recibirá. Las
+precondiciones chequeadas por el refactoring se redujeron porque los objetos que
+recibe son válidos entonces las validaciones espcíficas de esas estructuras
+están encapsuladas en esos objetos.
+
+El refactoring se utiliza de la siguiente manera:
+
+#+BEGIN_SRC
+refactoring := IntroduceNullObject
+    on: 'ivar1'
+    of: aRocket class
+    usingAsConcreteClass: ConcreteFuelTank
+    usingAsNullClass: NullFuelTank
+    for: replacementParameters
+refactoring apply.
+#+END_SRC
+
+=IntroduceNullObject= es subclase de =Refactoring= y por lo tanto sobrescribe el
+mensaje =apply=. Los colaboradores que recibe en el mensaje de creación de
+instancia son los que necesita para poder aplicar el refactoring.
+
+** La variable de instancia y la clase
+
+En el keyword =on:= recibe el nombre de la variable de instancia que se
+reemplazará por el Null Object. Hasta ahora el refactoring Introduce Null Object
+parecía aplicarse a un tipo. El tipo que utilizamos de referencia era Componente
+y los cambios, reemplazo de asignaciones de nil o chequeos por nil, se
+realizaban sin un scope determinado, es decir, se aplicaban a lo largo de todo
+el sistema. Realizar algo así en un sistema dinámico como Cuis no es posible sin
+sacrificar demasiada confianza sobre la preservación del comportamiento del
+refactoring. El proceso para encontrar todos los lugares en los que se utiliza
+una instancia de la clase Component no es claro y, aunque lo fuera, como los
+tipos son dinámicos la variable podría contener un conjunto de tipos durante su
+vida, no solo Component, dependiendo el momento de ejecución.  Por último
+siempre queda el problema de la metaprogramación que vuelve inútil cualquier
+intento de inferencia de tipos estática. Por esta razón decidimos darle al
+cambio un scope determinado y que el usuario guíe al refactoring con su
+conocimiento del modelo.
+
+El scope elegido es el de una clase. La clase provee un equilibrio entre el
+método, que sería demasiado restrictivo, probablemente existan pocos casos en
+los que se justifique introducir este refactoring solo para eliminar los
+condicionales de un solo método, y todo el sistema, ya que no existe un scope
+claro más grande que la clase o por lo menos Cuis no lo provee ya que las
+categorías o los paquetes no permiten ese tipo de funcionalidad. La clase que se
+utilizará como contexto es la recibida en el keyword =of:=.
+
+Dentro de una clase se eligirá un colaborador interno o variable de instancia en
+particular sobre la cual se realicen chequeos por nil para aplicar el
+refactoring. Al no contar con un tipo específico para buscar todas las variables
+es necesario fijar la o las variables que el programador, por su conocimiento
+del modelo, ya sabe que deberían pertenecer a ese tipo. Esto se apoya en las
+ventajas ya expuestas de floss refactoring, el caso en el que el programador
+tiene claro el cambio que quiere realizar y la herramienta lo automatiza para
+reducir la posibilidad de errores y aumentar la velocidad de ejecución. La
+herramienta no asume entender el modelo ni poder cambiarlo sin guía del
+usuario. Se elige como variable a fijar una variable de instancia porque son las
+variables que están disponibles a través de todo el scope de la clase y son más
+comunes que las variables de clase o las variables de pool.
+
+El refactoring tendrá como objeto central a la variable de instancia elegida,
+todo los condicionales modificados serán sobre esa variable. La única
+precondición que incluye a la variable de instancia o a la clase es la que
+verifica que la variable pertenezca a la clase.
+
+** La jerarquía de Null Object
+
+La jerarquía que se asumirá será aquella en la que Component y NullComponent
+heredan de AbstractComponent, veremos por qué más adelante. Sin embargo, no es
+necesario que efectivamente la implementen, no es una precondición. La única
+precondición con respecto a las clases Component y NullComponent es que no sean
+iguales. Si se utilizara la misma clase no se podrían enviar mensajes
+polimórficos que se respondan de forma distinta dependiendo el tipo de la
+variable.
+
+** Los argumentos para los condicionales a reemplazar
+
+Los condicionales a reemplazar ya están determinados por la variable de
+instancia y su clase. Smalltalk no cuenta con condicionales como parte de su
+sintaxis, éstos se implementan con polimorfismo. Por lo tanto, los tipos de
+condicionales soportados por el refactoring no son más que un conjunto mensajes:
+
+- Nil Selectors
+
+  - =ifNil:=
+
+  - =ifNil:ifNotNil:=
+
+  - =ifNotNil:=
+
+  - =ifNotNil:ifNil:=
+
+- Boolean Selectors
+
+  - =ifTrue:=
+
+  - =ifTrue:ifFalse:=
+
+  - =ifFalse:=
+
+  - =ifFalse:ifTrue:=
+
+Los Nil Selectors siempre tienen que tener como receptor del mensaje a la
+variable de instancia y los Boolean Selectors tienen que tener como receptor del
+mensaje a un envío de mensaje =isNil= a la variable de instancia:
+
+#+BEGIN_SRC
+"Nil Selector: ejemplo de receptor"
+component ifNil: [^4]    
+
+"Boolean Selector: ejemplo de receptor"
+component isNil ifTrue: [^4]    
+#+END_SRC
+
+Todos los condicionales soportados serán reemplazados por el envío de un mensaje
+polimórfico:
+
+#+BEGIN_SRC 
+Context>>fuel
+    component ifNil: [unit zero] ifNotNil: [component fuelLeftIn: unit]
+
+"Pasará a ser:"
+Context>>fuel
+    component polymorphicSelector: unit
+
+"Agregando:"
+Component>>polymorphicSelector: aUnit
+    ^self fuelLeftIn: aUnit
+
+NullComponent>>polymorphicSelector: aUnit
+    ^aUnit zero
+#+END_SRC
+
+El usuario deberá elegir el selector polimórfico y los nombres de los parámetros
+para las variables a parametrizar. En el ejemplo anterior el selector
+polimórfico es =polymorphicSelector= y el nombre del parámetro =aUnit=.
+
+:DIAGRAM:
+un diagrama de objetos mostrando cómo intereactúan INO y RINWPP
+:END:
+
+* Funcionalidad de ReplaceIfNilWithPolymorphismParameters
+
+=ReplaceIfNilWithPolymorphismParameters= es una clase que representa los
+argumentos necesarios para reemplazar un chequeo por nil con polimorfirsmo. Los
+colaboradores internos de la clase son el =methodNode= del método, la raíz del
+AST, en el cual se encuentra el chequeo por nil, el =messageNode=
+correspondiente al chequeo por nil y una instancia de
+=VariablesToParametrizeKeywordsDefinitions=. Los dos primeros identifican y
+referencian al chequeo por nil que reemplazaremos. El tercero es un objeto que
+contiene la definición del mensaje polimórfico: los keywords, qué variable a
+parametrizar irá en qué keyword y los nombres de los parámetros.
+
+=ReplaceIfNilWithPolymorphismParameters= valida que el =messageNode= sea un
+mensaje soportado por el refactoring.
+
+:WRITE:
+Explicar cómo se valida que el mensaje sea soportado y las complicaciones que
+trae eso.  esto no lo voy a escribir hasta que no haga los tests para ver si ya
+funciona todo bien o no
+:END:
+
+Verificar que el =MessageNode= represente un envío de mensaje soportado es un
+poco más complicado que verificar que el selector del nodo pertenezca al
+conjunto de selectores soportados y que el receptor del mensaje sea una variable
+de instancia de la clase del método. La causa son algunas optimizaciones que se
+realizan al construir el AST, en específico los MessageNode de un conjunto de
+mensajes, dentro de los cuales encontramos a ~ifNil:ifNotNil:~ ~ifNotNil:~ y
+~ifNotNil:ifNil:~.
+
+Además, verifica que la definición del mensaje polimórfico sea consistente con
+las variables a parametrizar en los bloques y que no existan colisiones entre
+los nombres de los parámetros del mensaje polimórfico y las variables temporales
+de los bloques que recibe el chequeo por nil como argumento.
+
+** Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters
+
+=IntroduceNullObject= valida que los selectores seleccionados para los mensajes
+polimórficos no colisionen con otro mensaje de la jerarquía del Null Object.
+
+** Aplicación del refactoring
+
+Al contar con la colección de =ReplaceIfNilWithPolymorphismParameters= la
+aplicación del refactoring reemplaza cada uno de esos chequeos de nil con lo
+argumentos correspondientes. Los cambios que se deben realizar son:
+
+- agregar el mensaje polimórfico al Component
+
+- agregar el mensaje polimórfico al NullComponent
+
+- reemplazar el chequeo de nil por el envío del mensaje polimórfico
+
+El proceso para compilar el nuevo método en las clases Component y NullComponent
+es igual, lo que cambia es el bloque utilizado como fuente:
+
+#+BEGIN_SRC
+component ifNil: ['The NullComponent block'] ifNotNil: ['The Component block']
+#+END_SRC
+
+Los mensajes que tienen un solo keyword no cuentan con un bloque para alguna de
+las dos clases, en ese caso el método que se compilará será vacío ya que no se
+requiere ningún comportamiento si el objeto tiene ese tipo. Veamos un ejemplo:
+
+#+BEGIN_SRC
+Context>>fuel
+    ^component ifNotNil: [
+        self fuelLevelChecked.
+        component fuelLevel]
+
+Component>>fuelLevelWithLog: context
+    context fuelLevelChecked.
+    ^self fuelLevel
+
+NullComponent>>fuelLevelWithLog: context
+    "Empty method"
+
+Context>>fuel
+    component fuelLevelWithLog: self
+#+END_SRC
+
+El chequeo por nil se realizó con el mensaje =ifNotNil:=, por lo tanto si el
+objeto es nil no se espera comportamiento alguno. Por esa razón el método en la
+clase =NullComponent= resulta vacío.
+
+La generación del código de los métodos para cada caso se realiza reemplazando
+todas las variables a parametrizar, todas las variables que se referencian en el
+:WRITE:
+qué sucedía con los argumentos de los bloques? puede ser que no tenían?
+:END:
+bloque excepto las que sean temporales del bloque, por el nombre del parámetros
+correspondiente. Para realizar esto necesitamos obtener el código fuente del
+bloque y luego obtener el rango en el código fuente del método de cada variable
+a parametrizar y restarle el offset del inicio del bloque.
+
+Finalmente, se reemplaza el chequeo de nil por el envío del mensaje
+polimórfico. Se toma el código fuente del método, se realiza el reemplazo y
+luego se vuelve a compilar en la clase Context. El único detalle de este proceso
+es que la obtención del rango que comprende el chequeo de nil se debe realizar
+manualmente porque el =Encoder= no posee esta información. En el caso de
+=MessageNode=s se cuenta con el rango de los keywords y sus argumentos pero no
+del receptor. Por lo tanto el rango de un =MessageNode= incluyendo al receptor
+debe tomar el lado derecho del rango del envío de mensaje y el lado izquierdo
+del receptor.  El receptor en nuestro caso puede ser una variable o un envío de
+mensaje (=instVar isNil=) por lo cual es simple obtener el rango consultando al
+Encoder. La construcción del envío del mensaje la realiza el
+=ReplaceIfNilWithPolymorphismParameters= correspondiente, ya que cuenta con el
+mapeo entre variable a parametrizar y keyword del selector polimórfico.
+
+** ¿Cómo se utiliza?
+
+El usuario puede iniciar el refactoring desde el listado de clases en el System
+Browser porque lo que necesita el =RefactoringApplier= para iniciar la obtención
+de los argumentos es la clase a utilizar como contexto:
+
+:DIAGRAM:
+mostrar cómo se selecciona el refactoring
+:END:
+
+El =RefactoringApplier= es el encargado de recabar los argumentos para el
+=IntroduceNullObject=, crear el refactoring y aplicarlo. Colaborará con el
+=IntroduceNullObjectForm= y el =IntroduceNullObjectRequest= para conseguir
+esto. La distribución de responsabilidades quedará reflejada en el siguiente
+diagrama de secuencia que muestra cómo colaborane en un caso exitoso:
+
+:DIAGRAM:
+colaboración en caso exitoso
+:END:
+
+y la experiencia para el usuario sería:
+
+:DIAGRAM:
+mostrar el paso a paso de aplicación del refactoring.
+:END:
+
+** Comentarios adicionales
+
+:WRITE:
+¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas
+se nos ocurrieron en un sistema dinámico como Smalltalk en el que no contamos
+con el tipo o la clase de una variable?
+:END:
+
+Ya veremos que es fácil pasar de realizar el cambio en el contexto de
+una clase a realizarlo en todo el sistema. Bueno quizás no es tan fácil
+en un sistema dinámico como Smalltalk. Pero tiene ventajas y desventajas
+realizarlo de esta manera, si lo vamos aplicando progresivamente podemos
+identificar más fácil si algo se rompe y dónde.
+
+** Preservación del comportamiento
+
+Aplicaré los refactorings a distintas partes de Cuis y después le voy a
+correr los tests.

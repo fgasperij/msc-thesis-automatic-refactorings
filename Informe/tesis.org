@@ -13,12 +13,15 @@ Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta
 
 #+INCLUDE: background.org
 
+
 * Estado del arte
 
 #+INCLUDE: estado_del_arte.org
 
 
 * Objetivos y justificación
+
+#+INCLUDE: definicion_del_problema.org
 
 
 * Descripción de la herramienta
@@ -32,6 +35,8 @@ Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta
 
 
 * Introduce Null Object
+
+#+INCLUDE: introduce_null_object.org
 
 
 bibliography:tesis.bib
