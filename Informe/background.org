@@ -1,5 +1,17 @@
 Información necesaria que puedan necesitar los lectores para entender la tesis.
 
+- smalltalk
+- programación orientada a objetos
+- qué es un refactoring
+- historia de los refactorings
+  - opdyke
+  - tdd
+- qué no es un refactoring
+- qué es un patrón de diseño
+- qué es un smell: estos atributos son parte de un conjunto de atributos del
+  código conocido como smells. Los smells son atributos que se pueden
+  identificar de manera fácil y suelen ser el síntoma de un diseño degradado.
+
 - smalltalk es un entorno vivo de objetos que es reflexivo
 - todo es un objeto, las clases son objetos
 - cómo funciona el method lookup, cuál es la diferencia entre self y super
