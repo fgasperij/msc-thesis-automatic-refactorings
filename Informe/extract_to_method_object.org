@@ -1131,9 +1131,101 @@ es distinto de ~self~.
 
 * La interfaz de usuario
 
-Como creo que le va a ayudar bastante al lector seguir un caso de uso para
-entender la implementación de la interfaz voy a combinarlas. Voy a seguir un
-caso de uso que será la excusa para poder mostrar la implementación.
+La aplicación del refactoring se puede realizar creando una instancia de
+~ExtractToMethodObject~ y evaluándola o a través de la interfaz de usuario. La
+interfaz de usuario busca simplificar la tarea y guiar su utilización. Al
+ser un refactoring de alto nivel es esperable que el usuario no pueda visualizar
+simultáneamente todos los cambios que implica la aplicación del mismo, por eso
+se han agregado varios textos explicativos que intentan ayudar al usuario a
+construir esta imagen y poder entender rápidamente todas las configuraciones que
+se le presentan.
+
+:REFERENCE:
+a todo lo que sea de smalltalk y demasiado básico para explicar aquí mismo.
+:END:
+La interfaz se puede acceder a través de la lista de mensajes de la ~BrowserWindow~:
+
+[[file:screenshots/etmo/access_refactorin_menu.png]]
+
+El menú que se ve es el que aparece al hacer click derecho sobre la lista. Al
+clickear la primer opción /+ refactorings/ veremos este menú:
+
+[[file:screenshots/etmo/access_refactorin_list.png]]
+
+El anteúltimo elemento, /extract to method object/, es el que se debe elegir
+para aplicar este refactoring. Al elegirlo aparecerá el siguiente formulario:
+
+:IMAGE:
+Ejemplo del formulario con Object>>executeMethod
+:END:
+
+~Object>>executeMethod:~, el método sobre el que se aplicará el refactoring, es
+el método del mensaje que está seleccionado en la lista de mensajes.
+
+El formulario es una instancia de ~ExtractToMethodObjectForm~, creada por un
+~ExtractToMethodObjectApplier~. ~ETMOApplier~ es subclase de
+~RefactoringApplier~. ~RefactoringApplier~ encapsula el flujo estándar de
+aplicación de un refactoring y el control de errores común a todos los
+refactorings existentes:
+
+1. Solicitar los parámetros para aplicar el refactoring.
+
+2. Crear una instancia del refactoring.
+
+3. Aplicar el refactoring.
+   
+4. Mostrar los cambios realizados, opcional.
+   
+Además, sabe responder mensajes para solicitar inputs simples del usuario, por
+ejemplo un ~String~ mediante un prompt. El flujo está encapsulado en este objeto
+pero el método para realizar cada paso se espera que sea responsabilidad de sus
+subclases.
+
+~ETMOApplier~ respeta el mismo flujo casi por completo pero sobreescribe ~value~
+porque le realiza una pequeña modificación. Al solicitar del usuario varios
+parámetros, a diferencia de otros refactorings más simples que suelen requerir
+solo 1 o 2, resultaría inconveniente que ante un error el flujo sea abortado,
+que es lo que sucede en el resto de los refactorings. Sería inconveniente porque
+el usuario debería especificar nuevamente todos los parámetros. Por esta razón,
+~ETMOApplier~ no aborta el flujo en caso de error, le muestra un mensaje
+explicando la causa del error al usuario:
+
+:IMAGE:
+Un mensaje de error
+:END:
+
+y, preservando todos los parámetros especificados hasta el momento, le permite
+corregir su error en el mismo formulario.
+
+#+BEGIN_SRC plantuml :file diagrams/extract_to_method_object_ui_sequence.png
+title Interacción de los objetos de la interfaz
+
+hide footbox
+
+actor User
+
+User -> BrowserWindow : click //extract to method object//
+BrowserWindow -> Applier ** : extract
+return anApplier
+BrowserWindow -> Applier : value
+Applier -> Form ** : open: self
+Form -> Request ** : for: compiledMethod
+return aRequest
+Form --> User : //opens in world//
+
+... The User fills the Form ...
+
+User -> Form : click //Submit//
+Form -> Applier : userSubmitted: aRequest
+Applier -> Refactoring ** : create: aRequest
+return aRefactoring
+Applier -> Refactoring : apply
+return changes
+Applier -> Applier : showChanges
+#+END_SRC
+
+#+RESULTS:
+[[file:diagrams/extract_to_method_object_ui_sequence.png]]
 
 
 * ¿Cómo se utiliza?

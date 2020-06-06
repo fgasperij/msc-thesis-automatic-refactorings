@@ -11,6 +11,8 @@ Información necesaria que puedan necesitar los lectores para entender la tesis.
 - qué es un smell: estos atributos son parte de un conjunto de atributos del
   código conocido como smells. Los smells son atributos que se pueden
   identificar de manera fácil y suelen ser el síntoma de un diseño degradado.
+ 
+Justificación del problema y solución
 
 - smalltalk es un entorno vivo de objetos que es reflexivo
 - todo es un objeto, las clases son objetos
@@ -23,6 +25,8 @@ Información necesaria que puedan necesitar los lectores para entender la tesis.
   ese conjunto de mensajes comparten el tipo determinado por ese conjunto de
   mensajes.
 
+ETMO
+
 - Qué es el ParseNodeVisitor y para qué se usa?
 - Qué es un return self implicito?
 - Qué es el Encoder? Por qué es subclase de ParseNode?
@@ -30,3 +34,7 @@ Información necesaria que puedan necesitar los lectores para entender la tesis.
   con este tipo de variables?
 - Qué es el Scanner y para qué se usa en el package Refactoring?
 - Qué es shadowing?
+
+Interfaz de usuario
+
+- BrowserWindow
