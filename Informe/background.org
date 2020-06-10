@@ -34,7 +34,13 @@ ETMO
   con este tipo de variables?
 - Qué es el Scanner y para qué se usa en el package Refactoring?
 - Qué es shadowing?
+- OrderedCollection
+- Association
+- Interval
 
 Interfaz de usuario
 
 - BrowserWindow
+- world
+- qué es un model en el contexto de morph
+- qué es un layout morph, qué es un layout spec

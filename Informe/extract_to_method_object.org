@@ -1133,17 +1133,18 @@ es distinto de ~self~.
 
 La aplicación del refactoring se puede realizar creando una instancia de
 ~ExtractToMethodObject~ y evaluándola o a través de la interfaz de usuario. La
-interfaz de usuario busca simplificar la tarea y guiar su utilización. Al
-ser un refactoring de alto nivel es esperable que el usuario no pueda visualizar
+interfaz de usuario busca simplificar la tarea y guiar su utilización. Al ser un
+refactoring de alto nivel es esperable que el usuario no pueda visualizar
 simultáneamente todos los cambios que implica la aplicación del mismo, por eso
 se han agregado varios textos explicativos que intentan ayudar al usuario a
-construir esta imagen y poder entender rápidamente todas las configuraciones que
-se le presentan.
+construir esta imagen mental y poder entender rápidamente todas las
+configuraciones que se le presentan.
 
 :REFERENCE:
 a todo lo que sea de smalltalk y demasiado básico para explicar aquí mismo.
 :END:
-La interfaz se puede acceder a través de la lista de mensajes de la ~BrowserWindow~:
+La interfaz se puede acceder a través de la lista de mensajes de la
+~BrowserWindow~, o una en la lista de una ~MessageSetWindow~:
 
 [[file:screenshots/etmo/access_refactorin_menu.png]]
 
@@ -1155,9 +1156,7 @@ clickear la primer opción /+ refactorings/ veremos este menú:
 El anteúltimo elemento, /extract to method object/, es el que se debe elegir
 para aplicar este refactoring. Al elegirlo aparecerá el siguiente formulario:
 
-:IMAGE:
-Ejemplo del formulario con Object>>executeMethod
-:END:
+[[file:screenshots/etmo/complete_form.png]]
 
 ~Object>>executeMethod:~, el método sobre el que se aplicará el refactoring, es
 el método del mensaje que está seleccionado en la lista de mensajes.
@@ -1174,7 +1173,7 @@ refactorings existentes:
 
 3. Aplicar el refactoring.
    
-4. Mostrar los cambios realizados, opcional.
+4. Mostrar los cambios realizados (opcional).
    
 Además, sabe responder mensajes para solicitar inputs simples del usuario, por
 ejemplo un ~String~ mediante un prompt. El flujo está encapsulado en este objeto
@@ -1190,12 +1189,13 @@ el usuario debería especificar nuevamente todos los parámetros. Por esta razó
 ~ETMOApplier~ no aborta el flujo en caso de error, le muestra un mensaje
 explicando la causa del error al usuario:
 
-:IMAGE:
-Un mensaje de error
-:END:
+[[file:screenshots/etmo/error_message.png]]
 
 y, preservando todos los parámetros especificados hasta el momento, le permite
 corregir su error en el mismo formulario.
+
+Veamos cómo es a grandes rasgos la colaboración entre los objetos que se
+encargan de la interfaz de usuario en una aplicación del refactoring exitosa:
 
 #+BEGIN_SRC plantuml :file diagrams/extract_to_method_object_ui_sequence.png
 title Interacción de los objetos de la interfaz
@@ -1226,6 +1226,107 @@ Applier -> Applier : showChanges
 
 #+RESULTS:
 [[file:diagrams/extract_to_method_object_ui_sequence.png]]
+
+Las flechas cuya punta incide sobre la caja de un objeto, en lugar de sobre su
+línea de vida, pertenecen a mensajes que responde la clase. Estos mensajes son
+de creación de instancias, y el resto, los que inciden sobre la línea de vida,
+son los que responde el objeto creado.
+
+** ~ExtractToMethodObjectForm~
+
+~ETMOApplier~ se encarga de crear una instancia del formulario y luego, como ya
+vimos que encapsulan todos los appliers, crear el refactoring y
+aplicarlo. ~ETMOForm~, subclase de ~SystemWindow~, se encarga de:
+
+1. Presentarle el formulario al usuario abriéndose en el ~world~.
+
+2. Crear una instancia de ~ETMORequest~ y utilizarla como contenedor de todos
+   los modelos de ~Morph~ necesarios.
+
+3. Notificarle a ~ETMOApplier~ de los eventos /cancel/, /close/  y /submit/.
+   
+No existen paquetes para Cuis que permitan definir formularios de manera simple,
+para poder implementar este formulario se desarrollaron varios componentes que
+también fueron reutilizados en el formulario del ~IntroduceNullObject~. Éstos
+son:
+
+- ~ColoredScrollPane~ :: Subclase de ~PluggableScrollPane~, permite definir un
+     color para un pane con scroll.
+
+- ~FormSection~ :: Subclase de ~LayoutMorph~. Es un morph con un borde para
+                   diferenciarlo visualmente, un título y una explicación
+                   opcional. Sin explicación:
+                   [[file:screenshots/etmo/form_section.png]]
+                   Con explicación:
+                   [[file:screenshots/etmo/form_section_with_explanation.png]]
+		
+- ~LabeledInput~ :: Subclase de ~LayoutMorhp~. Es un ~StringMorph~, el nombre
+                    del campo, y un ~TextModelMorph~, el campo de entrada.
+                    [[file:screenshots/etmo/labeled_input.png]]
+		    
+- ~MessageKeywordsAndParametersTable~ :: Subclase de ~LayoutMorph~. Es una tabla
+     de tamaño dinámico con la siguiente estructura:
+
+     |                 | Keyword | Parameter name | Change Order |
+     |-----------------+---------+----------------+--------------|
+     | Variable Name 1 | input   | input          | Up - Down    |
+     | ...             | input   | input          | Up - Down    |
+     | Variable Name n | input   | input          | Up - Down    |
+
+     El tamaño es dinámico porque el número de filas es parametrizable. Se
+     utiliza para el ingreso de los keywords y el nombre de los parámetros
+     correspondiente a cada variable a parametrizar. Además, la última columna
+     permite al usuario cambiar el orden de las filas, lo cual se corresponde
+     con el orden que tendrán los keywords en el mensaje de creación de
+     instancia. Así se ve con ~Objet>>executeMethod~:
+
+     [[file:screenshots/etmo/message_keywords_and_parameter_table.png]]
+
+- ~MessageKeywordsAndParametersModel~ :: Subclase de ~Object~. Contiene todos
+     los modelos utilizados por la tabla de igual nombre, se encarga de
+     crearlos, ordenarlos y proveer un acceso conveniente.
+
+- ~ImmutableTextModelMorph~ :: Subclase de ~TextModelMorph~. Es el encargado de
+     mostrar código Smalltalk, resaltando su sintaxis pero sin permitir
+     ediciones manuales por parte del usuario. Se utilizar para mostrar la
+     preview del mensaje de creación de instancia en el ~PreviewTextModelMorph~.
+
+- ~ChangeRowOrderButtonModel~ :: Subclase de ~Object~. Es utilizado por como el
+     modelo para los ~PluggableButtonMorph~ de las flechas para arriba y para
+     abajo que permiten reordenar las filas de la
+     ~MessageKeyworkdsAndParametersModel~.
+
+- ~AutocompletedTextProvider~ :: Subclase de ~Object~. Es el objeto que permite
+     que el input para ingresar el nombre de la superclase para el Method Object
+     tenga autocomplete.
+
+- ~IndependentlyColoredButton~ :: Subclase de ~PluggableButtonMorph~. Permite
+     elegir el color para los botones, es utilizado en los botones de /Cancel/ y
+     /Submit/.
+
+- ~PreviewTextModelMorph~ :: Subclase de ~TextModelMorph~. Es un
+     ~TextModelMorph~ que utiliza como su ~innerMorphClass~ al
+     ~ImmutableTextModelMorph~ para poder mostrar el código de la preview.
+     [[file:screenshots/etmo/immutable_text_model_morph.png]]
+
+- ~TabPassingInnerTextMorph~ :: Subclase de ~InnerTextMorph~. Los inputs del
+     formulario se pueden recorrer utilizando la tecla key symbol TAB porque
+     este objeto captura ese key stroke y encapsula ese movimiento.
+
+- ~PreviewInnerTextMorph~ :: Subclase de ~TabPassingInnerTextMorph~. Los inputs
+     de la tabla son los parámetros para el mensaje de creación de instancia son
+     objetos de este tipo que además notifican al formulario que tiene que
+     regenerar el preview del header.
+     
+
+Se intentó modularizar los componentes de la UI para que sean reutilizables y
+todo este trabajo sirva en el futuro para el desarrollo de nuevos refactorings u
+otras funcionalidades en Cuis.
+
+
+** ~ExtractToMethodObjectRequest~
+
+Contiene todos los modelos correspondientes a todos los inputs, los crea y permite su acceso.
 
 
 * ¿Cómo se utiliza?
