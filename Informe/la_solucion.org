@@ -3,103 +3,71 @@
 ** ¿Por qué Smalltalk?
 
 Necesitamos que sea un lenguaje orientado a objetos ya que vamos a estar
-introduciendo refactorings que son propios de el diseño orientado a
-objetos. Un lenguaje dinámico y puro permitirá iterar más rápidamente
-sobre la herramienta, por lo tanto es ideal para la realización de un
-prototipo y nos permite explorar con más soltura. Al ser un trabajo
-exploratorio no queríamos vernos limitados por las particularidades de
-un lenguaje de programación o que las mayores dificultades provengan de
-la navegación de una sintaxis compleja y sobrecargada. Smalltalk cuenta
-con una sintaxis simple y al ser un lenguaje de objetos puro y reflexivo
-provee la posibilidad de manipular los programas a través de
-metaprogramación de una manera simple y poderosa. La reflexividad de
-Smalltalk además (A Refactoring Tool for Smalltalk) permite utilizar el
-mismo lenguaje que se está modificando para modificarlo, no es necesario
-un metalenguaje intermedio.
-:REFERENCE:
-A Refactoring Tool for Smalltalk
-:END:
-
-Smalltalk ya ha probado ser una buen campo de experimentación para refactorings.
-:REFERENCE:
-A Refactoring Tool for Smalltalk
-:END:
+introduciendo refactorings que son propios de el diseño orientado a objetos. Un
+lenguaje dinámico y puro permitirá iterar más rápidamente sobre la herramienta,
+por lo tanto es ideal para la realización de un prototipo y nos permite explorar
+con más soltura. Al ser un trabajo exploratorio no queríamos vernos limitados
+por las particularidades de un lenguaje de programación o que las mayores
+dificultades provengan de la navegación de una sintaxis compleja y
+sobrecargada. Smalltalk cuenta con una sintaxis simple y al ser un lenguaje de
+objetos puro y reflexivo provee la posibilidad de manipular los programas a
+través de metaprogramación de una manera simple y poderosa. La reflexividad de
+Smalltalk además \cite{roberts97_arefac} permite utilizar el mismo lenguaje que
+se está modificando para modificarlo, no es necesario un metalenguaje
+intermedio.  Smalltalk ya ha probado ser \cite{roberts97_arefac} una buen campo
+de experimentación para refactorings.
 
 
 ** ¿Por qué CuisUniversity?
-:REFERENCE:
-Cuis y OpenSmalltalk VM
-:END:
-Cuis es un entorno enfocado en Smalltalk-80 libre y Open Source. Está
-basado en la OpenSmalltalk VM, como Squeak, y su principal objetivo es
-:REFERENCE:
-cuis university
-:END:
-mantener su base pequeña y simple. CuisUniversity es un ambiente basado
-en Cuis creado con el objetivo de enseñar programación orientada a
-objetos. Actualmente, es utilizado en la Universidad de Buenos Aires, en
-la Universidad de Quilmes y en la Universidad Católica Argentina. Uno de
-los objetivos de este trabajo es permitir a los alumnos experimentar con
-este tipo de refactorings.
+
+Cuis \cite{cuis} es un entorno enfocado en Smalltalk-80 libre y Open
+Source. Está basado en la OpenSmalltalk VM \cite{opensmalltalk}, como Squeak, y
+su principal objetivo es mantener su base pequeña y simple. CuisUniversity
+\cite{cuisuniv} es un ambiente basado en Cuis creado con el objetivo de enseñar
+programación orientada a objetos. Actualmente, es utilizado en la Universidad de
+Buenos Aires, en la Universidad de Quilmes y en la Universidad Católica
+Argentina. Uno de los objetivos de este trabajo es permitir a los alumnos
+experimentar con este tipo de refactorings.
 
 
 ** ¿Por qué Introduce Null Object y Extract Method To Method Object?
 
-Luego de analizar varios refactorings de alto nivel, la mayoría
-variaciones de patrones de diseño, nos enfocamos en estos dos porque
-creemos que presentan un buen balance de abstracción y simplicidad. Son
-lo suficientemente abstractos para ser considerados de alto nivel, no
-son refactorings simples que ya estén presentes en otras IDEs ni
-manipulan elementos diminutos como un nombre ya que operan al nivel de
-diseño del código. Sin embargo, son más simples que otros, lo cual nos
-permitirá explorar y aprender para poder sentar la bases hacia
+Luego de analizar varios refactorings de alto nivel, la mayoría variaciones de
+patrones de diseño, nos enfocamos en estos dos porque creemos que presentan un
+buen balance de abstracción y simplicidad. Son lo suficientemente abstractos
+para ser considerados de alto nivel, no son refactorings simples que ya estén
+presentes en otras IDEs ni manipulan elementos diminutos como un nombre ya que
+operan al nivel de diseño del código. Sin embargo, son más simples que otros, lo
+cual nos permitirá explorar y aprender para poder sentar la bases hacia
 refactorings futuros. El Introduce Null Object es un caso particular de
 Introduce Special Case y de Replace If With Polymorphism, por lo tanto
-consideramos que es un buen precursor de ellos. De la misma forma,
-Extract Method To Method Object es un precursor de todos los
-refactorings que requieren extraer código y hacer reemplazos
-contextuales.
+consideramos que es un buen precursor de ellos. De la misma forma, Extract
+Method To Method Object es un precursor de todos los refactorings que requieren
+extraer código y hacer reemplazos contextuales.
 
-
-* Los refactorings
-
-:WRITE:
-explicación de lo que describe este párrafo
-:END:
-Varios cambios que formarían parte del refactoring si se realizara
-manualmente quedaron fuera del scope porque no vimos fácilmente cómo
-automatizarlo o por que dadas las limitaciones de tiempo no entraron
-dentro de la priorización. Dejamos asentadas acá qué cosas quedaron
-fuera y en qué categorías se encuentran. Además, explicamos cómo creemos
-que podrían resolverse en el futuro o cómo hacemos nosotros para guiar
-al usuario en las tareas manuales que debería realizar luego de aplicar
-el refactoring.
 
 ** Manipulación de código
 
-:WRITE:
-Esta sección tiene que explicar cómo se modifica el código y se genera
-nuevo. Por qué elegimos ~String~ por sobre el AST.
-:END:
+Los dos refactorings implementados deben generar nuevo código fuente o modificar
+código fuente existente y luego compilarlo en determinadas clases. Las dos
+formas que consideramos para operar con el códgio fueron:
 
-Las dos formas que consideramos para construirlo
-fueron:
-
-- Modificar el código fuente original, lo cual parecía más simple pero con un
-  modelo nulo. En lugar de representar las transformaciones con objetos
-  deberíamos realizarlas como transformaciones de texto.
+- Operar directamente con los ~String~ del código fuente ya sea para modificar
+  el código fuente de un ~CompiledMethod~ o para generar el de uno
+  nuevo. Parecía más simple pero con un modelo nulo. En lugar de representar las
+  transformaciones con objetos deberíamos realizarlas como transformaciones de
+  texto.
 
 - Obtener el AST del código fuente original, modificarlo y luego traducir el AST
-  transformado al código correspondiente.
+  transformado al código correspondiente o en el caso de un método nuevo generar
+  el AST y luego transformarlo al código correspondiente.
 
-representada por objetos, que luego pueda ser traducida a código fuente. La
-abstracción más utilizada para representar código fuente es el AST del
-mismo. Cuis tiene una jerarquía de objetos que representan los posibles nodos de
-un AST pero la construcción del árbol es realizada por el ~Parser~ a
-partir de un código fuente ya existente. Ese modelo del AST no incluye la
-posibilidad de relizarle modificaciones al mismo para luego generar un nuevo
-código fuente. Se decidió utilizar el modelo del AST para casos específicos en
-los cuales se podía reutilizar alguna funcionalidad incluida en él pero para la
+Cuis tiene una jerarquía de objetos que representan los posibles nodos de un AST
+pero la construcción del árbol es realizada por el ~Parser~ a partir de un
+código fuente ya existente. Ese modelo del AST no incluye la posibilidad de
+relizarle modificaciones al mismo para luego generar un nuevo código fuente. Por
+lo tanto, se decidió utilizar el modelo del AST para casos específicos en los
+cuales se podía reutilizar alguna funcionalidad incluida en él pero para la
 generación de nuevos métodos y modificaciones a códigos ya existentes se trabajó
 siempre directamente con el código fuente y su representación como
-~String~.
+~String~. Esta decisión en retrospectiva parece acertada.
