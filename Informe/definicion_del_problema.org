@@ -1,13 +1,6 @@
 * Justificación
+
 ** ¿Por qué refactorings automáticos de alto nivel?
-
-:SECTION_GOAL:
-Preguntas guía
-  - Cuál es el potencial de los refactorings automáticos de alto nivel
-  - Por qué creemos que son una buena herramienta
-
-Por qué refactorings
-:END:
 
 Los refactorings son una herramienta esencial del arsenal de los ingenieros de
 software para minimzar el incremento de la complejidad del software y así
@@ -50,15 +43,12 @@ de su realización ayudan a reducirlos:
      simple ver si efectivamente los refactorings automáticos mitigarían el
      riesgo de bajar la calidad del sistema. Sin embargo, existen
      consideraciones que nos llevan a intuir que este puede ser el caso.
-     :REFERENCE:
-     al que decía que con refactorings de patrones iban a poder probar más diseños
-     :END:
-     UNA REF postula que si los desarrolladores contaran con buenas herramientas
-     automáticas para realizar refactorings de alto nivel probarían más opciones
-     de diseño, lo cual les permitiría llegar a mejores diseños. No es
-     concluyente, pero si ciertas herramientas aportan a que los desarrolladores
-     lleguen a mejores diseños tienen una buena chance de aumentar la calidad de
-     los sistemas.
+     \cite{roberts99_practic} postula que si los desarrolladores contaran con
+     buenas herramientas automáticas para realizar refactorings de alto nivel
+     probarían más opciones de diseño, lo cual les permitiría llegar a mejores
+     diseños. No es concluyente, pero si ciertas herramientas aportan a que los
+     desarrolladores lleguen a mejores diseños tienen una buena chance de
+     aumentar la calidad de los sistemas.
 
 Los refactorings automáticos de alto nivel cuentan con el potencial de maximizar
 estos beneficios porque el scope de automatización sería mayor. Al reemplazar
@@ -68,24 +58,17 @@ superior, más cercano al nivel de la semántica del pensamiento del programador
 aumentaría la velocidad a la que puede probar diseños alternativos y así llegar
 a uno mejor.
 
-:REFERENCE:
-A survey of Software Refactoring
-:END:
-[La referencia] concluye que los refactorings automáticos de alto nivel son más
-escalables y performantes. También que los refactorings automáticos aumentan la
-velocidad de desarrollo, resultando en una reducción de costos y un aumento de
-la calidad del software porque los desarrolladores tienen la posibilidad de
+\cite{mens04_asurv} concluye que los refactorings automáticos de alto nivel son
+más escalables y performantes. También que los refactorings automáticos aumentan
+la velocidad de desarrollo, resultando en una reducción de costos y un aumento
+de la calidad del software porque los desarrolladores tienen la posibilidad de
 probar más cambios con menos esfuerzo.
 
 Al explorar refactorings de alto nivel surge la pregunta de cuán alto es
-convienente subir.
-:REFERENCE:
-(Refactoring Object-Oriented Frameworks)
-:END:
-(Refactoring Object-Oriented Frameworks) expone dos objetivos
-de los refactorings automáticos que se contraponen. Un objetivo es que el
-refactoring sea expresivo, que su nivel sea lo más alto posible para mantener al
-usuario lo más lejos posible de toda la complejidad que implica realizar el
+convienente subir. \cite{opdyke92_refac_objec_orien_framew} expone dos
+objetivos de los refactorings automáticos que se contraponen. Un objetivo es que
+el refactoring sea expresivo, que su nivel sea lo más alto posible para mantener
+al usuario lo más lejos posible de toda la complejidad que implica realizar el
 cambio, y el otro es que preserve el comportamiento. Cuanto más alto es su nivel
 más difícil es justificar que preservan el comportamiento del programa, por lo
 tanto queremos que los refactorings sean suficientemente pequeños para poder
@@ -95,38 +78,30 @@ abstractos para que sean útiles.
 Este trabajo busca sentar las bases para poder analizar los refactorings
 automáticos de alto nivel.
 
+
 ** Investigaciones más cercanas
 
-:REFERENCE:
-A Methodology for the Automated Introduction of Design Pattern
-:END:
-Este paper es similar porque busca implementar un refactoring que introduce un
-patrón de diseño. El foco está puesto en la identificación de transformaciones
-parciales que permitan reestructurar el programa desde un estado precursor
-elegido hasta uno con el patrón aplicado.  Toman este camino porque su principal
-objetivo es automatizar la generación de las transformaciones necesarias. Este
-objetivo es atractivo pero no necesariamente valioso. Todavía no contamos con la
-información necesaria para saber si ese nivel de abstracción es apropiado para
-los desarrolladores y si esas transformaciones son generalizables.
+\cite{cinnei99_ametho} es similar porque busca implementar un refactoring que
+introduce un patrón de diseño. El foco está puesto en la identificación de
+transformaciones parciales que permitan reestructurar el programa desde un
+estado precursor elegido hasta uno con el patrón aplicado.  Toman este camino
+porque su principal objetivo es automatizar la generación de las
+transformaciones necesarias. Este objetivo es atractivo pero no necesariamente
+valioso. Todavía no contamos con la información necesaria para saber si ese
+nivel de abstracción es apropiado para los desarrolladores y si esas
+transformaciones son generalizables.
 
-:REFERENCE:
-% REF
-%   - Automated refactoring to the Strategy design pattern
-%   - Automated refactoring of super-class method invocations to the Template Method design pattern
-%   - Automated refactoring to the Null Object design pattern
-:END:
-Estos 3 papers implementan la introducción de patrones de diseño de manera
-automática en Java. Además, automatizan la identificación de oportunidades para
-aplicar el refactoring. La herramienta evalua todo el código, identifica partes
-del mismo que se beneficiarían con la aplicación del refactoring y ofrece
-aplicarlo.
-:REFERENCE:
-a programmer-friendly refactoring tools
-:END:
-Los dos problemas principales que se pueden encontrar son que el
-nivel de automatización no se ajusta a las prácticas actuales de desarrollo y
-que las restricciones impuestas al código precursor para poder aplicar el
-refactoring son demasiado estrictas, perdiéndose así un gran número de casos.
+\cite{gaitani15_automat} \cite{zafeiris_2017} \cite{christo12_automat} Estos 3
+papers implementan la introducción de patrones de diseño de manera automática en
+Java. Además, automatizan la identificación de oportunidades para aplicar el
+refactoring. La herramienta evalua todo el código, identifica partes del mismo
+que se beneficiarían con la aplicación del refactoring y ofrece aplicarlo.
+Los dos problemas principales que se pueden encontrar son que el nivel de
+automatización no se ajusta a las prácticas actuales de desarrollo
+\cite{murphy00_programm} y que las restricciones impuestas al código precursor
+para poder aplicar el refactoring son demasiado estrictas, perdiéndose así un
+gran número de casos.
+
 
 * Valor de realizar este trabajo
 
@@ -166,10 +141,7 @@ cual lleva a que ese tipo de herramientas corran dos riesgos:
   tiempo realizarle modificaciones; lo cual resultará en un incremento
   del tiempo de desarrollo.
 
-Mientras no haya una manera precisa de expresar comprensibilidad y
-diseño del dominio la intervención humana será necesaria y proveerá una
-reducción de costos mayor que la utilización de refactorings
-:REFERENCE:
-la survey que decía que el 80% del costo del software es mantenimiento
-:END:
+Mientras no haya una manera precisa de expresar comprensibilidad y diseño del
+dominio la intervención humana será necesaria y proveerá una reducción de costos
+mayor que la utilización de refactorings \cite{bennet80_softw_maint_manag}
 completamente automáticos.
