@@ -233,7 +233,7 @@ instancia que ofrece la clase:
 #+BEGIN_SRC 
 refactoring := ExtractToMethodObject
   from: methodToExtract
-  toMehtodObjectClassNamed: #MethodObject
+  toMethodObjectClassNamed: #MethodObject
   subclassing: Object
   onCategory:'ThesisExamples'
   withExtractedVariablesToInstanceVariables: variablesNameMapping
@@ -471,7 +471,7 @@ decir que tenemos que pasarle al Method Object al instanciarlo para que pueda
 referenciarlas, son: ~aParam~, ~self~ y ~ivar~.
 
 
-** Cómo se identifican las variables a parametrizar?
+** ¿Cómo se identifican las variables a parametrizar?
 
 La identificación de las variables a parametrizar está reificada en un objeto
 llamado ~VariablesToExtractFinder~, el cual sigue la estructura que comúnmente
@@ -1326,59 +1326,52 @@ otras funcionalidades en Cuis.
 
 ** ~ExtractToMethodObjectRequest~
 
-Contiene todos los modelos correspondientes a todos los inputs, los crea y permite su acceso.
+Todos los valores que el usuario puede ingresar y modificar a través del
+formulario tienen un ~TextModel~ correspondiente con su contenido, el cual es
+utilizado para su ~Morph~ correspondiente. En el caso de los keywords deben
+incluso estar en una colección ordenada para conocer el orden elegido por el
+usuario. ~ETMORequest~ se encarga de crear todos estos modelos y contenerlos
+colaborando principalmente con el ~ETMOForm~, que se encarga de crear los
+~Morph~ s correspondientes a ellos. Además, provee el acceso a el contenido de
+estos modelos de una forma simple para que el ~ETMOApplier~ pueda crear el
+refactoring sin necesidad de conocer sobre modelos.
 
+** Aclaraciones adicionales
 
-* ¿Cómo se utiliza?
-
-El modelo ~ExtractToMethodObject~ colabora con un
-~RefactoringApplier~ y un ~ExtractToMethodObjectForm~ para
-ofrecerle la funcionalidad al usuario y que pueda configurar el refactoring. Una
-secuencia exitosa:
-
-:DIAGRAM:
-Un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
+:WRITE:
+Este próximo párrafo dónde tendría que estar?
 :END:
+Además, las validaciones que no dependen del input del usuario son realizadas
+también antes de presentarle el formulario al usuario, de esta forma si el
+método contiene una referencia a ~super~ el usuario se entera inmediatamente y
+no después de llenar todos los parámetros necesarios.
 
-:DIAGRAM:
-cómo es una secuencia exitosa
-un diagrama de objetos de las tres clases relacionadas. Lo hice en el cuaderno.
+:WRITE:
+Sacar esta aclaración si se detalla nada.
 :END:
+Al finalizar el refactoring si detectamos algo que probablemente deba ser
+modificado pero no es realizado automáticamente se le informa al usuario para
+que sepa las limitaciones del refactoring que aplicó.
 
-en Cuis se puede ver de esta forma:
-
-:DIAGRAM:
-secuencia de screenshots que muestran cómo se aplica.
-:END:
-
-Unan secuencia con un error sigue estos pasos:
-
-:DIAGRAM:
-un diagrama de secuencia que muestre como se relacionan. Lo hice en el cuaderno.
-:END:
-
-y en Cuis el usuario lo ve así:
-
-:DIAGRAM:
-secuencia de screenshots que muestran cómo se aplica.
-:END:
-
-Vemos que en este caso si alguna validación falla el usuario puede seguir
-modificando los parámetros hasta pasarla. Además, las validaciones que no
-dependen del input del usuario son realizadas también antes de presentarle el
-formulario al usuario, de esta forma si el método contiene una referencia a
-~super~ el usuario se entera inmediatamente y no después de llenar
-todos los parámetros necesarios. Al finalizar el refactoring si detectamos algo
-que probablemente deba ser modificado pero no es realizado automáticamente se le
-informa al usuario para que sepa las limitaciones del refactoring que aplicó.
 
 
 * Preservación del comportamiento
 
-:WRITE:
-resumir cómo ganamos confianza y los tests más importantes
-:END:
+Todo el compartamiento descripto del ~ExtractToMethodObject~ tiene tests
+automáticos que lo cubren. Además, se realizó una prueba automática en la cual:
 
-Aplicaré los refactorings a distintas partes de Cuis y después le voy a correr
-los tests.
+1. Se eligen $n$ métodos al azar de la imagen de Cuis.
 
+2. A todos se les aplica el refactoring programáticamente:
+
+  - Eligiendo nombres aleatorios para las variables de instancia, los keywords y los parámetros.
+  
+  - Con ~Object~ como superclase del Method Object.
+
+3. Se corren todos los tests de la imagen.
+
+El código de esta prueba también se incluye en el paquete de refactorings y
+permite ganar más confianza en que el refactoring implementado preserva el
+comportamiento de los métodos sobre los que se aplica. Los métodos se eligen al
+azar porque no tenemos forma de saber si hay alguna métrica sobre los mismos que
+prediga su propensión a que el refactoring no preserve su comportamiento.

@@ -4,6 +4,9 @@
 
 #+OPTIONS: d:nil
 
+#+LATEX_CLASS: article
+#+LATEX_HEADER: \usepackage{cite}
+
 * Introducción
 
 Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta y respuestas.
@@ -39,6 +42,7 @@ Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta
 #+INCLUDE: introduce_null_object.org
 
 
-bibliography:tesis.bib
+\bibliography{tesis}
+\bibliographystyle{authordate1}
 
 
