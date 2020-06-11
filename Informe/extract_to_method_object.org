@@ -1,4 +1,4 @@
-* Qué problema resuelve el Extract Method to Method Object?
+* ¿Qué problema resuelve el Extract Method to Method Object?
 
 El software evoluciona y con él todos sus componentes. Uno de ellos son los
 métodos, los cuales a medida que evolucionan ganan funcionalidad y se vuelven
@@ -11,19 +11,21 @@ más complejos. Los atributos más tangibles que reflejan esa complejidad son:
 
 - La cantidad de variables temporales que define y utiliza (colaboradores internos)
 
-cite:fowler99_refac Estos atributos reducen la entendibilidad del método, por lo
+
+\cite{fowler99_refac} Estos atributos reducen la entendibilidad del método, por lo
 tanto, su presencia indica la necesidad de aplicar un refactoring que reduzca su
 complejidad y permita entenderlo más fácilmente. Si la complejidad del método
 sigue aumentando se corre el riesgo de que el programador lo malinterprete, lo
 modifique o utilice erróneamente, y así introduzca un bug en el programa.
 
 Los atributos mencionados son un ejemplo de lo que se conoce comúnmente como
-smells.  Los smells son síntomas o atributos que se pueden identificar de forma
+smells. Los smells son síntomas o atributos que se pueden identificar de forma
 fácil en el código y suelen ser el reflejo de a la erorsión del diseño, de un
 problema en el modelo más profundo. En este caso, las dos principales razones
 que reducen la comprensibilidad de un método son:
 
 - Tiene múltiples responsabilidades
+
 - Opera en múltiples niveles de abstracción
 
 Un simple ejemplo que muestra un poco ambas es:
@@ -48,11 +50,6 @@ validación podría delegarse a otro objeto. Además, la validación llega hasta
 el detalle de qué atributos valida de los ingredientes, lo cual parece
 corresponder a una capa de abstracción más baja.
 
-:WRITE:
-Si sobra el tiempo
-
-Agregar un ejemplo de Extract Method
-:END:
 La primera herramienta para reducir la complejidad producida por esas razones es
 el refactoring Extract Method. Si el método cuenta con múltiples
 responsabilidades se pueden extraer y delegar a otros méotodos y si contiene
@@ -64,15 +61,10 @@ positivo para el sistema. Sin embargo, existen casos en los que Extract Method
 no se puede realizar o las formas en las que se puede realizar no consiguen un
 aumento de la entendibilidad del método o una reducción de su complejidad. Estos
 casos se caracterizan por cómo se utilizan las variables temporales
-cite:fowler99_refac, lo cual produce que cualquier sección significativa que se
-intenta extraer modifica más de una variable que luego se sigue utilizando.
-:WRITE:
-Si sobra el tiempo
+\cite{fowler99_refac}, lo cual produce que cualquier sección significativa que
+se intenta extraer modifica más de una variable que luego se sigue utilizando.
 
-Mostrar un ejemplos
-:END:
-
-En estos casos la sugerencia cite:fowler99_refac es utilizar el refactoring
+En estos casos la sugerencia \cite{fowler99_refac} es utilizar el refactoring
 Extract Method to Method Object ya que al convertir todas las variables
 temporales en variables de instancia se puede descomponer el comportamiento sin
 la limitación del acceso a las variables ya que todas comparten el contexto del
@@ -295,6 +287,7 @@ que no puedan ser aplicadas ya que las consideraremos inválidas.
 
 Estas validaciones son realizadas sobre el parámetro ~from: aCompiledMethod~.
 
+
 ** No puede contener referencias a la pseudovariable ~super~
 
 No se permite realizar el refactoring sobre métodos que contienen referencias a
@@ -348,6 +341,7 @@ MehtodObjectClass>>value
 ~CompiledMethod~ responde al mensaje ~sendsToSuper~ chequeando las instrucciones
 de su propio byte-code. Este es el mensaje que se utilizó para realizar el
 chequeo.
+
 
 ** No contiene asignaciones a variables que no sean temporales
 
@@ -428,7 +422,7 @@ son:
 - Empiza con una mayúscula.
 - Es un ~Symbol~.
 
-cite:goldberg83_small La única validación extra es realizada sobre la superclase
+\cite{goldberg83_small} La única validación extra es realizada sobre la superclase
 y consiste en verificar que no sea una metaclase, es decir, una instancia de
 ~Metaclass~. Sería inusual que un usuario elija una metaclase como superclase de
 la Method Object class porque entonces las instancias serían clases, lo cual es
@@ -437,6 +431,7 @@ en su protocolo el mensaje ~subclass:~ por lo cual no se puede heredar de ellas.
 
 
 * Validaciones sobre las variables de instancia de la clase del Method Object
+
 
 ** ¿Qué son las variables a parametrizar?
 
@@ -880,6 +875,7 @@ compilarle los métodos y para poder referenciarla desde el método a
 extraer. Respetando esa dependencia, es decir que 1 ocurra primero, el orden de
 los otros 3 pasos es aleatorio.
 
+
 ** 1. Creación de la Method Object class
 
 La creación de la clase del Method Object es simple en Smalltalk, las clases son
@@ -1232,6 +1228,7 @@ línea de vida, pertenecen a mensajes que responde la clase. Estos mensajes son
 de creación de instancias, y el resto, los que inciden sobre la línea de vida,
 son los que responde el objeto creado.
 
+
 ** ~ExtractToMethodObjectForm~
 
 ~ETMOApplier~ se encarga de crear una instancia del formulario y luego, como ya
@@ -1336,23 +1333,13 @@ colaborando principalmente con el ~ETMOForm~, que se encarga de crear los
 estos modelos de una forma simple para que el ~ETMOApplier~ pueda crear el
 refactoring sin necesidad de conocer sobre modelos.
 
+
 ** Aclaraciones adicionales
 
-:WRITE:
-Este próximo párrafo dónde tendría que estar?
-:END:
 Además, las validaciones que no dependen del input del usuario son realizadas
-también antes de presentarle el formulario al usuario, de esta forma si el
-método contiene una referencia a ~super~ el usuario se entera inmediatamente y
-no después de llenar todos los parámetros necesarios.
-
-:WRITE:
-Sacar esta aclaración si se detalla nada.
-:END:
-Al finalizar el refactoring si detectamos algo que probablemente deba ser
-modificado pero no es realizado automáticamente se le informa al usuario para
-que sepa las limitaciones del refactoring que aplicó.
-
+por el ~ETMOApplier~ también antes de presentarle el formulario al usuario, de
+esta forma si el método contiene una referencia a ~super~ el usuario se entera
+inmediatamente y no después de llenar todos los parámetros necesarios.
 
 
 * Preservación del comportamiento
