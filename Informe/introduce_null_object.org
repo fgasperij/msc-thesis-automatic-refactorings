@@ -1,4 +1,4 @@
-* Motivación y smells
+* ¿Qué problema resuelve Introduce Null Object?
 
 Existen pocos lenguajes de programación orientados a objetos, y de uso extendido
 ninguno, que no cuenten con una u otra forma de representar el valor especial
@@ -6,16 +6,17 @@ null. La utilización de null conlleva como principal riesgo el enviarle un
 mensaje o derefenciarlo, dependiendo el lenguaje utilizado, lo cual resulta en
 un error en runtime o una terminación abnormal del programa. La forma más simple
 de prevenir estos errores es realizar chequeos sobre las variables que se
-sospecha pueden contener null para evitar enviarles mensajes. Veamos un ejemplo
-en la clase =Behavior= de Cuis:
+sospecha puede contener null para evitar enviarles mensajes. Veamos un ejemplo
+en la clase ~Behavior~ de Cuis:
 
 #+BEGIN_SRC 
 Behavior>>allSuperclasses
 
-  "Answer an OrderedCollection of the receiver's
-   and the receiver's ancestor's superclasses. The first element is the
-   receiver's immediate superclass, followed by its superclass; the last
-   element is Object."
+  "Answer an OrderedCollection of the receiver's and the receiver's
+  ancestor's superclasses. The first element is the receiver's immediate
+  superclass, followed by its superclass; and subsequent superclasses,
+  and proceeding as long as there is a non-nil superclass.""
+
   | temp |
   
   ^ superclass
@@ -26,61 +27,52 @@ Behavior>>allSuperclasses
       temp]
 #+END_SRC
 
-En este caso se verifica si la variable de instancia =superclass= es nil para
-evitar enviarle el mensaje =allSuperclasses= y además por que la ausencia de
-:REFERENCE:
-Fowler
-:END:
+En este caso se verifica si la variable de instancia ~superclass~ es nil para
+evitar enviarle el mensaje ~allSuperclasses~, y además, por que la ausencia de
 superclase indica que estamos en la raíz de la jerarquía. Si null conlleva
 tantos riesgos, ¿por qué se utiliza con tanta frecuencia?  La utilización de
 null puede ser la forma más simple y barata de implementar un modelo en
 determinado estado o caso. Sin embargo, si los chequeos por null abundan las
-causas más comunes son:
+causas más comunes son \cite{fowler99_refac}:
 
-- que la variable de instancia sea lo que se llama un temporary field,
+- Que la variable de instancia sea lo que se llama un temporary field,
   un colaborador que no forma parte de la esencia del objeto y por lo
   tanto no es necesario siempre; en los casos en los que no es necesario
   es nil.
 
-- que falte una abstracción en el modelo para representar la ausencia de
+- Que falte una abstracción en el modelo para representar la ausencia de
   un tipo de objetos.
 
-:REFERENCE:
-Fowler y Woolf
-:END:
-Fowler y Woolf describen que la motivación para realizar el refactoring son
-repetidos chequeos por nil de un colaborador. Los condicionales reducen la
-entendibilidad del código y al chequear siempre la misma condición producen
-código repetido, lo cual suele aumentar la posibilidad de que el programador
-introduzca bugs olvidándose de chequear por nil antes de enviarle un mensaje al
-colaborador correspondiente. Una de las principales herramientas del paradigma
-de objetos para lidiar con la proliferación de condicionales repetidos en el
-código es la utilización de polimorfismo. En lugar de chequear manualmente en
-qué tipo de situación nos encontramos para decidir qué hacer, se envía un
-mensaje polimórfico a un objeto que realizará la tarea correspondiente para esa
-situación dependiendo de su tipo. La introducción de un Null Object sigue esta
-guía. Se reemplazará la utilización de nil por un Null Object, un objeto que
-representa la ausencia o la nada del tipo correspondiente y encapsula el
-comportamiento necesario en las situaciones en las cuales hay una ausencia de
-ese tipo. Al contar con un Null Object ya no es necesario verificar si el objeto
-es nil, nunca debería ser nil, y se le puede enviar los mismos mensajes que a un
-Concrete Object, ya que son polimórficos, contando con que el Null Object sabrá
-qué hacer. Además de reducir la complejidad del código la introducción del Null
-Object consigue que las extensiones futuras sean más seguras, ya que no hay que
-chequear por nil, y más mantenibles porque si se requiere cierto comportamiento
-adicional en un caso en el que el colaborador está ausente el cambio quedará
-encapsulado en la clase del Null Object.
+\cite{fowler99_refac} y \cite{woolf96_thenull} describen que la motivación para
+realizar el refactoring son repetidos chequeos por nil de un colaborador. Los
+condicionales reducen la entendibilidad del código y al chequear siempre la
+misma condición producen código repetido, lo cual suele aumentar la posibilidad
+de que el programador introduzca bugs olvidándose de chequear por nil antes de
+enviarle un mensaje al colaborador correspondiente. Una de las principales
+herramientas del paradigma de objetos para lidiar con la proliferación de
+condicionales repetidos en el código es la utilización de polimorfismo. En lugar
+de chequear manualmente en qué tipo de situación nos encontramos para decidir
+qué hacer, se envía un mensaje polimórfico a un objeto que realizará la tarea
+correspondiente para esa situación dependiendo de su tipo. La introducción de un
+Null Object sigue esta guía. Se reemplazará la utilización de nil por un Null
+Object, un objeto que representa la ausencia o la nada del tipo correspondiente
+y encapsula el comportamiento necesario en las situaciones en las cuales hay una
+ausencia de ese tipo. Al contar con un Null Object ya no es necesario verificar
+si el objeto es nil, nunca debería ser nil, y se le pueden enviar los mismos
+mensajes que a un Concrete Object, ya que son polimórficos, contando con que el
+Null Object sabrá qué hacer. Además de reducir la complejidad del código la
+introducción del Null Object consigue que las extensiones futuras sean más
+seguras, ya que no hay que chequear por nil, y más mantenibles porque si se
+requiere cierto comportamiento adicional en un caso en el que el colaborador
+está ausente el cambio quedará encapsulado en la clase del Null Object.
 
-:WRITE:
-En el paper de null object hay una buena introducción, si estoy falto de ideas puedo sacar de ahí.
-:END:
 
 * ¿En qué consiste?
 
 La esencia del refactoring es el reemplazo de condicionales que chequean si una
-variable es nil o no por el envío de un mensaje polimórfico.  Conseguir ese
-objetivo requiere de varios pasos que tienen varias alternativas de
-implementación:
+variable es nil o no por el envío de un mensaje polimórfico. Conseguir ese
+objetivo requiere de la creación de nuevas clases en una jerarquía, de varias
+posibles, y otros varios pasos implementación:
 
 1. Crear una jerarquía para el Null Object.
 
@@ -92,35 +84,68 @@ implementación:
 4. Mover el comportamiento requerido para los casos en los que el objeto es nil
    al Null Object.
 
-Llamaremos NullComponent a la clase del Null Object y Component a la clase del
-objeto que representa un componente que no es nil. El NullComponent será
-polimórfico con el Component pero no contiene estado porque sus métodos no
-tienen comportamiento, están vacíos, o devuelven alguna constante, en ocasiones
+Llamaremos ~NullComponent~ a la clase del Null Object y ~Component~ a la clase
+del objeto que representa un componente que no es nil. El ~NullComponent~ será
+polimórfico con el ~Component~ pero no contiene estado porque sus métodos no
+tienen comportamiento: están vacíos, o devuelven alguna constante, en ocasiones
 en forma de un Null Object de otro tipo.  En un lenguaje dinámico como Smalltalk
 no es necesario que exista una relación de herencia entre las clases para que
 puedan utilizarse indistintamente como en el caso de lenguajes estáticamente
 tipados. De todas formas se elige utilizar una relación de herencia y relacionar
-al Component y al NullComponent en una misma jerarquía para dejar la relación
+al ~Component~ y al ~NullComponent~ en una misma jerarquía para dejar la relación
 entre las dos explícita. La jerarquía que los relaciona puede tomar varias
-formas:
+formas como se ha descrito en \cite{gaitani15_automat}:
 
-:DIAGRAM:
-NullObject hierarchy diagram
-:END:
+#+BEGIN_SRC plantuml :file diagrams/introduce_null_object_hierarchy_simple.png
+Context -> Component
+Component <|-- NullComponent
+#+END_SRC
 
-La primer y más simple alternativa es la propuesta por Fowler. La principal
-ventaja de esta alternativa es que no requiere cambiar la clase Component; su
-principal desventaja es que si se le agregan mensajes a la interfaz de Component
-el NullComponent los heredará y si no se recuerda reescribirlos en el
-NullComponent con el comportamiento correcto para el NullComponent el programa
-tendrá comportamientos inesperados. La segunda alternativa no tiene la
-desventaja que vimos en la primera y es por eso que suele preferirse por sobre
-ella.
+#+RESULTS:
+[[file:diagrams/introduce_null_object_hierarchy_simple.png]]
 
-Luego de armar la jerarquía se deberán sobrescribir todos los mensajes de la
-interfaz de Component en NullComponent con un comportamiento vacío. Luego de
-realizar esto se reemplazarán las asignaciones de nil a la variable de
-instancia. Por ejemplo:
+La primer y más simple alternativa es la propuesta por Fowler
+\cite{fowler99_refac}. La principal ventaja de esta alternativa es que no
+requiere cambiar la clase ~Component~, lo cual la hace una buena candidata
+cuando el código de ~Component~ está en una librería por ejemplo; su principal
+desventaja es que si se le agregan mensajes a la interfaz de ~Component~ el
+~NullComponent~ los heredará y si no se recuerda reescribirlos en el
+~NullComponent~ con el comportamiento correcto para el ~NullComponent~ el
+programa tendrá comportamientos inesperados.
+
+#+BEGIN_SRC plantuml :file diagrams/introduce_null_object_hierarchy_abstract.png
+Context -> AbstractComponent
+AbstractComponent <|-- Component
+AbstractComponent <|-- NullComponent
+#+END_SRC
+
+#+RESULTS:
+[[file:diagrams/introduce_null_object_hierarchy_abstract.png]]
+
+La segunda alternativa no tiene la desventaja que vimos en la primera y es por
+eso que suele preferirse por sobre ella. El único problema que podría
+presentarse es si ~Component~ ya hereda de alguna clase en un lenguaje sin
+herencia múltiple.
+
+#+BEGIN_SRC plantuml :file diagrams/introduce_null_object_hierarchy_interface.png
+interface IComponent
+Context -> IComponent
+IComponent <|.. Component
+IComponent <|.. NullComponent
+#+END_SRC
+
+#+RESULTS:
+[[file:diagrams/introduce_null_object_hierarchy_interface.png]]
+
+Esta tercer alternativa es similar a la segunda pero no requiere que las clases
+hereden de una clase en común sino que implementen una misma interfaz, lo cual
+requiere que el lenguaje provea interfaces.
+
+Luego de armar la jerarquía, que por ahora asumiremos que la alternativa elegida
+es la segunda, se deberán implementar todos los mensajes de la interfaz de
+~Component~ en ~NullComponent~ con un comportamiento vacío. Luego de realizar
+esto se reemplazarán las asignaciones de nil a la variable de instancia. Por
+ejemplo:
 
 #+BEGIN_SRC 
 Context>>initialize
@@ -132,9 +157,9 @@ Context>>initialize
   component := NullComponent new.
 #+END_SRC
 
-Algunas asignaciones pueden tener como lado derecho el envío de un
-mensaje el cual puede devolver nil. Esos casos deben reemplazarse por
-una delegación que permita asignar el Null Object:
+Algunas asignaciones pueden tener como lado derecho el envío de un mensaje el
+cual puede devolver nil. Esos casos deben reemplazarse por una delegación que
+permita asignar el Null Object:
 
 #+BEGIN_SRC 
 Context>>sendTask
@@ -149,33 +174,35 @@ Context>>sendTask
     self assignComponentWith: (self latestComponent).
 #+END_SRC
 
-Se agrega un mensaje que asignará a la variable de instancia una
-instancia de NullComponent cuando el valor que devuelva la colaboración
-del lado derecho sea nil. Esto debe ser así cuando no tenemos control
-sobre esas colaboraciones o queremos encapsular la utilización del
-NullComponent a cierta parte del código, si se reemplazan todos los
-lugares donde se utiliza un nil, en lugar de un Component, por un
-NullComponent entonces el mensaje de asignación no debería ser
-necesario.
+Se agrega un mensaje que asignará a la variable de instancia una instancia de
+~NullComponent~ cuando el valor que devuelva la colaboración del lado derecho
+sea nil. Esto debe ser así cuando no tenemos control sobre esas colaboraciones o
+queremos encapsular la utilización del ~NullComponent~ a cierta parte del
+código, si se reemplazan todos los lugares donde se utiliza un nil en lugar de
+un ~Component~ por un ~NullComponent~ entonces el mensaje de asignación no
+debería ser necesario.
 
 Luego de realizar las operaciones anteriores la variable de instancia
-=component= no debería contener en ningún caso nil, solo instancias de
-Component o NullComponent. El siguiente y último paso es reemplazar los
-condicionales por el envío de mensajes polimórficos y el traslado del
-comportamiento de nil al NullComponent:
+~component~ no debería contener en ningún caso nil, solo instancias de ~Component~
+o ~NullComponent~. El siguiente y último paso es reemplazar los condicionales por
+el envío de mensajes polimórficos y el traslado del comportamiento de nil al
+~NullComponent~:
 
 #+BEGIN_SRC 
-Context>>launchRocket
-    rocketHeight := component ifNil: [0] ifNotNil: [component ignite].
+CompiledMethod>>compilerClass
+  ^self methodClass 
+    ifNil: [Compiler] 
+    ifNotNil: [:class | class compilerClass].
 
 "Luego de aplicar el refactoring"
 
-NullComponent>>ignite
-    ^0
+NullClass>>compilerClass
+    ^Compiler
 
-Context>>launchRocket
-    rocketHeight := component ignite.
+CompiledMethod>>compilerClass
+    ^self methodClass compilerClass.
 #+END_SRC
+
 
 * Descripción completa de la funcionalidad del refactoring implementado
 
@@ -330,6 +357,7 @@ polimórfico es =polymorphicSelector= y el nombre del parámetro =aUnit=.
 :DIAGRAM:
 un diagrama de objetos mostrando cómo intereactúan INO y RINWPP
 :END:
+
 
 * Funcionalidad de ReplaceIfNilWithPolymorphismParameters
 
