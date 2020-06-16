@@ -67,12 +67,11 @@ requiere cierto comportamiento adicional en un caso en el que el colaborador
 está ausente el cambio quedará encapsulado en la clase del Null Object.
 
 
-* ¿En qué consiste?
+* ¿Cuáles son los pasos para aplicarlo?
 
 La esencia del refactoring es el reemplazo de condicionales que chequean si una
 variable es nil o no por el envío de un mensaje polimórfico. Conseguir ese
-objetivo requiere de la creación de nuevas clases en una jerarquía, de varias
-posibles, y otros varios pasos implementación:
+objetivo requiere a grandes rasgos los siguientes pasos:
 
 1. Crear una jerarquía para el Null Object.
 
@@ -84,17 +83,55 @@ posibles, y otros varios pasos implementación:
 4. Mover el comportamiento requerido para los casos en los que el objeto es nil
    al Null Object.
 
+El paso 1 es el único que debe realizarse antes que el resto, los demás se
+pusieron en cierto orden para mayor claridad pero no es necesario que se
+realicen en ese orden para todos los chequeos por nil, podrían realizarse para
+cada chequeo por nil todos antes de pasar al siguiente.
+
+Además, es importante aclarar que estos pasos asumen que el scope del Null
+Object es una clase. Si el scope fuera todo el sistema habría que considerar que
+quizás el valor del ivar que contiene al Null Object puede ser la respuesta de
+un mensaje y el emisor del mensaje debería también ser modificado para colaborar
+con el Null Object y no con nil. Por ejemplo:
+
+#+BEGIN_SRC
+Client>>doSomething
+  context mayReturnNilMessage
+    ifNil: [^0]
+    ifNotNil: [ ^self somethingThatOnlyNeedsToBeDoneWhenAnswerIsNotNull ].
+    
+"Asumamos que ContextClass es modificada de forma tal que mayReturnNilMessage
+conteste aComponent o aNullComponent, pero nunca nil. De se así, en los casos
+que conteste aNullComponent se evaluará el bloque pasado ifNotNil: el cual
+enviará un mensaje que solo debería enviarse cuando la respuesta no es null,
+lo cual es un comportamiento no deseado. Esto se puede adaptar a la respuesta de
+un NullObject en lugar de nil de la siguiente manera:"
+
+Client>>doSomething
+  context wontReturnNilMessage polymorphicReplacement: self.
+
+Component>>polymorphicReplacement: client
+  ^client somethingThatOnlyNeedsToBeDoneWhenAnswerIsNotNull.
+
+NullComponent>>polymorphicReplacement: client
+  ^0.
+#+END_SRC
+
+** La jerarquía
+
 Llamaremos ~NullComponent~ a la clase del Null Object y ~Component~ a la clase
-del objeto que representa un componente que no es nil. El ~NullComponent~ será
+del objeto que representa un componente que no es nil. El ~NullComponent~ es
 polimórfico con el ~Component~ pero no contiene estado porque sus métodos no
 tienen comportamiento: están vacíos, o devuelven alguna constante, en ocasiones
-en forma de un Null Object de otro tipo.  En un lenguaje dinámico como Smalltalk
-no es necesario que exista una relación de herencia entre las clases para que
-puedan utilizarse indistintamente como en el caso de lenguajes estáticamente
-tipados. De todas formas se elige utilizar una relación de herencia y relacionar
-al ~Component~ y al ~NullComponent~ en una misma jerarquía para dejar la relación
-entre las dos explícita. La jerarquía que los relaciona puede tomar varias
-formas como se ha descrito en \cite{gaitani15_automat}:
+en forma de un Null Object de otro tipo. En un lenguaje dinámico como Smalltalk
+no es necesario que exista una relación de herencia entre las clases o que
+pertenezcan a la misma jerarquía para que puedan utilizarse indistintamente,
+como es el caso en lenguajes estáticamente tipados. De todas formas, en este
+trabajo se eligió utilizar una relación de herencia y relacionar al ~Component~
+y al ~NullComponent~ en una misma jerarquía para que la relación entre las dos
+sea explícita, lo cual podría incrementar la entendibilidad del modelo. La
+jerarquía que los relaciona puede tomar varias formas como se ha descrito en
+\cite{gaitani15_automat}:
 
 #+BEGIN_SRC plantuml :file diagrams/introduce_null_object_hierarchy_simple.png
 Context -> Component
@@ -141,15 +178,18 @@ Esta tercer alternativa es similar a la segunda pero no requiere que las clases
 hereden de una clase en común sino que implementen una misma interfaz, lo cual
 requiere que el lenguaje provea interfaces.
 
-Luego de armar la jerarquía, que por ahora asumiremos que la alternativa elegida
-es la segunda, se deberán implementar todos los mensajes de la interfaz de
+
+** Reemplazo de las asignaciones
+
+Luego de armar la jerarquía, que por ahora asumiremos que se corresponde con la
+segunda alternativa, se podrían implementar todos los mensajes de la interfaz de
 ~Component~ en ~NullComponent~ con un comportamiento vacío. Luego de realizar
 esto se reemplazarán las asignaciones de nil a la variable de instancia. Por
 ejemplo:
 
 #+BEGIN_SRC 
 Context>>initialize
-  component := null.
+  component := nil.
 
 "Pasará a ser"
 
@@ -158,34 +198,42 @@ Context>>initialize
 #+END_SRC
 
 Algunas asignaciones pueden tener como lado derecho el envío de un mensaje el
-cual puede devolver nil. Esos casos deben reemplazarse por una delegación que
-permita asignar el Null Object:
+cual puede que en algunos casos responda ~nil~ y en otros no. Esos casos deben
+reemplazarse por una delegación que permita asignar el Null Object cuando la
+respuesta es ~nil~:
 
 #+BEGIN_SRC 
-Context>>sendTask
-    component := self latestComponent.
+Context>>performTask
+    component := self mayAnswerNilMessage.
 
 "Se reemplazará por:"
 
-Context>>assignComponentWith: aComponentOrNull
-    component := aComponentOrNull ifNil: [NullComponent new] ifNotNil: [aComponentOrNull].
+Context>>assignComponentWith: aComponentOrNil
+  component :=
+    aComponentOrNil ifNil: [NullComponent new] ifNotNil: [aComponentOrNil].
 
-Context>>sendTask
-    self assignComponentWith: (self latestComponent).
+Context>>performTask
+    self assignComponentWith: (self mayAnswerNilMessage).
 #+END_SRC
 
 Se agrega un mensaje que asignará a la variable de instancia una instancia de
 ~NullComponent~ cuando el valor que devuelva la colaboración del lado derecho
 sea nil. Esto debe ser así cuando no tenemos control sobre esas colaboraciones o
 queremos encapsular la utilización del ~NullComponent~ a cierta parte del
-código, si se reemplazan todos los lugares donde se utiliza un nil en lugar de
-un ~Component~ por un ~NullComponent~ entonces el mensaje de asignación no
-debería ser necesario.
+código, el scope de la clase ~Context~ como ya mencionamos antes por ejemplo. Si
+se reemplazan todos los lugares, en todo el sistema, donde se utiliza un nil en
+lugar de un ~Component~ por un ~NullComponent~ entonces el mensaje de asignación
+no debería ser necesario.
 
 Luego de realizar las operaciones anteriores la variable de instancia
-~component~ no debería contener en ningún caso nil, solo instancias de ~Component~
-o ~NullComponent~. El siguiente y último paso es reemplazar los condicionales por
-el envío de mensajes polimórficos y el traslado del comportamiento de nil al
+~component~ no debería contener en ningún caso dentro del scope de la clae
+~Context~ nil, solo instancias de ~Component~ o ~NullComponent~.
+
+
+** Reemplazo de los condicionales
+
+El siguiente y último paso es reemplazar los condicionales por el envío de
+mensajes polimórficos y el traslado del comportamiento de nil al
 ~NullComponent~:
 
 #+BEGIN_SRC 
@@ -202,6 +250,10 @@ NullClass>>compilerClass
 CompiledMethod>>compilerClass
     ^self methodClass compilerClass.
 #+END_SRC
+
+Este es un caso simple, más adelante, al describir la implementación de este
+trabajo se verán las particularidades que pueden surgir en función de lo que
+contienen los bloques ~ifNil~: e ~ifNotNil:~.
 
 
 * Descripción completa de la funcionalidad del refactoring implementado
@@ -237,6 +289,7 @@ refactoring apply.
 =IntroduceNullObject= es subclase de =Refactoring= y por lo tanto sobrescribe el
 mensaje =apply=. Los colaboradores que recibe en el mensaje de creación de
 instancia son los que necesita para poder aplicar el refactoring.
+
 
 ** La variable de instancia y la clase
 
@@ -282,6 +335,7 @@ todo los condicionales modificados serán sobre esa variable. La única
 precondición que incluye a la variable de instancia o a la clase es la que
 verifica que la variable pertenezca a la clase.
 
+
 ** La jerarquía de Null Object
 
 La jerarquía que se asumirá será aquella en la que Component y NullComponent
@@ -291,6 +345,7 @@ precondición con respecto a las clases Component y NullComponent es que no sean
 iguales. Si se utilizara la misma clase no se podrían enviar mensajes
 polimórficos que se respondan de forma distinta dependiendo el tipo de la
 variable.
+
 
 ** Los argumentos para los condicionales a reemplazar
 
@@ -393,12 +448,14 @@ las variables a parametrizar en los bloques y que no existan colisiones entre
 los nombres de los parámetros del mensaje polimórfico y las variables temporales
 de los bloques que recibe el chequeo por nil como argumento.
 
+
 ** Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters
 
 =IntroduceNullObject= valida que los selectores seleccionados para los mensajes
 polimórficos no colisionen con otro mensaje de la jerarquía del Null Object.
 
-** Aplicación del refactoring
+
+* Aplicación del refactoring
 
 Al contar con la colección de =ReplaceIfNilWithPolymorphismParameters= la
 aplicación del refactoring reemplaza cada uno de esos chequeos de nil con lo
@@ -466,7 +523,8 @@ Encoder. La construcción del envío del mensaje la realiza el
 =ReplaceIfNilWithPolymorphismParameters= correspondiente, ya que cuenta con el
 mapeo entre variable a parametrizar y keyword del selector polimórfico.
 
-** ¿Cómo se utiliza?
+
+* ¿Cómo se utiliza?
 
 El usuario puede iniciar el refactoring desde el listado de clases en el System
 Browser porque lo que necesita el =RefactoringApplier= para iniciar la obtención
@@ -492,7 +550,8 @@ y la experiencia para el usuario sería:
 mostrar el paso a paso de aplicación del refactoring.
 :END:
 
-** Comentarios adicionales
+
+* Comentarios adicionales
 
 :WRITE:
 ¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas
@@ -506,7 +565,8 @@ en un sistema dinámico como Smalltalk. Pero tiene ventajas y desventajas
 realizarlo de esta manera, si lo vamos aplicando progresivamente podemos
 identificar más fácil si algo se rompe y dónde.
 
-** Preservación del comportamiento
+
+* Preservación del comportamiento
 
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a
 correr los tests.
