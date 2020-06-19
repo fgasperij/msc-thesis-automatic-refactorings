@@ -258,15 +258,12 @@ contienen los bloques ~ifNil~: e ~ifNotNil:~.
 
 * Descripción completa de la funcionalidad del refactoring implementado
 
-El modelo de IntroduceNullObject es más complejo que el de
-:REFERENCE:
-TDD
-:END:
-ExtractToMethodObject. Ambos fueron desarrollados utilizando TDD y la principal
-diferencia que se encontró es que al empezar a desarrollar de manera incremental
-las precondiciones del refactoring eran complejas y requerían que las
-estructuras recibidas por el objeto central del modelo, el encargado de aplicar
-el refactoring, una instancia de la clase =IntroduceNullObject=, fueran también
+El modelo de ~IntroduceNullObject~ es más complejo que el de
+~ExtractToMethodObject~. Ambos fueron desarrollados utilizando TDD
+\cite{beck02_testdri} y la principal diferencia que se encontró es que las
+precondiciones del refactoring eran complejas y requerían que las estructuras
+recibidas por el objeto central del modelo, el encargado de aplicar el
+refactoring, una instancia de la clase ~IntroduceNullObject~, fueran también
 complejas (colleciones con varios niveles de profundidad). Resultó conveniente
 repartir las responsabilidades y encapsular las distintas estructuras que
 necesita el refactoring en otros objetos que luego éste recibirá. Las
@@ -278,71 +275,71 @@ El refactoring se utiliza de la siguiente manera:
 
 #+BEGIN_SRC
 refactoring := IntroduceNullObject
-    on: 'ivar1'
-    of: aRocket class
-    usingAsConcreteClass: ConcreteFuelTank
-    usingAsNullClass: NullFuelTank
+    on: 'numerator'
+    of: Fraction
+    usingAsConcreteClass: Integer
+    usingAsNullClass: NullInteger
     for: replacementParameters
+
 refactoring apply.
 #+END_SRC
 
-=IntroduceNullObject= es subclase de =Refactoring= y por lo tanto sobrescribe el
-mensaje =apply=. Los colaboradores que recibe en el mensaje de creación de
-instancia son los que necesita para poder aplicar el refactoring.
+~IntroduceNullObject~ es subclase de ~Refactoring~ y por lo tanto sobrescribe el
+mensaje ~apply~.
 
+** El scope del refactoring: la clase y su variable de instancia
 
-** La variable de instancia y la clase
+Hasta ahora el refactoring Introduce Null Object parece aplicarse a un tipo. El
+tipo que utilizamos de referencia era ~Component~ y los cambios, reemplazo de
+asignaciones de nil o chequeos por nil, se realizaban sin un scope determinado,
+es decir, se aplicaban a lo largo de todo el sistema sobre las variables de ese
+tipo. Esto no es posible en Cuis porque es un sistema dinámico, las variables no
+tienen tipo, solo los valores. Lo que sí sucede a menudo, es que se utilicen
+variables que siempre contienen el mismo tipo. Los tipos de variables en Cuis son:
 
-En el keyword =on:= recibe el nombre de la variable de instancia que se
-reemplazará por el Null Object. Hasta ahora el refactoring Introduce Null Object
-parecía aplicarse a un tipo. El tipo que utilizamos de referencia era Componente
-y los cambios, reemplazo de asignaciones de nil o chequeos por nil, se
-realizaban sin un scope determinado, es decir, se aplicaban a lo largo de todo
-el sistema. Realizar algo así en un sistema dinámico como Cuis no es posible sin
-sacrificar demasiada confianza sobre la preservación del comportamiento del
-refactoring. El proceso para encontrar todos los lugares en los que se utiliza
-una instancia de la clase Component no es claro y, aunque lo fuera, como los
-tipos son dinámicos la variable podría contener un conjunto de tipos durante su
-vida, no solo Component, dependiendo el momento de ejecución.  Por último
-siempre queda el problema de la metaprogramación que vuelve inútil cualquier
-intento de inferencia de tipos estática. Por esta razón decidimos darle al
-cambio un scope determinado y que el usuario guíe al refactoring con su
-conocimiento del modelo.
+- argumento de método o bloque
 
-El scope elegido es el de una clase. La clase provee un equilibrio entre el
-método, que sería demasiado restrictivo, probablemente existan pocos casos en
-los que se justifique introducir este refactoring solo para eliminar los
-condicionales de un solo método, y todo el sistema, ya que no existe un scope
-claro más grande que la clase o por lo menos Cuis no lo provee ya que las
-categorías o los paquetes no permiten ese tipo de funcionalidad. La clase que se
-utilizará como contexto es la recibida en el keyword =of:=.
+- temporal de método o bloque
 
-Dentro de una clase se eligirá un colaborador interno o variable de instancia en
-particular sobre la cual se realicen chequeos por nil para aplicar el
-refactoring. Al no contar con un tipo específico para buscar todas las variables
-es necesario fijar la o las variables que el programador, por su conocimiento
-del modelo, ya sabe que deberían pertenecer a ese tipo. Esto se apoya en las
-ventajas ya expuestas de floss refactoring, el caso en el que el programador
-tiene claro el cambio que quiere realizar y la herramienta lo automatiza para
-reducir la posibilidad de errores y aumentar la velocidad de ejecución. La
-herramienta no asume entender el modelo ni poder cambiarlo sin guía del
-usuario. Se elige como variable a fijar una variable de instancia porque son las
-variables que están disponibles a través de todo el scope de la clase y son más
-comunes que las variables de clase o las variables de pool.
+- variable de instancia
 
-El refactoring tendrá como objeto central a la variable de instancia elegida,
-todo los condicionales modificados serán sobre esa variable. La única
-precondición que incluye a la variable de instancia o a la clase es la que
-verifica que la variable pertenezca a la clase.
+- variable de clase
+
+- variable de pool
+
+- variables globales, aquellas que se encuentran definidas en el diccionario
+  global ~Smalltalk~.
+
+Los tipos más utilizados son los tres primeros, que tienen scope de método o
+bloque y de clase, repectivamente. En esta implementación el scope elegido fue
+la clase y la variable de instancia en particular, porque son ampliamente
+utilizadas y suelen contener el mismo tipo. El método es demasiado restrictivo,
+probablemente existan pocos casos en los que se justifique introducir este
+refactoring solo para eliminar los condicionales de un solo método. La clase que
+se utilizará como contexto es la recibida en el keyword ~of:~ y en el keyword
+~on:~ recibe el nombre de la variable de instancia que es chequeada por nil.  El
+refactoring se aplicará para modificar los chequeos por nil que se realicen en
+la clase sobre la variable de instancia recibida como parámetros. El
+programador, por su conocimiento del modelo, ya sabe que deberían pertenecer a
+ese tipo. Esto se apoya en las ventajas ya expuestas de floss refactoring, el
+caso en el que el programador tiene claro el cambio que quiere realizar y la
+herramienta lo automatiza para reducir la posibilidad de errores y aumentar la
+velocidad de ejecución. La herramienta no asume entender el modelo ni poder
+cambiarlo sin guía del usuario. 
+
+*Validación sobre la variable de instancia y la clase*
+
+La única precondición que incluye a la variable de instancia o a la clase es la
+que verifica que la variable pertenezca a la clase.
 
 
 ** La jerarquía de Null Object
 
-La jerarquía que se asumirá será aquella en la que Component y NullComponent
-heredan de AbstractComponent, veremos por qué más adelante. Sin embargo, no es
+La jerarquía que se asumirá será aquella en la que ~Component~ y ~NullComponent~
+heredan de ~AbstractComponent~, veremos por qué más adelante. Sin embargo, no es
 necesario que efectivamente la implementen, no es una precondición. La única
-precondición con respecto a las clases Component y NullComponent es que no sean
-iguales. Si se utilizara la misma clase no se podrían enviar mensajes
+precondición con respecto a las clases ~Component~ y ~NullComponent~ es que no
+sean iguales. Si se utilizara la misma clase no se podrían enviar mensajes
 polimórficos que se respondan de forma distinta dependiendo el tipo de la
 variable.
 
@@ -356,23 +353,23 @@ condicionales soportados por el refactoring no son más que un conjunto mensajes
 
 - Nil Selectors
 
-  - =ifNil:=
+  - ~ifNil:~
 
-  - =ifNil:ifNotNil:=
+  - ~ifNil:ifNotNil:~
 
-  - =ifNotNil:=
+  - ~ifNotNil:~
 
-  - =ifNotNil:ifNil:=
+  - ~ifNotNil:ifNil:~
 
 - Boolean Selectors
 
-  - =ifTrue:=
+  - ~ifTrue:~
 
-  - =ifTrue:ifFalse:=
+  - ~ifTrue:ifFalse:~
 
-  - =ifFalse:=
+  - ~ifFalse:~
 
-  - =ifFalse:ifTrue:=
+  - ~ifFalse:ifTrue:~
 
 Los Nil Selectors siempre tienen que tener como receptor del mensaje a la
 variable de instancia y los Boolean Selectors tienen que tener como receptor del
@@ -407,26 +404,130 @@ NullComponent>>polymorphicSelector: aUnit
 
 El usuario deberá elegir el selector polimórfico y los nombres de los parámetros
 para las variables a parametrizar. En el ejemplo anterior el selector
-polimórfico es =polymorphicSelector= y el nombre del parámetro =aUnit=.
+polimórfico es ~polymorphicSelector~ y el nombre del parámetro ~aUnit~.
 
 :DIAGRAM:
-un diagrama de objetos mostrando cómo intereactúan INO y RINWPP
+un diagrama de secuencia mostrando cómo intereactúan INO y RINWPP
 :END:
 
+:WRITE:
+Qué son las variables a parametrizar? Es lo mismo que en ETMO? Si es lo mismo
+hacer un vínculo
+:END:
+
+El keyword ~for:~ del mensaje de creación de instancias recibe una colección de
+~ReplaceIfNilWithPolymorphismParameters~. Éstos objetos, su estructura y
+comportamiento, serán descriptos en una sección dedicada exclusivamente a
+ellos. Varias de las validaciones que se deben realizar sobre estos parámetros
+ya están encapsuladas en ellos, por lo tanto, como los recibimos instanciados no
+es necesario repetirlas aquí. Las validaciones que sí se les realizan a estos
+parámetros aquí porque son particulares del ~IntroduceNullObject~ son:
+
+- Los bloques no contienen referencias a ~super~: los bloques son los que reciben
+  los selectores ya mencionados, Nil Selectors y Boolean Selectors. No pueden
+  :REFERENCE:
+  A la parte de ETMO en la que explico esto.
+  :END:
+  contener ~super~ por la misma razón que los métodos de ~ExtractToMethodObject~
+  no pueden.
+  
+- Los bloques no contienen asignaciones a variables que no son temporales del
+  bloque: en este caso se decidió no incluir estos casos en el scope para
+  :REFERENCE:
+  Link a ETMO la parte de las [[file:extract_to_method_object.org::*No%20contiene%20asignaciones%20a%20variables%20que%20no%20sean%20temporales][asignaciones]] 
+  :END:
+  priorizar la simplicidad de la primer versión. Más detalles en ETMO.
+
+- Los bloques no contienen return statements: si uno de los bloques contiene un
+  return statement y el otro no ese comportamiento no es replicable con el envío
+  de un mensaje polimórfico. Supongamos que el chequeo por nil es:
+
+  #+BEGIN_SRC
+  Context>>doSomething
+    ivar ifNil: [ ^3 ] ifNotNil: [ self doSomethingElse ].
+
+    ^2.
+    
+   "El refactoring lo modificaría de la siguiente manera:"
+    
+  Context>>doSomething
+    ivar polymorphicSelector.
+
+    ^2. 
+  #+END_SRC
+  
+  El problema es que cuando ~ivar~ es un Null Object la respuesta de
+  ~doSomething~ debería ser 3 pero no hay forma de hacer return de manera
+  anticipada desde ~polymorphicSelector~ de ~doSomething~. Por esta razón no se
+  permiten returns en los bloques.
+  
+- No debe haber chequeos duplicados: debe haber solo un
+  ~ReplaceIfNilWithPolymorphismParameters~ por chequeo en la colección recibida
+  en el keyword ~for:~.
+  
+- El receptor de los mensajes debe ser la variable de instancia elegida: todos
+  los ~ReplaceIfNilWithPolymorphismParameters~ representan un cheque por nil que
+  es un ~MessageNode~ cuyo selector es pertenece a los conjuntos ya
+  presentados. El receptor debe ser en todos los casos la variable de instancia
+  elegida. Asumiendo que la variable de instancia es ~arguments~:
+
+  #+BEGIN_SRC
+  "VÁLIDO"
+  arguments ifNil: [ self doSomething ].
+
+  "INVÁLIDO"
+  receiver ifNotNil: [ self doSomething ].
+  #+END_SRC
+
+  En el segundo caso aunque el selector pertenece a los permitidos el receptor
+  del mensaje no es ~arguments~.
+  
+- Los ~MethodNode~ deben pertenecer a la jerarquía de ~aClassToRefactor~: los
+  ~ReplaceIfNilWithPolymorphismParameter~ se corresponden con un chequeo por nil
+  y este chequeo, que es un ~MessageNode~, un envío de un mensaje, se encuentra
+  dentro de un método, es decir, es descendiente de un ~MethodNode~ en un
+  AST. La clase de cada uno de estos métodos, aquella en la cual están
+  compilados (~aMethodNode methodClass~), debe ser igual a la clase que se
+  recibe en el keyword ~of:~ o una subclase de la misma. Veamos un ejemplo:
+
+  #+BEGIN_SRC
+  Object subclass: #MessageSend
+    instanceVariableNames: 'receiver selector arguments'
+    classVariableNames: ''
+    poolDictionaries: ''
+    category: 'Kernel-Objects'
+  
+  Object weakSubclass: #WeakMessageSend
+    instanceVariableNames: 'selector shouldBeNil arguments'
+    classVariableNames: ''
+    poolDictionaries: ''
+    category: 'Kernel-Objects'
+
+  "Ambas clases tiene una ivar con nombre selector, por lo cual:"
+
+  IntroduceNullObject on: 'selector' of: (MessageSend | WeakMessageSend) [..]
+  
+  "Es válido con cualquier de las dos clases. Sin embargo receiver solo es ivar
+  de MessageSend, por lo tanto intentar aplicar el refactoring con ese nombre y
+  WeakMessageSend es inválido:"
+  
+  IntroduceNullObject on: 'receiver' of: WeakMessageSend [..]
+  #+END_SRC
+  
 
 * Funcionalidad de ReplaceIfNilWithPolymorphismParameters
 
-=ReplaceIfNilWithPolymorphismParameters= es una clase que representa los
+~ReplaceIfNilWithPolymorphismParameters~ es una clase que representa los
 argumentos necesarios para reemplazar un chequeo por nil con polimorfirsmo. Los
-colaboradores internos de la clase son el =methodNode= del método, la raíz del
-AST, en el cual se encuentra el chequeo por nil, el =messageNode=
+colaboradores internos de la clase son el ~methodNode~ del método, la raíz del
+AST, en el cual se encuentra el chequeo por nil, el ~messageNode~
 correspondiente al chequeo por nil y una instancia de
-=VariablesToParametrizeKeywordsDefinitions=. Los dos primeros identifican y
+~VariablesToParametrizeKeywordsDefinitions~. Los dos primeros identifican y
 referencian al chequeo por nil que reemplazaremos. El tercero es un objeto que
 contiene la definición del mensaje polimórfico: los keywords, qué variable a
 parametrizar irá en qué keyword y los nombres de los parámetros.
 
-=ReplaceIfNilWithPolymorphismParameters= valida que el =messageNode= sea un
+~ReplaceIfNilWithPolymorphismParameters~ valida que el ~messageNode~ sea un
 mensaje soportado por el refactoring.
 
 :WRITE:
@@ -435,7 +536,7 @@ trae eso.  esto no lo voy a escribir hasta que no haga los tests para ver si ya
 funciona todo bien o no
 :END:
 
-Verificar que el =MessageNode= represente un envío de mensaje soportado es un
+Verificar que el ~MessageNode~ represente un envío de mensaje soportado es un
 poco más complicado que verificar que el selector del nodo pertenezca al
 conjunto de selectores soportados y que el receptor del mensaje sea una variable
 de instancia de la clase del método. La causa son algunas optimizaciones que se
@@ -451,7 +552,7 @@ de los bloques que recibe el chequeo por nil como argumento.
 
 ** Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters
 
-=IntroduceNullObject= valida que los selectores seleccionados para los mensajes
+~IntroduceNullObject~ valida que los selectores seleccionados para los mensajes
 polimórficos no colisionen con otro mensaje de la jerarquía del Null Object.
 
 
