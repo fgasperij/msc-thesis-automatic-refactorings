@@ -434,6 +434,7 @@ en su protocolo el mensaje ~subclass:~ por lo cual no se puede heredar de ellas.
 
 
 ** ¿Qué son las variables a parametrizar?
+\label{sec:variables_a_parametrizar}
 
 Las variables a parametrizar son todas las variables referenciadas en el
 método a extraer que no son temporales:
@@ -455,9 +456,9 @@ de variables que podemos encontrar en un método:
 
 - ~aParam~ :: los parámetros del método.
 - ~aTemp~ :: las variables temporales del método.
-- ~self~ :: las pseudovariables (self y super).
+- ~self~ :: las pseudovariables (~self~ y ~super~).
 - ~ivar~ :: las variables del contexto de la clase (variables de instancia,
-  variables de clase y variables de pool)
+  variables de clase y variables de pool).
 
 Todas las categorías de variables deben ser parametrizadas excepto las
 temporales, ya que pertencen al contexto del método por lo tanto basta con

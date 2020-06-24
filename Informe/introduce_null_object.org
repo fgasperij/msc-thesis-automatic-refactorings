@@ -256,7 +256,7 @@ trabajo se verán las particularidades que pueden surgir en función de lo que
 contienen los bloques ~ifNil~: e ~ifNotNil:~.
 
 
-* Descripción completa de la funcionalidad del refactoring implementado
+* Creación del refactoring y validaciones
 
 El modelo de ~IntroduceNullObject~ es más complejo que el de
 ~ExtractToMethodObject~. Ambos fueron desarrollados utilizando TDD
@@ -407,7 +407,7 @@ para las variables a parametrizar. En el ejemplo anterior el selector
 polimórfico es ~polymorphicSelector~ y el nombre del parámetro ~aUnit~.
 
 :DIAGRAM:
-un diagrama de secuencia mostrando cómo intereactúan INO y RINWPP
+Un diagrama de secuencia mostrando cómo intereactúan INO y RINWPP
 :END:
 
 :WRITE:
@@ -514,51 +514,310 @@ parámetros aquí porque son particulares del ~IntroduceNullObject~ son:
   IntroduceNullObject on: 'receiver' of: WeakMessageSend [..]
   #+END_SRC
   
+- Los selectores de los mensajes polimórficos no se hayan definidos ni en la
+  ~ConcreteClass~ ni en la ~NullClass~: si así fuera al aplicar el refactoring
+  éstos serían sobrescritos. Quizás esto es lo que desea el usuario pero en pos
+  de preservar la simpleza decidimos no incluir esta funcionalidad. Si el
+  usuario desea sobrescribir un método deberá eliminarlo antes de aplicar el
+  refactoring.
 
-* Funcionalidad de ReplaceIfNilWithPolymorphismParameters
 
-~ReplaceIfNilWithPolymorphismParameters~ es una clase que representa los
-argumentos necesarios para reemplazar un chequeo por nil con polimorfirsmo. Los
-colaboradores internos de la clase son el ~methodNode~ del método, la raíz del
-AST, en el cual se encuentra el chequeo por nil, el ~messageNode~
-correspondiente al chequeo por nil y una instancia de
-~VariablesToParametrizeKeywordsDefinitions~. Los dos primeros identifican y
-referencian al chequeo por nil que reemplazaremos. El tercero es un objeto que
-contiene la definición del mensaje polimórfico: los keywords, qué variable a
-parametrizar irá en qué keyword y los nombres de los parámetros.
-
-~ReplaceIfNilWithPolymorphismParameters~ valida que el ~messageNode~ sea un
-mensaje soportado por el refactoring.
-
-:WRITE:
-Explicar cómo se valida que el mensaje sea soportado y las complicaciones que
-trae eso.  esto no lo voy a escribir hasta que no haga los tests para ver si ya
-funciona todo bien o no
+* ~ReplaceIfNilWithPolymorphismParameters~
+  
+:DIAGRAM:
+Le schéma dans page cinq de le bloc-notes 
 :END:
 
-Verificar que el ~MessageNode~ represente un envío de mensaje soportado es un
-poco más complicado que verificar que el selector del nodo pertenezca al
-conjunto de selectores soportados y que el receptor del mensaje sea una variable
-de instancia de la clase del método. La causa son algunas optimizaciones que se
-realizan al construir el AST, en específico los MessageNode de un conjunto de
-mensajes, dentro de los cuales encontramos a ~ifNil:ifNotNil:~ ~ifNotNil:~ y
-~ifNotNil:ifNil:~.
+~ReplaceIfNilWithPolymorphismParameters~ es una clase que representa los
+argumentos necesarios para reemplazar un chequeo por nil con polimorfirsmo:
 
-Además, verifica que la definición del mensaje polimórfico sea consistente con
-las variables a parametrizar en los bloques y que no existan colisiones entre
-los nombres de los parámetros del mensaje polimórfico y las variables temporales
-de los bloques que recibe el chequeo por nil como argumento.
+#+BEGIN_SRC
+Object subclass: #ReplaceIfNilWithPolymorphismParameters
+  instanceVariableNames: 'messageNode methodNode definitions'
+  classVariableNames: ''
+  poolDictionaries: ''
+  category: 'Refactoring'
+#+END_SRC
+
+Los colaboradores internos son:
+
+- ~messageNode~: el nodo del AST correspondiente al mensaje de chequeo por
+  nil. Este mensaje tiene como selector alguno de los Nil Selectors o de los
+  Boolean Selectors. Un ~MessageNode~ por sí solo no tiene ninguna referencia al
+  método al cual pertenece, por esta razón para poder reemplazar el chequeo por
+  polimorfismo es necesario también contar con el ~MethodNode~, raíz del AST al
+  que el ~MessageNode~ pertenece. Esto es así porque las modificaciones de
+  código se realizan manipulando los ~String~ s correspondientes y
+  recompilándolos en la clase. 
+
+- ~methodNode~: la raíz del AST del ~messageNode~. Este colaborador indica en
+  qué clase está compilado el método al cual pertenece el chequeo por nil.
+  
+- ~definitions~: una instancia de ~VariablesToParametrizeKeywordsDefinitions~
+  que contiene la definición del mensaje polimórfico que permite saber qué
+  compilar en la ~ConcreteClass~ y en la ~NullClass~ y cómo enviarlo para
+  reemplazar el chequeo por nil:
+
+  - los keywords
+
+  - la variable a parametrizar que irá en cada keyword
+
+  - los nombres de los parámetros
+    
+  - el orden de los keywords
 
 
-** Validaciones de la colección de ReplaceIfNilWithPolymorphismParameters
+** ~VariablesToParametrizeKeywordsDefinitions~
+   
+~VariablesToParametrizeKeywordsDefinitions~ es una colección de
+~VariableToParametrizeKeywordDefinition~, notar el singular en los sustantivos
+del nombre, por lo tanto primero explicaremos ese objeto.
 
-~IntroduceNullObject~ valida que los selectores seleccionados para los mensajes
-polimórficos no colisionen con otro mensaje de la jerarquía del Null Object.
+*** ~VariableToParametrizeKeywordDefinition~
+
+#+BEGIN_SRC 
+Object subclass: #VariableToParametrizeKeywordDefinition
+	instanceVariableNames: 'variableName keyword parameterName'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Refactoring'
+#+END_SRC
+
+Este objeto representa la definición del keyword para una variable a
+parametrizar. Las variables a parametrizar ya fueron explicadas en la sección
+\ref{sec:variables_a_parametrizar} del ~ExtractToMethodObject~ para ese caso
+particular. Utilizamos el mismo nombre aquí porque el concepto es el mismo. Se
+extrae una porción de código fuente y existen un conjunto de variables que se
+referencian desde dentro de esa porción, porque forman parte de su scope y por
+lo tanto son accesibles desde dentro del mismo, pero se definieron fuera de la
+misma. En este caso se extrae el envío de un mensaje que realiza el chequeo por
+nil por el envío de otro mensaje. Las variables a parametrizar son las mismas
+que mencionamos en la sección \ref{sec:variables_a_parametrizar} más las
+temporales del método que en este caso no están definidas en la porción que se
+extrae. Por lo tanto, son variables a parametrizar:
+
+- Los parámetros del método.
+
+- Las variables temporales del método.
+  
+- Las pseudovariables ~self~ y ~super~.
+
+- Las variables del contexto de la clase (ivars, class vars, y pool vars).
+
+En este caso las variables a parametrizar estarán referenciadas desde dentro de
+los bloques que reciben los Nil Selectors y los Boolean Selectors.
+
+Cada variable a parametrizar precisa un keyword y un nombre para su parámetro en
+la definición del mensaje polimórfico. Este objeto encapsula a los tres
+colaboradores: la variable a parametrizar, el keyword y el nombre del parámetro.
+y valida al crear la instancia que:
+
+- El nombre del parámetro es válido: para validarlo se utiliza el
+  ~Scanner>>scanFieldNames~ ya que los parámetros tienen las mismas
+  :REFERENCE:
+  background identifier
+  :END:
+  restricciones que cualquier otro identifier.
+  
+- El keyword es válido: no debe ser vacío y todos sus caracteres deben
+  cumplir con ~Character>>isValidInIdentifiers~.
+
+
+*** Modelo
+
+Veamos con un ejemplo cómo encapsulan estos objetos los parámetros necesarios
+para especificar los keywords y los nombre de los parámetros para cada variable
+a parametrizar, representando en conjunto el header y el envío del mensaje:
+
+#+BEGIN_SRC
+WeakMessageSend>>value
+  ^ arguments
+    ifNil: [
+      self withEnsuredReceiverDo: [ :r | r perform: selector ]]
+    ifNotNil: [
+      self withEnsuredReceiverAndArgumentsDo: [ :r :a |
+        r perform: selector withArguments: a ]]
+	
+"Luego del reemplazo"
+WeakMessageSend>>value
+  ^arguments passTo: self usingSelector: selector
+  
+ConcreteArguments>>passTo: aMesasgeSend usingSelector: aSelector
+  aMessageSend withEnsuredReceiverAndArgumentsDo: [ :r :a |
+    r perform: aSelector withArguments: a ]
+#+END_SRC
+\label{lst:weak_message_send_value}
+
+En este caso ~VariablesToParametrizeKeywordDefinitions~ hubiera sido creado de
+la siguiente manera:
+
+#+BEGIN_SRC
+
+VariablesToParametrizeKeywordDefinitions with: {
+  VariableToParametrizKeywordDefinition
+    forVariable: 'self'
+    useKeyword: #passTo
+    withParameterName: 'aMessageSend'.
+  VariableToParametrizKeywordDefinition
+    forVariable: 'selector'
+    useKeyword: #usingSelector
+    withParameterName: 'aSelector.}
+#+END_SRC
+
+Notar que el keyword ~#with~ recibe una ~OrderedCollection~ cuyo orden
+corresponde al orden que tendrán los keywords en el selector del
+mensaje.
+
+Antes de crear la instancia se realizan las siguientes validaciones:
+
+- El primer keywords debe tener un primer caracter válido: los identifiers
+  permiten un conjunto de caracteres pero el primer caracter debe pertenecer a
+  un subconjunto de éstos definido en ~Character>>isValidStartOfIdentifiers~.
+  
+- Los nombre de los parámetros no están repetidos.
+  
+- Los nombres de las variables no están repetidos.
+
+Existe otro caso que es en el que no hay variables a parametrizar, el conjunto
+es vacío. Este caso también es soportado por
+~VariablesToParametrizeKeywordsDefinitions~. Se pueden crear instancias para ese
+caso con:
+
+#+BEGIN_SRC
+VariablesToParametrizeKeywordsDefinitions withSelector: #polymorphicSelector
+#+END_SRC
+
+Ya que solo se precisa el selector elegido.
+
+
+** Validaciones 
+   
+Las validaciones realizadas verifican la consistencia entre los colaboradores
+recibidos ya que todos ya son instancias válidas de sus respectivas clases:
+
+- Verificar que el ~MessageNode~ represente un envío de mensaje soportado:
+  ~MessageNode>>selectorSymbol~ permite acceder al selector correspondiente al
+  ~MessageNode~. En el caso de los siguientes mensajes, verificar que el
+  selector del ~MessageNode~ sea uno de éstos:
+
+  - ~ifNil:~
+
+  - ~ifTrue:~
+
+  - ~ifTrue:ifFalse:~
+
+  - ~ifFalse:~
+
+  - ~ifFalse:ifTrue:~
+
+  y que el receptor se una variable de instancia o ~ivar isNil~, en el caso de
+  los boolean selectors, es suficiente. Sin embargo, para los siguientes mensajes:
+
+  - ~ifNil:ifNotNil:~
+
+  - ~ifNotNil:~
+
+  - ~ifNotNil:ifNil:~
+    
+  no es suficiente porque el código de los mismos es optimizado de forma que el
+  AST que el ~Parser~ construye los transforma de la siguiente forma:
+  
+  | Orginal                             | Transformado                               |
+  |-------------------------------------+--------------------------------------------|
+  | ~ivar ifNil: [...] ifNotNil: [...]~ | ~ivar == nil ifTrue: [...] ifFalse: [...]~ |
+  | ~ivar ifNotNil: [...]~              | ~ivar == nil ifTrue: [] ifFalse: [...]~    |
+  | ~ivar ifNotNil: [...] ifNil: [...]~ | ~ivar == nil ifTrue: [...] ifFalse: [...]~ |
+  
+  Por lo tanto, se verifica también si el receptor es ~ivar == nil~ y el
+  selector ~#ifTrue:ifFalse:~, lo cual hace que todo los chequeos por nil de esa
+  forma que no fueron el resultado de una optimización también sean
+  considerados.
+  
+- El ~MessageNode~ debe ser un descendiente del ~MethodNode~ en el AST: un
+  ~MessageNode~ no tiene un ~MethodNode~ asociado, a partir de él no se puede
+  saber a qué método pertenece, si es que pertenece a uno. La única forma de
+  verificar la consistencia entre ambos es recorrer el AST desde el ~MethodNode~
+  y entontrar al ~MessageNode~. Esto se realiza comparando el código fuente
+  generado por el nodo ya que puede que sean objetos distintos.
+  
+- El ~MessageNode~ tiene que ser consistente con las
+  ~VariablesToParametrizeKeywordsDefinitions~:
+
+    - Cada una de las variables a parametrizar en el ~MessageNode~ debe tener
+      una ~VariableToParametrizeKeywordDefinition~ en el
+      ~VariablesToParametrizeKeywordsDefinitions~. Es decir, que cada variable a
+      parametrizar deber tener especificado su keyword.
+      
+    - Cada uno de los ~VariableToParametrizeKeywordDefinition~ debe
+      corresponderse con una variable a parametrizar el ~MessageNode~.
+      
+    - Los nombres de los parámetros especificados en
+      ~VariablesToParametrizeKeywordsDefinitions~ para las variables a
+      parametrizar deben ser distintos de los nombres de las variables
+      temporales o argumentos de los bloques que se pasan como argumento al
+      ~MessageNode~ y de los que se definen dentro de ellos:
+
+      #+BEGIN_SRC
+      Example>>value
+        ivar ifNil: [:blockArg | | blockTemp |
+          self checkSomethingAndDo: [:nestedBlockArg | | nestedBlockTemp |
+            nestedBlockTemp := 1 ]]
+      #+END_SRC
+      
+      En este ejemplo ninguna variable a parametrizar podrá tener como nombre de
+      parámetro: ~blockArg~, ~blockTemp~, ~nestedBlockArg~ o
+      ~nestedBlockTemp~. Esto vale para todos los bloques definidos sin importar
+      el nivel de anidamiento. Cuis no permite shadowing.
+
+
+** Protocolo/Funcionalidad que provee
+   
+~ReplaceIfNilWithPolymorphismParameters~ provee acceso y calcula todo lo que
+necesita un objeto, en este caso el ~IntroduceNullObject~, para poder realizar
+el reemplazo de un chequeo por el envío de un mensaje. En el futuro podría
+utilizarse para refactorings que realicen otro tipo de reemplazos. Las funciones
+principales son:
+
+- Acceso al bloque nil y al bloque concreto. En particular si es el primer
+  argumento o el segundo o si es nil (para el caso en el que no hay, como bloque
+  conreto para ~#ifNil:~). Los casos posibles son:
+  
+  - ~ivar isNil ifTrue: nullBlock~
+  - ~ivar isNil ifFalse: concreteBlock~
+  - ~ivar isNil ifTrue: nullBlock ifFalse: concreteBlock~
+  - ~ivar isNil ifFalse: concreteBlock ifTrue: nullBlock~
+  - ~ivar ifNotNil: concreteBlock~
+  - ~ivar == nil ifTrue: nullBlock ifFalse: concreteBlock~ que incluye el resto
+    de las combinaciones de ~ifNil~ optimizadas.
+  
+  De éstos bloques el atributo más relevante es el rango que comprenden. Éste se
+  obtiene a través del ~Encoder~.
+  
+- ~ReplaceIfNilWithPolymorphismParameters>>rangeOfMessageSend~: Cálculo del
+  rango a reemplazar por el envío del mensaje polimórfico. Veamos unos
+  ejemplos:
+  
+  [[file:~/Projects/Thesis/ino_range_to_replace.jpg]]
+  
+  En todos los casos, el rango de interés comprende el intervalo desde el
+  caracter siguiente a la ~ivar~ hasta el fin ~MessageNode~. Ésta manera de
+  calcularlo incluye todos los separadores (~Character>>isSeparator~) extra que
+  puedan haber, como en el item 4, ya que ~Encoder~ incluye en el ~sourceRange~
+  de un ~MessageNode~ desde la izquierda del receptor hasta la derecha del
+  último argumento, que en este caso sería el ~]~ que cierra el último bloque.
+  
+- ~ReplaceIfNilWithPolymorphismParameters>>rangesOfVariablesToParametrizeToReplacingParameter~:
+  Construye una ~OrderedCollection~ de ~Association~ s cuyas keys son ~Interval~
+  que representan un rango de código fuente, que será el de una variable a
+  parametrizar, y el ~value~ el nombre del parámetro correspondiente a esa
+  variable a parametrizar. Esta colección incluye todas las ocurrencias de las
+  variables a parametrizar en el ~methodNode~ será responsabilidad del cliente
+  que envía este mensaje elegir qué rangos son de su interés.
 
 
 * Aplicación del refactoring
 
-Al contar con la colección de =ReplaceIfNilWithPolymorphismParameters= la
+Al contar con la colección de ~ReplaceIfNilWithPolymorphismParameters~ la
 aplicación del refactoring reemplaza cada uno de esos chequeos de nil con lo
 argumentos correspondientes. Los cambios que se deben realizar son:
 
@@ -650,6 +909,11 @@ y la experiencia para el usuario sería:
 :DIAGRAM:
 mostrar el paso a paso de aplicación del refactoring.
 :END:
+
+
+* Elementos que no estoy viendo descriptos
+
+- la búsqueda de los chequeos de ifNil
 
 
 * Comentarios adicionales

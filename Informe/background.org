@@ -44,3 +44,8 @@ Interfaz de usuario
 - world
 - qué es un model en el contexto de morph
 - qué es un layout morph, qué es un layout spec
+
+  
+INO
+
+- Qui est un identifier? ~Scanner>>scanFieldNames~
