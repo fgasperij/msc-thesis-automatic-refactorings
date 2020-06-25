@@ -805,6 +805,7 @@ principales son:
   puedan haber, como en el item 4, ya que ~Encoder~ incluye en el ~sourceRange~
   de un ~MessageNode~ desde la izquierda del receptor hasta la derecha del
   último argumento, que en este caso sería el ~]~ que cierra el último bloque.
+  \label{itm:range_of_message_send_cases}
   
 - ~ReplaceIfNilWithPolymorphismParameters>>rangesOfVariablesToParametrizeToReplacingParameter~:
   Construye una ~OrderedCollection~ de ~Association~ s cuyas keys son ~Interval~
@@ -817,21 +818,27 @@ principales son:
 
 * Aplicación del refactoring
 
-Al contar con la colección de ~ReplaceIfNilWithPolymorphismParameters~ la
-aplicación del refactoring reemplaza cada uno de esos chequeos de nil con lo
-argumentos correspondientes. Los cambios que se deben realizar son:
+La aplicación del refactoring la realiza el objeto ~IntroduceNullObject~, ésta
+consiste en reemplazar cada uno de los chequeos por nil especificados por los
+elementos de su colaborador interno ~replacementParameters~. Como cada uno de
+los elementos es una instancia de ~ReplaceIfNilWithPolymorphismParameters~ no
+solo especifican el chequeo por nil, sino que también el keyword y el nombre del
+parámetro de cada variable a parametrizar para realizar el reemplazo. Los cambios
+que incluye la aplicación para cada cheque son:
 
-- agregar el mensaje polimórfico al Component
+- Agregar el mensaje al ~Component~.
 
-- agregar el mensaje polimórfico al NullComponent
+- Agregar el mensaje al ~NullComponent~.
 
-- reemplazar el chequeo de nil por el envío del mensaje polimórfico
+- Reemplazar el chequeo de nil por el envío del mensaje polimórfico.
+  
+El orden en el que se realizan no es relevante.
 
-El proceso para compilar el nuevo método en las clases Component y NullComponent
-es igual, lo que cambia es el bloque utilizado como fuente:
+La compilación del nuevo método en las clases ~Component~ y ~NullComponent~ se
+realiza de igual manera, lo que cambia es el bloque utilizado como fuente. Por ejemplo:
 
 #+BEGIN_SRC
-component ifNil: ['The NullComponent block'] ifNotNil: ['The Component block']
+component ifNil: nullComponentBlock ifNotNil: componentBlock
 #+END_SRC
 
 Los mensajes que tienen un solo keyword no cuentan con un bloque para alguna de
@@ -855,33 +862,105 @@ Context>>fuel
     component fuelLevelWithLog: self
 #+END_SRC
 
-El chequeo por nil se realizó con el mensaje =ifNotNil:=, por lo tanto si el
+El chequeo por nil se realizó con el mensaje ~ifNotNil:~, por lo tanto si el
 objeto es nil no se espera comportamiento alguno. Por esa razón el método en la
-clase =NullComponent= resulta vacío.
+clase ~NullComponent~ resulta vacío.
 
-La generación del código de los métodos para cada caso se realiza reemplazando
-todas las variables a parametrizar, todas las variables que se referencian en el
-:WRITE:
-qué sucedía con los argumentos de los bloques? puede ser que no tenían?
-:END:
-bloque excepto las que sean temporales del bloque, por el nombre del parámetros
-correspondiente. Para realizar esto necesitamos obtener el código fuente del
-bloque y luego obtener el rango en el código fuente del método de cada variable
-a parametrizar y restarle el offset del inicio del bloque.
+La generación del código de los métodos requiere:
+
+1. Obtener el código del bloque: se obtiene a través de
+   ~ReplaceIfNilWithPolymorphismParameters>>(concrete|null)BlockSourceCode~.
+   
+2. Obtener el rango de las variables a parametrizar en el bloque para
+   reemplazarlas por el nombre del parámetro:
+   ~ReplaceIfNilWithPolymorphismParameters>>rangesOfVariablesToParametrizeToReplacingParameter~
+   responde con los rangos de todas las ocurrencias de las variables a
+   parametrizar en el método en el que se encuentra el ~ifNil~. Para poder
+   realizar el reemplazo en el código del bloque es necesario:
+
+   1. Seleccionar las ocurrencias de las variables a parametrizar en el bloque.
+ 
+   2. Modificar los rangos de forma tal que sean relativos al bloque y no al
+      método, es decir, que si tenemos este ~ifNil~:
+      
+      #+BEGIN_SRC
+      Example>>value
+        ivar ifNil: [ self doSomething ].
+      #+END_SRC
+      
+      El rango que se recibe para la variable a parametrizar ~self~ es ~Interval
+      from: 22 to: 25~, pero al realizar el reemplazo relativo al bloque, con el
+      primer caracter del bloque igual a 0, el intervalo sería ~Interval from: 2
+      to 5~. Para realizar esto simplemente se toma como offset el inicio del
+      bloque y se resta el mismo al ~from~ y ~to~ de todos los rangos.
+   
+3. Reemplazar las variables a parametrizar por los nombres de los parámetros con
+   la estructura generada en el paso anterior.
+
+Una vez que se tiene el código de cada bloque compilarlo en la clase
+correspondiente se realiza enviando ~Behavior>>compile~, precediendolo con el
+message header que provee
+~ReplaceIfNilWithPolymorphismParameters>>polymorphicMessageHeader~, ya que no
+olvidemos que ~VariablesToParametrizeKeywordsDefinitions~ es su colaborador
+interno.
 
 Finalmente, se reemplaza el chequeo de nil por el envío del mensaje
 polimórfico. Se toma el código fuente del método, se realiza el reemplazo y
-luego se vuelve a compilar en la clase Context. El único detalle de este proceso
-es que la obtención del rango que comprende el chequeo de nil se debe realizar
-manualmente porque el =Encoder= no posee esta información. En el caso de
-=MessageNode=s se cuenta con el rango de los keywords y sus argumentos pero no
-del receptor. Por lo tanto el rango de un =MessageNode= incluyendo al receptor
-debe tomar el lado derecho del rango del envío de mensaje y el lado izquierdo
-del receptor.  El receptor en nuestro caso puede ser una variable o un envío de
-mensaje (=instVar isNil=) por lo cual es simple obtener el rango consultando al
-Encoder. La construcción del envío del mensaje la realiza el
-=ReplaceIfNilWithPolymorphismParameters= correspondiente, ya que cuenta con el
-mapeo entre variable a parametrizar y keyword del selector polimórfico.
+luego se vuelve a compilar en su clase. La obtención del rango que comprende el
+chequeo por nil se realiza considerando los mismos casos que ya fueron
+descriptos en el item \ref{itm:range_of_message_send_cases}. La construcción del
+envío del mensaje la realiza el
+~ReplaceIfNilWithPolymorphismParameters>>polymorphicMessageSend~
+correspondiente, ya que cuenta con ~VariablesToParametrizeKeywordsDefinitions~
+como colaborador interno.
+
+:UNUSED_DIAGRAM:
+
+Mostrar un diagrama de secuencia sobre cómo se produce un reemplazo
+
+La idea es que se vean todos los pasos, qué objeto hace qué cosa y todos los
+mensajes que se deben enviar para que se realice un reemplazo.
+
+#+BEGIN_SRC plantuml :file diagrams/ino_replace_sequence.png
+title Reemplazo de un ifNil
+
+hide footbox
+
+participant anApplier as INOApplier << (C, #ADD1B2) IntroduceNullObjectApplier >>
+participant anIntroduceNullObject as INO << (C, #ADD1B2) IntroduceNullObject >>
+participant replacementParameters as rps << (C, #ADD1B2) Collection<ReplaceIfNilWithPolymorphismParameters> >>
+participant replacementParameter as rp << (C, #ADD1B2) ReplaceIfNilWithPolymorphismParameters >>
+
+INOApplier -> INO : ""apply""
+INO -> rps : ""do: [ :p | self applyWith: p ]""
+rps -> INO : ""applyWith: replacementParameter""
+INO -> rp : ""concreteBlockSourceCode""
+return ""sourceCode""
+INO -> rp : ""concreteBlockRange""
+return ""blockRange""
+INO -> INO : ""compile: sourceCode in: blockRange asPolymorphicMessageOnClass: concreteClass using: replacementParameter""
+INO -> INO : ""rangesIn: blockRange toReplacementParametersFrom: replacementParameter""
+return ""rangesToReplacingParameter""
+INO -> rp : ""polymorphicMessageHeader""
+INO -> concreteClass : ""compile: polymorphicMessageSourceCode""
+
+... The same process is performed for the Null Block ...
+
+INO -> INO : ""replaceNilCheckWithPolymorphicMessageSendUsing: replacementParameter""
+INO -> rp : ""methodSourceCode""
+return ""originalSourceCode""
+INO -> rp : ""rangeOfMessageSend""
+return ""rangeOfMessageSend""
+INO -> rp : ""polymorphicMessageSend""
+return ""polymorphicMessageSend""
+INO -> originalSourceCode : ""copyReplacing: rangeOfMessageSend with: polymorphicMessageSend""
+
+#+END_SRC
+
+#+RESULTS:
+[[file:diagrams/ino_replace_sequence.png]]
+
+:END:
 
 
 * ¿Cómo se utiliza?
@@ -935,3 +1014,4 @@ identificar más fácil si algo se rompe y dónde.
 
 Aplicaré los refactorings a distintas partes de Cuis y después le voy a
 correr los tests.
+
