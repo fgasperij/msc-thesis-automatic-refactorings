@@ -406,15 +406,6 @@ El usuario deberá elegir el selector polimórfico y los nombres de los parámet
 para las variables a parametrizar. En el ejemplo anterior el selector
 polimórfico es ~polymorphicSelector~ y el nombre del parámetro ~aUnit~.
 
-:DIAGRAM:
-Un diagrama de secuencia mostrando cómo intereactúan INO y RINWPP
-:END:
-
-:WRITE:
-Qué son las variables a parametrizar? Es lo mismo que en ETMO? Si es lo mismo
-hacer un vínculo
-:END:
-
 El keyword ~for:~ del mensaje de creación de instancias recibe una colección de
 ~ReplaceIfNilWithPolymorphismParameters~. Éstos objetos, su estructura y
 comportamiento, serán descriptos en una sección dedicada exclusivamente a
@@ -433,10 +424,35 @@ parámetros aquí porque son particulares del ~IntroduceNullObject~ son:
   
 - Los bloques no contienen asignaciones a variables que no son temporales del
   bloque: en este caso se decidió no incluir estos casos en el scope para
-  :REFERENCE:
-  Link a ETMO la parte de las [[file:extract_to_method_object.org::*No%20contiene%20asignaciones%20a%20variables%20que%20no%20sean%20temporales][asignaciones]] 
-  :END:
-  priorizar la simplicidad de la primer versión. Más detalles en ETMO.
+  priorizar la simplicidad de la primer versión (se puede encontrar una
+  explicación más detallada en la sección
+  \ref{sec:etmo_asignaciones_a_no_temporales}). La detección en este caso
+  utiliza una instancia de ~EntranceExitBlockEnumerator~, clase creada por este
+  trabajo, que permite evaluar un bloque al visitar y al salir de cada nodo del
+  AST de un método. Se implementó de esta forma porque las únicas variables que
+  se pueden asignar son las temporales de los bloques, por lo tanto es necesario
+  contar con el conjunto de variables asignables o con las no asignables. El de
+  no asignables es más heterogéneo (incluye las temporales del método, los
+  parámetros, las de instancia, las de clase y las de pools) y complicado de
+  generar. Las asignables, las temporales de los bloques, cambian según el nodo
+  en el que estemos:
+
+  #+BEGIN_SRC
+  Example>>value
+    self do: [ | firstLevelBlockTemp |
+      "Acá la única asignable es firstLevelBlockTemp."
+
+      self do: [ | secondLevelBlockTemp |
+	"Acá las asignables son { firstLevelBlockTemp, secondLevelBlockTemp }."
+	...].
+ 
+      "Acá la única asignable VUELVE A SER firstLevelBlockTemp."
+    ]
+  #+END_SRC
+  
+  El ~EntranceExitBlockEnumerator~ permite agregar al conjunto de asignables
+  todas las temporales de un bloque al visitarlo y removerlas al salir de ese
+  nodo.
 
 - Los bloques no contienen return statements: si uno de los bloques contiene un
   return statement y el otro no ese comportamiento no es replicable con el envío
@@ -463,7 +479,12 @@ parámetros aquí porque son particulares del ~IntroduceNullObject~ son:
   
 - No debe haber chequeos duplicados: debe haber solo un
   ~ReplaceIfNilWithPolymorphismParameters~ por chequeo en la colección recibida
-  en el keyword ~for:~.
+  en el keyword ~for:~. Los ifNils en una clase se pueden obtener evaluando una
+  instancia de ~IfNilChecksFinder~, se encapsuló el comportamiento en esta clase
+  porque el ~IntroduceNullObjectApplier~ también necesita obtener todos los
+  ifNils para que el usuario pueda configurar cómo reemplazarlos. Ésta clase
+  puede servir como base para implementar un detector de smells, en este caso
+  ifs, en el futuro.
   
 - El receptor de los mensajes debe ser la variable de instancia elegida: todos
   los ~ReplaceIfNilWithPolymorphismParameters~ representan un cheque por nil que
@@ -605,7 +626,11 @@ extrae. Por lo tanto, son variables a parametrizar:
 - Las variables del contexto de la clase (ivars, class vars, y pool vars).
 
 En este caso las variables a parametrizar estarán referenciadas desde dentro de
-los bloques que reciben los Nil Selectors y los Boolean Selectors.
+los bloques que reciben los Nil Selectors y los Boolean Selectors. La búsqueda
+de las variables a parametrizar en los bloque está encapsulada en la clase
+~MessageSendingBlocksVariablesToExtractFinder~ ya que también es requerida por
+la interfaz de usuario, el ~IntroduceNullObjectForm~, para presentarle al
+usuario las configuraciones de cada variable.
 
 Cada variable a parametrizar precisa un keyword y un nombre para su parámetro en
 la definición del mensaje polimórfico. Este objeto encapsula a los tres
@@ -963,55 +988,62 @@ INO -> originalSourceCode : ""copyReplacing: rangeOfMessageSend with: polymorphi
 :END:
 
 
-* ¿Cómo se utiliza?
+* Interfaz de usuario
 
-El usuario puede iniciar el refactoring desde el listado de clases en el System
-Browser porque lo que necesita el =RefactoringApplier= para iniciar la obtención
-de los argumentos es la clase a utilizar como contexto:
+El usuario puede iniciar la interfaz para aplicar el refactoring desde el
+listado de clases en el /System Browser/, porque lo que necesita seleccionar es
+la clase a utilizar como contexto:
 
-:DIAGRAM:
-mostrar cómo se selecciona el refactoring
-:END:
+[[file:screenshots/ino/select_refactoring.png]]
 
-El =RefactoringApplier= es el encargado de recabar los argumentos para el
-=IntroduceNullObject=, crear el refactoring y aplicarlo. Colaborará con el
-=IntroduceNullObjectForm= y el =IntroduceNullObjectRequest= para conseguir
-esto. La distribución de responsabilidades quedará reflejada en el siguiente
-diagrama de secuencia que muestra cómo colaborane en un caso exitoso:
+La clase que se utilizará es la que esté seleccionada en el listado. Si no hay
+ningún item seleccionado se le informa al usuario que debe seleccionar alguna
+clase para poder aplicar el refactoring. En este caso seleccionamos la clase
+~Browser~. En ese momento un ~IntroduceNullObjectRefactoringApplier~ es
+instanciado y comienza a solicitarle los parámetros necesarios al usuario. Se le
+pedirá que seleccione la variable de instancia de la clase sobre la cual quiere
+aplicar el refactoring:
 
-:DIAGRAM:
-colaboración en caso exitoso
-:END:
+[[file:screenshots/ino/select_ivar.png]]
 
-y la experiencia para el usuario sería:
+Ésta funcionalidad es provista por el ~RefactoringApplier~ como se vió en la
+sección \ref{sec:la_interfaz_del_etmo}. Después de elegir la variable de
+instancia, si la misma cuenta con algún chequeo por nil, se le provee el
+siguiente formulario para que pueda especificar los parámetros del refactoring:
 
-:DIAGRAM:
-mostrar el paso a paso de aplicación del refactoring.
-:END:
+[[file:screenshots/ino/ino_form.png]]
 
+Éste es una instancia de ~IntroduceNullObjectForm~ que comparte todos los
+elementos comunes con ~ExtractToMethodObjectForm~, los cuales fueron explicados
+en la sección \ref{sec:extract_to_method_object_form}. La sección superior del
+formulario, /Null Object Hierarchy/, permite ingresar las clases de la jerarquía
+del Null Object. El resto del formulario permite visualizar todos los chequeos
+por nil y para cada uno especificar los keywords y los nombres de los
+parámetros:
 
-* Elementos que no estoy viendo descriptos
+- La lista de chequeos por nil: es una ~PluggableListMorph~ que utiliza como
+  model un ~IfNilMessageListModel~ inicializado con todos los ~IfNilCheck~
+  encontrados.
 
-- la búsqueda de los chequeos de ifNil
+- El área de texto con el código del método: debajo del listado hay un área de
+  texto que muestra el código del método del ~IfNilCheck~ con el código
+  correspondiente al ~IfNilCheck~ seleccionado. Esta visualización busca darle
+  mayor contexto al usuario.
+  
+- La tabla de keywords y nombres de parámetros: esta sección es una
+  ~MessageKeywordsAndParametersTable~, que fue explicada en el item
+  \ref{itm:message_keywords_and_parameters_table}. Debajo de la misma está la
+  preview del message header en un ~PreviewTextModelMorph~, como se vió en el
+  item \ref{itm:preview_text_model_morph}.
 
-
-* Comentarios adicionales
-
-:WRITE:
-¿Por qué lo aplicamos solo en el contexto de una clase? ¿Qué otras alternativas
-se nos ocurrieron en un sistema dinámico como Smalltalk en el que no contamos
-con el tipo o la clase de una variable?
-:END:
-
-Ya veremos que es fácil pasar de realizar el cambio en el contexto de
-una clase a realizarlo en todo el sistema. Bueno quizás no es tan fácil
-en un sistema dinámico como Smalltalk. Pero tiene ventajas y desventajas
-realizarlo de esta manera, si lo vamos aplicando progresivamente podemos
-identificar más fácil si algo se rompe y dónde.
+Todos los modelos de los campos son creados y contenidos por una instancia de
+~IntroduceNullObjectRequest~. Ésta es utilizada por el applier para instanciar
+el refactoring cuando el usuario hace /Submit/ del formulario.
 
 
 * Preservación del comportamiento
 
-Aplicaré los refactorings a distintas partes de Cuis y después le voy a
-correr los tests.
-
+Todo el compartamiento descripto del ~IntroduceNullObject~ tiene tests
+automáticos que lo cubren. Además, ya es parte de Cuis University y los
+estudiantes de la cátedra de Ingeniería del Software I lo están utilizando en la
+materia.

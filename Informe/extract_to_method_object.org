@@ -344,6 +344,7 @@ chequeo.
 
 
 ** No contiene asignaciones a variables que no sean temporales
+\label{sec:etmo_asignaciones_a_no_temporales}
 
 Las variables no temporales son las variables del contexto de la clase:
 
@@ -377,7 +378,7 @@ restaría agregar la parte de configuración para la creación automática de lo
 métodos.
 
 La detección de asignaciones a este tipo de variables se realiza recorriendo el
-AST correspondiente al ~CompiledMethod~ del método a extraer. Elp
+AST correspondiente al ~CompiledMethod~ del método a extraer. El
 ~CompiledMethod~ provee el AST correspondiente a su código a través del mensaje
 ~methodNode~ que devuelve el nodo correspondiente al método. El comportamiento
 de recorrer el AST ya está encapsulado en ~ParseNodeEnumerator~ como podemos
@@ -1127,6 +1128,7 @@ es distinto de ~self~.
 
 
 * La interfaz de usuario
+\label{sec:la_interfaz_del_etmo}
 
 La aplicación del refactoring se puede realizar creando una instancia de
 ~ExtractToMethodObject~ y evaluándola o a través de la interfaz de usuario. La
@@ -1141,7 +1143,7 @@ configuraciones que se le presentan.
 a todo lo que sea de smalltalk y demasiado básico para explicar aquí mismo.
 :END:
 La interfaz se puede acceder a través de la lista de mensajes de la
-~BrowserWindow~, o una en la lista de una ~MessageSetWindow~:
+~BrowserWindow~, o en cualquier lista de una instancia de ~MessageSetWindow~:
 
 [[file:screenshots/etmo/access_refactorin_menu.png]]
 
@@ -1159,10 +1161,9 @@ para aplicar este refactoring. Al elegirlo aparecerá el siguiente formulario:
 el método del mensaje que está seleccionado en la lista de mensajes.
 
 El formulario es una instancia de ~ExtractToMethodObjectForm~, creada por un
-~ExtractToMethodObjectApplier~. ~ETMOApplier~ es subclase de
-~RefactoringApplier~. ~RefactoringApplier~ encapsula el flujo estándar de
-aplicación de un refactoring y el control de errores común a todos los
-refactorings existentes:
+~ExtractToMethodObjectApplier~. ~ExtractToMethodObjectApplier~ es subclase de
+~RefactoringApplier~, clase que encapsula el flujo estándar de aplicación de un
+refactoring y el control de errores común a todos los refactorings existentes:
 
 1. Solicitar los parámetros para aplicar el refactoring.
 
@@ -1177,14 +1178,14 @@ ejemplo un ~String~ mediante un prompt. El flujo está encapsulado en este objet
 pero el método para realizar cada paso se espera que sea responsabilidad de sus
 subclases.
 
-~ETMOApplier~ respeta el mismo flujo casi por completo pero sobreescribe ~value~
-porque le realiza una pequeña modificación. Al solicitar del usuario varios
-parámetros, a diferencia de otros refactorings más simples que suelen requerir
-solo 1 o 2, resultaría inconveniente que ante un error el flujo sea abortado,
-que es lo que sucede en el resto de los refactorings. Sería inconveniente porque
-el usuario debería especificar nuevamente todos los parámetros. Por esta razón,
-~ETMOApplier~ no aborta el flujo en caso de error, le muestra un mensaje
-explicando la causa del error al usuario:
+~ExtractToMethodObjectApplier~ respeta el mismo flujo casi por completo pero
+sobreescribe ~value~. Al solicitar del usuario varios parámetros, a diferencia
+de otros refactorings más simples que suelen requerir solo 1 o 2, resultaría
+inconveniente que ante un error el flujo sea abortado, que es lo que sucede en
+el resto de los refactorings. Sería inconveniente porque el usuario debería
+especificar nuevamente todos los parámetros. Por esta razón,
+~ExtractToMethodObjectApplier~ no aborta el flujo en caso de error, le muestra
+un mensaje explicando la causa del error al usuario:
 
 [[file:screenshots/etmo/error_message.png]]
 
@@ -1231,21 +1232,24 @@ son los que responde el objeto creado.
 
 
 ** ~ExtractToMethodObjectForm~
+\label{sec:extract_to_method_object_form}
 
-~ETMOApplier~ se encarga de crear una instancia del formulario y luego, como ya
-vimos que encapsulan todos los appliers, crear el refactoring y
-aplicarlo. ~ETMOForm~, subclase de ~SystemWindow~, se encarga de:
+~ExtractToMethodObjectApplier~ se encarga de crear una instancia del formulario
+y luego, como ya vimos que encapsulan todos los appliers, crear el refactoring y
+aplicarlo. ~ExtractToMethodObjectForm~, subclase de ~SystemWindow~, se encarga
+de:
 
 1. Presentarle el formulario al usuario abriéndose en el ~world~.
 
-2. Crear una instancia de ~ETMORequest~ y utilizarla como contenedor de todos
-   los modelos de ~Morph~ necesarios.
+2. Crear una instancia de ~ExtractToMethodObjectRequest~ y utilizarla como
+   contenedor de todos los modelos de ~Morph~ necesarios.
 
-3. Notificarle a ~ETMOApplier~ de los eventos /cancel/, /close/  y /submit/.
+3. Notificarle a ~ExtractToMethodObjectApplier~ de los eventos /cancel/, /close/
+   y /submit/.
    
 No existen paquetes para Cuis que permitan definir formularios de manera simple,
 para poder implementar este formulario se desarrollaron varios componentes que
-también fueron reutilizados en el formulario del ~IntroduceNullObject~. Éstos
+también fueron reutilizados en el ~IntroduceNullObjectForm~. Éstos
 son:
 
 - ~ColoredScrollPane~ :: Subclase de ~PluggableScrollPane~, permite definir un
@@ -1279,6 +1283,7 @@ son:
      instancia. Así se ve con ~Objet>>executeMethod~:
 
      [[file:screenshots/etmo/message_keywords_and_parameter_table.png]]
+     \label{itm:message_keywords_and_parameters_table}
 
 - ~MessageKeywordsAndParametersModel~ :: Subclase de ~Object~. Contiene todos
      los modelos utilizados por la tabla de igual nombre, se encarga de
@@ -1306,6 +1311,7 @@ son:
      ~TextModelMorph~ que utiliza como su ~innerMorphClass~ al
      ~ImmutableTextModelMorph~ para poder mostrar el código de la preview.
      [[file:screenshots/etmo/immutable_text_model_morph.png]]
+     \label{itm:preview_text_model_morph}
 
 - ~TabPassingInnerTextMorph~ :: Subclase de ~InnerTextMorph~. Los inputs del
      formulario se pueden recorrer utilizando la tecla key symbol TAB porque
@@ -1328,11 +1334,12 @@ Todos los valores que el usuario puede ingresar y modificar a través del
 formulario tienen un ~TextModel~ correspondiente con su contenido, el cual es
 utilizado para su ~Morph~ correspondiente. En el caso de los keywords deben
 incluso estar en una colección ordenada para conocer el orden elegido por el
-usuario. ~ETMORequest~ se encarga de crear todos estos modelos y contenerlos
-colaborando principalmente con el ~ETMOForm~, que se encarga de crear los
-~Morph~ s correspondientes a ellos. Además, provee el acceso a el contenido de
-estos modelos de una forma simple para que el ~ETMOApplier~ pueda crear el
-refactoring sin necesidad de conocer sobre modelos.
+usuario. ~ExtractToMethodObjectRequest~ se encarga de crear todos estos modelos
+y contenerlos, colaborando principalmente con el ~ExtractToMethodObjectForm~,
+que se encarga de crear los ~Morph~ s correspondientes a ellos. Además, provee
+el acceso al contenido de estos modelos de una forma simple para que el
+~ExtractToMethodObjectApplier~ pueda crear el refactoring sin necesidad de
+conocer sobre modelos.
 
 
 ** Aclaraciones adicionales
