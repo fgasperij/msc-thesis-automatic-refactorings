@@ -844,12 +844,20 @@ principales son:
 * Aplicación del refactoring
 
 La aplicación del refactoring la realiza el objeto ~IntroduceNullObject~, ésta
-consiste en reemplazar cada uno de los chequeos por nil especificados por los
-elementos de su colaborador interno ~replacementParameters~. Como cada uno de
-los elementos es una instancia de ~ReplaceIfNilWithPolymorphismParameters~ no
-solo especifican el chequeo por nil, sino que también el keyword y el nombre del
-parámetro de cada variable a parametrizar para realizar el reemplazo. Los cambios
-que incluye la aplicación para cada cheque son:
+consiste en:
+
+- Reemplazar cada uno de los chequeos por nil.
+
+- Delegar las asignaciones a la variable de instancia a ~assignOptionalField~.
+
+** Reemplazo de los chequeos por ~nil~
+
+Los chequeos están especificados por los elementos de su colaborador interno
+~replacementParameters~. Como cada uno de los elementos es una instancia de
+~ReplaceIfNilWithPolymorphismParameters~ no solo especifican el chequeo por nil,
+sino que también el keyword y el nombre del parámetro de cada variable a
+parametrizar para realizar el reemplazo. Los cambios que incluye la aplicación
+para cada cheque son:
 
 - Agregar el mensaje al ~Component~.
 
@@ -938,6 +946,65 @@ envío del mensaje la realiza el
 ~ReplaceIfNilWithPolymorphismParameters>>polymorphicMessageSend~
 correspondiente, ya que cuenta con ~VariablesToParametrizeKeywordsDefinitions~
 como colaborador interno.
+
+
+** Delegar las asignaciones a la variable de instancia
+   
+Dividimos las asignaciones en dos tipos, (i) las que asignan ~nil~ y (ii) y las
+que asignan cualquier otro objeto o el resultado de una colaboración. El
+reemplazo del primero tipo se realiza sustituyendo ~nil~ por ~NullObjectClass
+new~ ya que como los Null Objects no tienen estado no requieren
+inicialización:
+
+#+BEGIN_SRC
+instvar := nil.
+"Se reemplaza por una asignación de un NullObject"
+instvar := NullObject new.
+#+END_SRC
+
+Se podrían haber delegado todas las asignaciones a ~assignOptionalField~
+resultando en ~self assignOptionalField: nil~ pero nos pareció más prolijo de
+esta manera ya que es como creemos que el usuario lo hubiera escrito.
+
+Hasta ahora los reemplazos de código que se han realizado son de todas las
+ocurrencias de una variable, por ejemplo el reemplazo de las variables a
+parametrizar en el Extract to method object por los nombres de los parámetros
+correspondientes, o del código correspondiente a un ~MessageNode~. Los rangos de
+todas las ocurrencias de una variable se pueden obtener con
+~Encoder>>rangesForVariable:checkingType:ifAbsent~ y el rango de un
+~MessageNode~, que es único, se puede obtener con
+~Encoder>>rangeForNode:ifAbsent~. La diferencia de este reemplazo, es que ~nil~
+es un ~VariableNode~ pero no necesitamos reemplazar todas las ocurrencias de la
+misma, solo aquellas que se ubiquen del lado derecho de una asignación a la
+variable de instancia del refactoring. Para obtener los rangos correspondientes
+se identifican los nodos de las asignaciones correspondientes, los
+~AssignmentNode~ del AST, y luego se filtran los rangos que se encuentran dentro
+del rango del ~AssignmentNode~:
+
+#+BEGIN_SRC 
+ParseNodeEnumerator ofBlock: [ :node |
+  (self isAssignmentToNil: node) ifTrue: [ | ranges assignmentRange nilRange |
+    nilRanges := encoder rangeForNode: node value ifAbsent: [self shouldNotHappen].
+    assignmentRange := encoder rangeForNode: node ifAbsent: [self shouldNotHappen].
+    nilRangeOfThisAssignment := ranges detect: [:range | assignmentRange rangeIncludes: range first].
+
+    nilAssignmentsRanges add: nilRange]].
+#+END_SRC
+
+En ambos casos decidimos no permitir al usuario elegir el nombre del mensaje.
+El creador de instancias del Null Object es siempre ~new~ y el mensaje para
+asignar la variable de instancia es siempre ~assignOptionalField~. Se realizó de
+esta forma para reducir la carga de configuración del usuario. Veamos un ejemplo
+del segundo tipo:
+
+#+BEGIN_SRC 
+"Asignación de un objeto o colaboración"
+instavar := self doSomething.
+"Se reemplaza por un envío a assignOptionalField"
+self assignOptionalField: (self doSomething).
+#+END_SRC
+
+
 
 :UNUSED_DIAGRAM:
 

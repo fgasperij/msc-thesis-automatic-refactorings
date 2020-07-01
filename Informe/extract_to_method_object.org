@@ -472,11 +472,8 @@ referenciarlas, son: ~aParam~, ~self~ y ~ivar~.
 
 La identificación de las variables a parametrizar está reificada en un objeto
 llamado ~VariablesToExtractFinder~, el cual sigue la estructura que comúnmente
-:REFERENCE:
-Command pattern. Fowler? Beck?
-:END:
-se llama Command pattern, y es subclase de ~ParseNodeVisitor~. Veamos un ejemplo
-de uso de la misma: 
+se llama Command pattern \cite{gamma94_gof}, y es subclase de
+~ParseNodeVisitor~. Veamos un ejemplo de uso de la misma:
 
 #+BEGIN_SRC 
 MessageSend>>valueWithArguments: anArray
@@ -1353,7 +1350,8 @@ inmediatamente y no después de llenar todos los parámetros necesarios.
 * Preservación del comportamiento
 
 Todo el compartamiento descripto del ~ExtractToMethodObject~ tiene tests
-automáticos que lo cubren. Además, se realizó una prueba automática en la cual:
+automáticos que lo cubren. Además, se realizó una prueba automática, que busca
+simular el uso habitual de un programador, en la cual:
 
 1. Se eligen $n$ métodos al azar de la imagen de Cuis.
 
