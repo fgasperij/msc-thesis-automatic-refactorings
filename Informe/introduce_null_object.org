@@ -1004,7 +1004,26 @@ instavar := self doSomething.
 self assignOptionalField: (self doSomething).
 #+END_SRC
 
+El reemplazo requiere obtener el rango a reemplazar, que se corresponde con el
+rango del statement completo:
 
+#+BEGIN_SRC
+"node es el AssignmentNode correspondiente a instvar := ..."
+assignmentRange := encoder rangeForNode: node ifAbsent: [self shouldNotHappen].
+variableRanges := encoder rangeForNode: node variable ifAbsent: [self shouldNotHappen].
+leftSideRange := (variableRanges select: [:r | r last < assignmentRange first]) last.
+rangeToReplace := Interval from: (leftSideRange first) to: assignmentRange last.
+#+END_SRC
+
+Como podemos ver el ~encoder~ no cuenta con este rango, es necesario generarlo a
+partir del comienzo del rango de ~assignmentNode variable~ y el final del rango
+del ~assignmentNode~. El ~encoder~ tampoco cuenta con el rango del lado derecho
+de la asignación, el rango correspondiente al ~AssignmentNode~, comprende desde
+la posición del ~:=~ hasta el final del statement de asignación. Vale notar que
+los statements de asignación no soportan la concatenación de llamadas con
+~;~. El lado derecho se obtiene tomando la posición siguiente al ~:=~ hasta el
+final y se usa como parámetro, rodeado por ~()~, para el envío de
+~assignOptionalField:~.
 
 :UNUSED_DIAGRAM:
 
