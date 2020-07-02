@@ -849,6 +849,8 @@ consiste en:
 - Reemplazar cada uno de los chequeos por nil.
 
 - Delegar las asignaciones a la variable de instancia a ~assignOptionalField~.
+  
+- Compilar ~assignOptionalField~.
 
 ** Reemplazo de los chequeos por ~nil~
 
@@ -1072,6 +1074,34 @@ INO -> originalSourceCode : ""copyReplacing: rangeOfMessageSend with: polymorphi
 [[file:diagrams/ino_replace_sequence.png]]
 
 :END:
+
+
+** Compilar ~assignOptionalField~
+
+La compilación de este mensaje la realiza el siguiente mensaje:
+
+#+BEGIN_SRC
+compileAssignOptionalField
+
+  | body header paramName selectorName |
+  
+  paramName := 'maybeNil'.
+  selectorName := 'assignOptionalField'.
+  header := selectorName, ': ', paramName, String newLineString, String newLineString, String tab.
+  body := instVar, ' := ', paramName, ' ifNil: [ ', nullClass name, ' new ].'
+  
+  classToRefactor compile: header, body. 
+#+END_SRC
+
+La forma que tiene el código resultante es:
+
+#+BEGIN_SRC
+assignOptionalField: maybeNil
+
+  ivar := maybeNil ifNil: [ NullObject new ]
+#+END_SRC
+
+El selector ~assignOptionalField~ no puede estar definido en la clase.
 
 
 * Interfaz de usuario
