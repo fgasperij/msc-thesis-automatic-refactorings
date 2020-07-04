@@ -117,6 +117,7 @@ NullComponent>>polymorphicReplacement: client
   ^0.
 #+END_SRC
 
+
 ** La jerarquía
 
 Llamaremos ~NullComponent~ a la clase del Null Object y ~Component~ a la clase
@@ -286,6 +287,7 @@ refactoring apply.
 
 ~IntroduceNullObject~ es subclase de ~Refactoring~ y por lo tanto sobrescribe el
 mensaje ~apply~.
+
 
 ** El scope del refactoring: la clase y su variable de instancia
 
@@ -594,6 +596,7 @@ Los colaboradores internos son:
 ~VariableToParametrizeKeywordDefinition~, notar el singular en los sustantivos
 del nombre, por lo tanto primero explicaremos ese objeto.
 
+
 *** ~VariableToParametrizeKeywordDefinition~
 
 #+BEGIN_SRC 
@@ -849,8 +852,9 @@ consiste en:
 - Reemplazar cada uno de los chequeos por nil.
 
 - Delegar las asignaciones a la variable de instancia a ~assignOptionalField~.
-  
-- Compilar ~assignOptionalField~.
+
+- Pasar ~nil~ a los colaboradores externos en lugar del Null Object.
+
 
 ** Reemplazo de los chequeos por ~nil~
 
@@ -1075,9 +1079,6 @@ INO -> originalSourceCode : ""copyReplacing: rangeOfMessageSend with: polymorphi
 
 :END:
 
-
-** Compilar ~assignOptionalField~
-
 La compilación de este mensaje la realiza el siguiente mensaje:
 
 #+BEGIN_SRC
@@ -1102,6 +1103,47 @@ assignOptionalField: maybeNil
 #+END_SRC
 
 El selector ~assignOptionalField~ no puede estar definido en la clase.
+
+
+** Pasar ~nil~ a los colaboradores externos en lugar del Null Object
+   
+El refactoring es aplicado en el contexto de una clase, no en todo el
+sistema. Por esta razón, es necesario preservar el tipo de los colaboradores que
+enviamos hacia el resto del sistema. La variable de instancia, que luego de
+aplicar el refactoring siempre será un objeto concreto o un Null Object pero
+nunca ~nil~ en el contexto de la clase, se comparte con el sistema cuando:
+
+- Es la repuesta de un mensaje.
+
+- Es un argumento del envío de un mensaje.
+  
+Antes de aplicar el refactoring, el emisor del mensaje en el primer caso y el
+receptor del mensaje en el segundo, recibían ~nil~ en los casos que ahora la
+variable de instancia es un Null Object. Para no romper estos contratos se debe
+seguir utilizando ~nil~ en esos casos. Para ello se debe:
+
+1. Compilar un mensaje en la ~ConcreteClass~, que devolverá ~self~, y en la
+   ~NullClass~, que devolverá ~nil~, que se llamará ~getReference~. El objetivo
+   es poder obtener ~nil~ a partir de la variable de instancia en los casos
+   correspondientes.
+   
+2. Reemplazar todas las ocurrencias de la variable de instancia como una
+   respuesta o un argumento de esta forma:
+
+   #+BEGIN_SRC
+   "Como respuesta"
+   ^ivar
+   "pasa a ser"
+   ^ivar getReference
+
+   "Como argumento"
+   anObject useCollaborator: ivar
+   "pasa a ser"
+   anObject useCollaborator: ivar getReference
+   #+END_SRC
+   
+El paso 2 es más simple porque ~getReference~ es unario, por lo tanto no hay
+casos en los que se tenga que especificar la precedencia con paréntesis.
 
 
 * Interfaz de usuario
