@@ -7,19 +7,192 @@
 #+LATEX_CLASS: article
 #+LATEX_HEADER: \usepackage{cite}
 
+* Abstract
+  
+La investigación sobre refactorings tiene un potencial enorme, el cual se
+desprende del hecho de que el mantenimiento del software productivo representa
+su mayor costo. La automatización de los mismos permite reducir el tiempo de
+desarrollo y aumentar la calidad del diseño ya que los programadores pueden
+experimentar de manera más barata. Cuánto del proceso de refactoring automatizar
+y a qué nivel son preguntas de investigación actual. 
+
+Este trabajo se enfoca en la automatización de refactorings de alto nivel en el
+entorno de Smalltalk-80 Cuis. Específicamente en la implementación de dos
+refactorings: /Extract Method To Method Object/ e /Introduce Null Object/. Nos
+apoyamos en las conclusiones de \cite{murphy00_programm} para guiar el grado de
+automatización provisto. El objetivo principal es explorar las dificultades y
+posibilidades de implementar refactorings de tan alto nivel que actualmente no
+se encuentran en ninguna herramienta de desarrollo comercial.
+
+Las implementaciones fueron integradas a CuisUniversity y comenzaron a ser
+usadas por los estudiantes. Las mismas muestran la viabilidad de la
+implementación de refactorings de tan alto nivel y asimismo la proporción de
+configuraciones que se le debe presentar al programador.
+
+
 * Introducción
 
-Resumen general de la tesis. por qué es una pregunta interesante, qué pregunta y respuestas.
+** Desarrollo de software evolutivo
+
+Los refactorings surgen de una característica esencial del software productivo:
+el cambio. Lehman, en 1969, fue uno de los primeros en estudiar la evolución y
+el mantenimiento del software. Sus investigaciones resultaron en un cambio de
+perspectiva sobre el mantenimiento de software, que pasó a verse como una forma
+de desarrollo evolutivo. Lientz y Swanson \cite{bennet80_softw_maint_manag}
+analizó la proporción de costos que representaban los distintos tipos de
+mantenimiento:
+
+- Adaptaciones: modificaciones para adaptarse a cambios en su entorno (DBMS,
+  OS).
+
+- Mejoras: implementación de requerimientos que cambiaron o son nuevos sobre la
+  funcionalidad.
+
+- Correcciones: diagnóstico y corrección de errores.
+
+- Preventivos: cambios para incrementar la mantenibilidad del software para
+  prevenir problemas.
+
+Los primeros dos tipos de actividades de mantenimiento representaban el 75% de
+los costos de mantenimiento, pero como no son de naturaleza correctiva es más
+apropiado incluirlos como parte de un desarrollo progresivo o evolutivo y no
+como mantenimiento. Lehman además propuso que esa evolución incrementa la
+complejidad de los sistemas. Al incrementarse el número de entidades que
+componen un sistema las interacciones que se producen entre ellos pueden
+aumentar exponencialmente hasta llegar a un punto en el cual no es posible
+entenderlos. La consecuencia de esto sería que los costos de modificar o
+extender el comportamiento de un sistema, sin provocar consecuencias inesperadas
+como cambiar el comportamiento de otra parte del sistema de una forma que
+contradiga los requerimientos funcionales, se vuelvan inviables. Son este tipo
+de casos los que \cite{randell68_nato_softw_engin_repor} llevaron a la crisis
+del software.
+
+Si bien no existe una métrica clara que mida la complejidad de un sistema de
+software, se utilizan algunas aproximaciones \cite{mccabe76_compl_measur} como
+la complejidad ciclomática de Mc Cabe. Sin embargo, dado que la complejidad del
+software está fuertemente asociada a su mantenibildad, se suele tratar la
+primera mejorando a la segunda. Es decir, se intenta limitar el incremento de la
+complejidad utilizando técnicas que apuntan a preservar la mantenibilidad del
+sistema.
 
 
-* Background
+** Calidad y mantenibilidad del software
 
-#+INCLUDE: background.org
+La calidad del software en este contexto se refiere a la calidad estructural,
+los atributos de calidad no funcionales sobre los que se apoyan los
+requerimientos funcionales. No existe una métrica aceptada de la calidad ya que
+esta puede ser entendida de distintas formas. Sin embargo, CISQ \cite{itcisq}
+definió un conjunto de características con las cuales todo software debería
+contar para aportar valor de negocio:
+
+- Fiabilidad: la probabilidad de que el sistema falle, su estabilidad. El
+  principal objetivo es evitar downtime del sistema.
+
+- Eficiencia: mide el grado con el cual cumple los requerimientos de los
+  usuarios en términos de tiempo de respuesta.
+
+- Seguridad: cuantifica el riesgo de que se encuentren vulnerabilidades que
+  dañen al negocio.
+
+- Mantenibilidad: la capacidad del software de cambiar y adaptarse a las
+  necesidades de los usuarios y el mercado.
+
+Entonces, se puede apreciar que la mantenibilidad es uno de los cuatros
+componentes de la calidad y, como se mencionó anteriormente, la misma ofrece una
+gran oportunidad para reducir los costos de un proyecto de software. La
+mantenibilidad del software suele describirse en función de varios otros
+atributos de calidad como:
+
+- Entendibilidad: cuán costoso es entender el sistema. El desarrollador necesita
+  entenderlo para poder modificarlo o extenderlo sin cambiar su comportamiento
+  de maneras inesperadas. El tiempo que le toma y el riesgo que tiene de que el
+  resultado viole los requerimientos funcionales por falta de comprensión
+  dependen directamente de este atributo.
+
+- Cambiabilidad: cuán costoso es cambiar el sistema. En particular, cuán costoso
+  es realizarle los cambios que el negocio y los usuarios demandan de él.
+
+- Reusabilidad: cuán costoso es reusar los componentes del software para proveer
+  una nueva funcionalidad.
+
+- Testabilidad: cuán costoso es crear tests para verificar una funcionalidad.
+
+- Extensibilidad: cuán costoso es extender el sistema con nuevas
+  funcionalidades. La diferencia entre este atributo de calidad y la
+  cambiabilidad radica en que en este caso la funcionalidad es nueva y en el
+  otro ya existe pero su comportamiento es modificado.
+
+- Transferibilidad: cuán costoso es transferir el proyecto o parte de él a otro
+  equipo de desarrollo.
+
+Éstos atributos no son independientes, están relacionados y se afectan los unos
+a los otros. El incremento de la complejidad se produce en gran parte debido a
+la erosión del diseño \cite{gurp02_desig_erosion}, lo cual decrementa su
+mantenibilidad. La degradación del diseño se puede ver más claramente a través
+del incremento de los costos de cada uno de los componentes de la mantenibilidad
+de un sistema. Por ejemplo, un diseño que no previó necesaria la flexibilidad
+que se requiere para implementar una nueva funcionalidad incrementará los costos
+de extensibilidad y por lo tanto el tiempo de desarrollo se verá afectado.
+
+
+** Técnicas para preservar la mantenibilidad
+
+Las decisiones de mantenimiento pueden ser más eficientes aceptando esta
+realidad del proceso de desarrollo, su esencia evolutiva. Existen varias
+metodologías de desarrollo de software con enfoques distintos y prioridades
+diferentes. Las metodologías ágiles engloban a varios frameworks de desarrollo
+que se contraponen a los procesos pesados más tradicionales y proponen
+alternativas más livianas en los cuales prima la aceptación del cambio como guía
+del desarrollo. Algunos ejemplos son:
+
+- Extreme Programming (XP) \cite{extreme}
+
+- Kanban \cite{anderson10_kanban}
+
+- Scrum \cite{sutherland95_busin}
+
+Los proyectos de software industriales tienen restricciones de tiempo ajustadas,
+motivo por el cual los desarrolladores introducen modificaciones de la forma más
+veloz posible, sin tener en cuenta la pérdida de calidad. El desarrollador no
+modifica el diseño antes de extender o modificar el modelo, entonces las
+modificaciones que le realiza al modelo lo vuelven más complejo. La erosión del
+diseño se produce porque no es posible anticipar los cambios que se le
+realizarán al software en el futuro, entonces el diseño original no es apropiado
+para incorporar todos los cambios que se le realizan luego al sistema.
+
+
+** Los refactorings
+
+Un refactoring o reestructuración es una modificación al software que no cambia
+su funcionalidad. El objetivo de la misma es mejorar la calidad del sistema
+modificando su estructura interna para volverlo más mantenible, entendible o que
+se adapte mejor a futuros cambios o funcionalidades que haya que agregarle. Por
+ejemplo, si se desea agregar una funcionalidad y el diseño no la contempló
+originalmente se puede agregar al diseño actual o cambiar el diseño primero para
+que agregar la funcionalidad sea más simple y se pueda seguir extendiendo el
+software en esa dirección más fácilmente.
+
+Los refactorings son una de las prácticas del proceso continuo que propone XP
+para evitar la erosión del diseño. Se utiliza en varios frameworks de desarrollo
+iterativo incremental, pero no se ha visto integrada en sistemas tradicionales
+con modelos de desarrollo de cascada lineales. Además, es una parte integral del
+desarrollo en el contexto de las metodologías ágiles.
+
+El término fue acuñado por Opdyke en su tesis de doctorado
+\cite{opdyke92_refac_objec_orien_framew} y luego popularizado por Fowler
+\cite{fowler99_refac}, uno de los mayores abanderados de la metodología extreme
+programming, en su libro /Refactoring: Improving the design of existing code/.
+
 
 
 * Estado del arte
 
 #+INCLUDE: estado_del_arte.org
+
+
+* Background
+
+#+INCLUDE: background.org
 
 
 * Objetivos y justificación
