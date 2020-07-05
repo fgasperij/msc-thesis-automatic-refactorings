@@ -1,29 +1,67 @@
+:INTENT:
 Información necesaria que puedan necesitar los lectores para entender la tesis.
+:END:
 
-- smalltalk
-- programación orientada a objetos
-- qué es un refactoring
-- historia de los refactorings
-  - opdyke
-  - tdd
-- qué no es un refactoring
-- qué es un patrón de diseño
-- qué es un smell: estos atributos son parte de un conjunto de atributos del
-  código conocido como smells. Los smells son atributos que se pueden
-  identificar de manera fácil y suelen ser el síntoma de un diseño degradado.
+Smalltalk es un lenguaje de programación con tipado dinámico y
+reflexivo. Además, Smalltalk es un entorno de desarrollo gráfico e interactivo,
+provisto por un entorno vivo de objetos. Todo en Smalltalk es un objeto, uno de
+los pocos conceptos en los que se basa:
+
+- Objeto :: Representa un componente del sistema. Consiste en una porción de
+            memoria privada y un conjunto de operaciones. La memoria privada
+            contiene un conjunto de objetos que solo él puede acceder llamados
+            variables de instancia o colaboradores internos.
+
+- Mensaje :: Es un pedido que se le realiza a un objeto para que realice una de
+             sus operaciones. El conjunto de mensajes que un objeto sabe
+             responder se conoce como la interfaz o protocolo que éste tiene con
+             el resto del sistema. Éste conjunto está determinado por su clase.
+
+- Clase :: Describe la implementación, la forma de su memoria privada y cómo
+           llevan a cabo sus operaciones, de un conjunto de objetos que
+           representan el mismo tipo de componente en el sistema. Los objetos de
+           una clase se llaman sus instancias y métodos las descripciones de
+           cómo realizar las operaciones.
+
+Los métodos de una clase tienen acceso a 5 tipos de variables que difieren en su
+scope, los contextos desde los cuáles son accesibles, y su ciclo de vida:
+
+- Variables que sólo puede acceder un solo objeto
+
+  - Variables de instancia: son variables privadas, solo son accesibles por el
+    objeto al que pertenecen y son destruidas junto con él.
+
+  - Variables temporales: son creadas y están disponibles durante desarrollo de
+    una actividad específica, por ejemplo la evaluación de un método o un bloque.
+
+- Variables que pueden acceder múltiples objetos
+
+  - Variables de clase: son compartidas por todas las instancias de una misma
+    clase.
+    
+  - Variables de pool: son compartidas por un subconjunto de clases del sistema.
+  
+  - Variables globales: son compartidas por todos los objetos del sistema.
  
+    
+Una pseudo-variable es un identificador que se refiere a un objeto, como el
+nombre de una variable. La diferencia con las variables es que su valor no puede
+ser modificado mediantes una asignación. Tres importantes pseudo-variables que
+siempre referencian a los mismos objetos son:
+
+- nil :: referencia al objeto que referencian las variables no inicializadas. En
+         Cuis pertenece a la clase ~UndefinedObject~.
+
+- true :: referencia al objeto que representa el valor booleano verdadero.
+
+- false :: referencia al objeto que representa el valor booleano falso.
+
+	   
+
 Justificación del problema y solución
 
-- smalltalk es un entorno vivo de objetos que es reflexivo
-- todo es un objeto, las clases son objetos
-- cómo funciona el method lookup, cuál es la diferencia entre self y super
-- qué son las variables de clase, qué son las variables de pool, qué son las
-  variables de instancia
 - qué es una metaclase
-- qué es null y cómo se representa en Smalltalk
-- qué es un tipo? Es un conjunto de mensajes. Todos los objetos que responden
-  ese conjunto de mensajes comparten el tipo determinado por ese conjunto de
-  mensajes.
+- cómo funciona el method lookup, cuál es la diferencia entre self y super
 
 ETMO
 
