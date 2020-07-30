@@ -89,12 +89,12 @@ class MethodObject {
 
 note left of MethodObject : 1) Creacion de una clase para el Method Object
 note bottom of MethodObject : 2) Creacion del metodo de creacion de instancia
-note right of MethodObject : 3, 4, 5) Se mueve el metodo a extraer al metodo de evaluacion del Method Object
-note right of ClassWithMethodToExtract : 6) Reemplazo del metodo a extraer por la evaluacion del Method Object
+note right of MethodObject : 3, 4, 5) Se mueve el metodo a extraer al metodo\nde evaluacion del Method Object
+note right of ClassWithMethodToExtract : 6) Reemplazo del metodo a extraer por\nla evaluacion del Method Object
 #+END_SRC
 
 #+RESULTS:
-[[file:extract_to_method_object_application_steps.png]]
+[[file:diagrams/extract_to_method_object_application_steps.png]]
 
 
 1. Se crea una clase para el Method Object.

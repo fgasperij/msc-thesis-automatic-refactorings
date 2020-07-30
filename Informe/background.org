@@ -23,6 +23,7 @@ los pocos conceptos en los que se basa:
            una clase se llaman sus instancias y métodos las descripciones de
            cómo realizar las operaciones.
 
+
 Los métodos de una clase tienen acceso a 5 tipos de variables que difieren en su
 scope, los contextos desde los cuáles son accesibles, y su ciclo de vida:
 
@@ -43,7 +44,6 @@ scope, los contextos desde los cuáles son accesibles, y su ciclo de vida:
   
   - Variables globales: son compartidas por todos los objetos del sistema.
  
-    
 Una pseudo-variable es un identificador que se refiere a un objeto, como el
 nombre de una variable. La diferencia con las variables es que su valor no puede
 ser modificado mediantes una asignación. Tres importantes pseudo-variables que
